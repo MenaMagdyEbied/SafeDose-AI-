@@ -2,7 +2,7 @@
 
 ## Architecture
 
-8 agent components total. All flows live in a shared Langflow workspace (cloud-hosted on DataStax Astra). Each agent has its own flow with its own API endpoint URL. The .NET backend calls each endpoint based on the user action.
+7 agent components total. All flows live in a shared Langflow workspace (cloud-hosted on DataStax Astra). Each agent has its own flow with its own API endpoint URL. The .NET backend calls each endpoint based on the user action.
 
 ## Drug Interaction Pipeline — 4 sub-agents in one flow
 
@@ -18,9 +18,8 @@
 | # | Agent | Role |
 |---|-------|------|
 | 5 | Prescription Parser (OCR) | Photo → multimodal LLM → structured drug data |
-| 6 | Scheduling Agent | Prescription → reminder times (meal + spacing rules) |
-| 7 | Data Sync Agent | Background job: GitHub repo → Pinecone |
-| 8 | Chatbot Agent | Free-form Arabic Q&A + symptom triage |
+| 6 | Data Sync Agent | Background job: GitHub repo → Pinecone |
+| 7 | Chatbot Agent | Free-form Arabic Q&A + symptom triage |
 
 ## Folder structure
 

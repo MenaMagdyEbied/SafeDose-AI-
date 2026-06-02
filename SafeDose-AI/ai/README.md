@@ -31,14 +31,6 @@ ai/
 └── README.md
 ```
 
-## Setup
-
-1. Sign up for [DataStax Astra Langflow](https://astra.datastax.com/) — free tier
-2. Create a project "SafeDose AI"
-3. Invite the 5 team members as collaborators
-4. Each owner creates their flow in the shared workspace
-5. After each flow is built, click "Export" and save the JSON to `flows/`
-6. Save the endpoint URL in a shared `.env` file used by the backend
 
 ## RAG Data Layer
 
@@ -47,9 +39,4 @@ ai/
 - Vector store: Pinecone index `safedose-drugs` (cosine similarity)
 - Already loaded — see `seeding/pinecone-seed.py`
 
-## Owners
 
-- Drug Interaction (4 sub-agents): Mina
-- Prescription Parser (OCR): Ahmed
-- Scheduling: Andrew
-- Data Sync + Chatbot: Fady

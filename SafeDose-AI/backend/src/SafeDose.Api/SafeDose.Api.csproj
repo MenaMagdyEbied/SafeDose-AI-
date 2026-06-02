@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\SafeDose.Application\SafeDose.Application.csproj" />
+    <ProjectReference Include="..\SafeDose.Infrastructure\SafeDose.Infrastructure.csproj" />
+    <ProjectReference Include="..\SafeDose.Domain\SafeDose.Domain.csproj" />
+    <ProjectReference Include="..\SafeDose.Shared\SafeDose.Shared.csproj" />
+  </ItemGroup>
+</Project>

@@ -7,19 +7,29 @@ namespace SafeDose.Api.Controllers;
 [Route("api/interactions")]
 public class InteractionsController : ControllerBase
 {
-    private readonly CheckDrugInteractionUseCase _useCase;
+    //private readonly CheckDrugInteractionUseCase _useCase;
 
-    public InteractionsController(CheckDrugInteractionUseCase useCase)
+    //public InteractionsController(CheckDrugInteractionUseCase useCase)
+    //{
+    //    _useCase = useCase;
+    //}
+
+
+    [HttpGet]
+    public async Task<IActionResult> Test()
     {
-        _useCase = useCase;
+        return Ok("ggggg");
     }
 
-    [HttpPost("check")]
-    public async Task<IActionResult> Check([FromBody] CheckInteractionRequest request)
-    {
-        var result = await _useCase.ExecuteAsync(request.PatientId, request.Drugs);
-        return Ok(result);
-    }
+
+
+
+    //[HttpPost("check")]
+    //public async Task<IActionResult> Check([FromBody] CheckInteractionRequest request)
+    //{
+    //    var result = await _useCase.ExecuteAsync(request.PatientId, request.Drugs);
+    //    return Ok(result);
+    //}
 }
 
-public record CheckInteractionRequest(int PatientId, string[] Drugs);
+//public record CheckInteractionRequest(int PatientId, string[] Drugs);

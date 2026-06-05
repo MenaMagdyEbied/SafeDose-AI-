@@ -1,6 +1,10 @@
 // SafeDose AI - .NET 10 Web API
 // Wire up dependency injection, controllers, and services here
 
+using Microsoft.AspNetCore.Builder;
+using Microsoft.EntityFrameworkCore;
+using SafeDose.Domain.Entities;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services
@@ -8,6 +12,9 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddHttpClient();
+
+builder.Services.AddDbContext<AppDbContext>(opt => opt.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
 
 // TODO: Register repositories and external service clients
 // Example:

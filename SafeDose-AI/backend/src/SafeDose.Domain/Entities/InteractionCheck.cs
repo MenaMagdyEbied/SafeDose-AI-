@@ -12,6 +12,7 @@
         public string? SafetyDisclaimer { get; set; }
         public DateTime CheckedAt { get; set; }
 
+        public string AccountId { get; set; }  
         public Patient Patient { get; set; } = null!;
     }
 

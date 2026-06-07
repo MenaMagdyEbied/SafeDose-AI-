@@ -11,6 +11,8 @@
         public DateTime? VisitDateTime { get; set; }
         public DateTime CreatedAt { get; set; }
 
+
+        public string AccountId { get; set; }
         public Patient Patient { get; set; } = null!;
     }
 

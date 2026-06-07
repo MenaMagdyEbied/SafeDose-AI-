@@ -9,6 +9,7 @@
         public int? SnoozeMinutes { get; set; }
         public DateTime? RespondedAt { get; set; }
 
+        public string AccountId { get; set; }      
         public PatientMedication PatientMedication { get; set; } = null!;
     }
 }

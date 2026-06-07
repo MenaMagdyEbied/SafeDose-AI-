@@ -10,6 +10,9 @@ namespace SafeDose.Domain.Entities
         public byte? Route { get; set; }
         public string? Dose { get; set; }
         public string? DoctorName { get; set; }
+
+
+        public string AccountId {  get; set; } 
         public PatientMedication PatientMedication { get; set; }
         public Prescription? Prescription { get; set; }
     }

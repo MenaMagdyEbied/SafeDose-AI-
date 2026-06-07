@@ -7,14 +7,13 @@ using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SafeDose.Domain.ApplicationDbContext;
 
-
 #nullable disable
 
 namespace SafeDose.Domain.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260604224231_init")]
-    partial class init
+    [Migration("20260607131843_addUserIdColumn")]
+    partial class addUserIdColumn
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -321,6 +320,10 @@ namespace SafeDose.Domain.Migrations
                     b.Property<string>("ReminderNote")
                         .HasColumnType("nvarchar(MAX)");
 
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<DateTime?>("VisitDateTime")
                         .HasColumnType("datetime2");
 
@@ -392,6 +395,10 @@ namespace SafeDose.Domain.Migrations
 
                     b.Property<byte?>("Route")
                         .HasColumnType("tinyint");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("DrugId");
 
@@ -477,6 +484,10 @@ namespace SafeDose.Domain.Migrations
 
                     b.Property<byte>("TriggerType")
                         .HasColumnType("tinyint");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("InteractionCheckId");
 
@@ -609,6 +620,10 @@ namespace SafeDose.Domain.Migrations
                     b.Property<byte>("Status")
                         .HasColumnType("tinyint");
 
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.HasKey("PatientMedicationId");
 
                     b.HasIndex("DrugId")
@@ -632,6 +647,10 @@ namespace SafeDose.Domain.Migrations
 
                     b.Property<TimeOnly>("Time")
                         .HasColumnType("time");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("PatientMedicationTimeId");
 
@@ -719,6 +738,10 @@ namespace SafeDose.Domain.Migrations
 
                     b.Property<byte>("SourceType")
                         .HasColumnType("tinyint");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("PrescriptionId");
 
@@ -834,6 +857,10 @@ namespace SafeDose.Domain.Migrations
                     b.Property<int?>("SnoozeMinutes")
                         .HasColumnType("int");
 
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.HasKey("ReminderResponseId");
 
                     b.HasIndex("PatientMedicationId");
@@ -913,6 +940,10 @@ namespace SafeDose.Domain.Migrations
 
                     b.Property<string>("TranscriptText")
                         .HasColumnType("nvarchar(MAX)");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("SymptomReportId");
 

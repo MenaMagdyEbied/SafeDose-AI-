@@ -11,6 +11,8 @@ namespace SafeDose.Domain.Entities
         public string? ImageUrl { get; set; }
         public string? OCRText { get; set; }
         public byte OCRStatus { get; set; }
+
+        public string AccountId { get; set; }  
         public DateTime? ConfirmedAt { get; set; }
         public DateTime CreatedAt { get; set; }
         public Patient Patient { get; set; } = null!;

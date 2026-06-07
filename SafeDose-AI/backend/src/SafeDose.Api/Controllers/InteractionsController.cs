@@ -1,7 +1,11 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using SafeDose.Application.Auth.ServicesInterfaces;
 using SafeDose.Application.UseCases;
+using SafeDose.Domain.Entities;
 
 namespace SafeDose.Api.Controllers;
+
 
 [ApiController]
 [Route("api/interactions")]
@@ -14,11 +18,18 @@ public class InteractionsController : ControllerBase
     //    _useCase = useCase;
     //}
 
+    private readonly IUserGlobalServices _userGlobalServices;
+    public InteractionsController(IUserGlobalServices userGlobalServices)
+    {
+        _userGlobalServices = userGlobalServices;
+    }
 
+    [Authorize]
     [HttpGet]
     public async Task<IActionResult> Test()
     {
-        return Ok("ggggg");
+        Account account = await _userGlobalServices.GerUser(); 
+        return Ok("ggggg" + account.UserName);
     }
 
 

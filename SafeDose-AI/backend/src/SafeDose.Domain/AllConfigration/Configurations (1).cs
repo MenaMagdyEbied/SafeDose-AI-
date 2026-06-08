@@ -292,17 +292,72 @@ public class InteractionCheckConfiguration : IEntityTypeConfiguration<Interactio
     {
         b.HasKey(x => x.InteractionCheckId);
 
-
-        b.Property(x => x.ArabicExplanation).HasColumnType("nvarchar(MAX)");
-        b.Property(x => x.RecommendationAction).HasColumnType("nvarchar(MAX)");
-        b.Property(x => x.SourceCitation).HasMaxLength(255);
-        b.Property(x => x.SafetyDisclaimer).HasMaxLength(500);
+        b.Property(x => x.CheckedDrugsJson).HasColumnType("nvarchar(MAX)").IsRequired();
+        b.Property(x => x.ConflictingPairsJson).HasColumnType("nvarchar(MAX)");
+        b.Property(x => x.SourcesJson).HasColumnType("nvarchar(MAX)");
+        b.Property(x => x.LabelArabic).HasMaxLength(50);
+        b.Property(x => x.TitleArabic).HasMaxLength(255);
+        b.Property(x => x.ExplanationArabic).HasColumnType("nvarchar(MAX)");
+        b.Property(x => x.RecommendedActionArabic).HasColumnType("nvarchar(MAX)");
+        b.Property(x => x.SafetyDisclaimerArabic).HasMaxLength(500);
+        b.Property(x => x.ModelVersion).HasMaxLength(80);
+        b.Property(x => x.PineconeIndexVersion).HasMaxLength(80);
+        b.Property(x => x.CacheKey).HasMaxLength(64);
         b.Property(x => x.CheckedAt).HasDefaultValueSql("GETDATE()");
+        b.Property(x => x.AcknowledgedByAccountId).HasMaxLength(450);  // Identity user ID length
 
+        // Optional patient — UI supports anonymous multi-drug check
         b.HasOne(x => x.Patient)
             .WithMany(p => p.InteractionChecks)
             .HasForeignKey(x => x.PatientId)
-            .OnDelete(DeleteBehavior.Cascade);
+            .OnDelete(DeleteBehavior.SetNull)
+            .IsRequired(false);
+
+        // Optional consent link (for compliance audit)
+        b.HasOne(x => x.ConsentRecord)
+            .WithMany()
+            .HasForeignKey(x => x.ConsentRecordId)
+            .OnDelete(DeleteBehavior.SetNull)
+            .IsRequired(false);
+
+        // Indexes for common queries
+        b.HasIndex(x => x.PatientId);
+        b.HasIndex(x => new { x.PatientId, x.CheckedAt });
+        b.HasIndex(x => x.CacheKey);  // for de-duplication lookups
+        b.HasIndex(x => x.AcknowledgedByAccountId);
+
+        // Soft delete filter — hide deleted rows by default
+        b.HasQueryFilter(x => !x.IsDeleted);
+    }
+}
+
+public class CriticalPairConfiguration : IEntityTypeConfiguration<CriticalPair>
+{
+    public void Configure(EntityTypeBuilder<CriticalPair> b)
+    {
+        b.HasKey(x => x.CriticalPairId);
+
+        b.Property(x => x.ScientificNameA).HasMaxLength(255);
+        b.Property(x => x.ScientificNameB).HasMaxLength(255);
+        b.Property(x => x.ReasonArabic).HasColumnType("nvarchar(MAX)").IsRequired();
+        b.Property(x => x.ReasonEnglish).HasColumnType("nvarchar(MAX)");
+        b.Property(x => x.Source).HasMaxLength(255);
+        b.Property(x => x.CreatedAt).HasDefaultValueSql("GETDATE()");
+
+        b.HasOne(x => x.DrugA)
+            .WithMany()
+            .HasForeignKey(x => x.DrugIdA)
+            .OnDelete(DeleteBehavior.SetNull)
+            .IsRequired(false);
+
+        b.HasOne(x => x.DrugB)
+            .WithMany()
+            .HasForeignKey(x => x.DrugIdB)
+            .OnDelete(DeleteBehavior.SetNull)
+            .IsRequired(false);
+
+        b.HasIndex(x => new { x.DrugIdA, x.DrugIdB });
+        b.HasIndex(x => x.IsActive);
     }
 }
 

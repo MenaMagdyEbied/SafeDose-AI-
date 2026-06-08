@@ -39,6 +39,7 @@ namespace SafeDose.Domain.Entities
         public DbSet<PatientMedication> PatientMedications { get; set; }
         public DbSet<PatientMedicationTime> PatientMedicationTimes { get; set; }
         public DbSet<InteractionCheck> InteractionChecks { get; set; }
+        public DbSet<CriticalPair> CriticalPairs { get; set; }
         public DbSet<SymptomReport> SymptomReports { get; set; }
         public DbSet<ClinicDescriptionReminder> ClinicDescriptionReminders { get; set; }
         public DbSet<ReminderResponse> ReminderResponses { get; set; }

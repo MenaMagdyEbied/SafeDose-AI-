@@ -1,42 +1,56 @@
- <footer class="bg-neutral-dark text-neutral-light border-t border-[#222222] text-right py-12 px-6">
-      <div class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8">
-        <div class="space-y-4 md:col-span-2">
-          <div class="flex items-center gap-2">
-            <div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-              <lucide-icon [img]="heartIcon" class="w-4 h-4 text-primary-container"></lucide-icon>
-            </div>
-            <span class="font-black text-white text-lg">SafeDose AI</span>
-          </div>
-          <p class="text-xs text-outline leading-relaxed max-w-sm">
-            نظام استشاري ومساند رقمي معتمد على الذكاء الاصطناعي لفحص التفاعلات الدوائية للحد من الأعراض الجانبية وتوفير سبل الدعم المباشر للأشخاص ومقدمي الرعاية.
-          </p>
+<footer class="bg-neutral-dark text-neutral-light border-t border-[#222222] text-right py-12 px-6">
+  <div class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8">
+    <div class="space-y-4 md:col-span-2">
+      <div class="flex items-center gap-2">
+        <div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+          <lucide-icon [img]="heartIcon" class="w-4 h-4 text-primary-container"></lucide-icon>
         </div>
-
-        <div class="space-y-3">
-          <h4 class="text-white text-sm font-bold">بوابة الخدمات</h4>
-          <div class="flex flex-col gap-2 text-xs">
-            <button (click)="router.navigate(['/landing'])" class="text-right hover:text-white transition-colors">عن الخدمة</button>
-            <button (click)="router.navigate(['/patient'])" class="text-right hover:text-white transition-colors">بوابة المريض</button>
-            <button (click)="router.navigate(['/caregiver'])" class="text-right hover:text-white transition-colors">بوابة SafeDose Pro</button>
-            <button (click)="router.navigate(['/interaction-checker'])" class="text-right hover:text-white transition-colors">فحص الأدوية</button>
-            <button (click)="router.navigate(['/pricing'])" class="text-right hover:text-white transition-colors">خطط الأسعار</button>
-          </div>
-        </div>
-
-        <div class="space-y-3">
-          <h4 class="text-white text-sm font-bold">معلومات قانونية</h4>
-          <p class="text-[11px] text-outline/60 leading-relaxed">
-            خاضع لمعايير هيئة الدواء المصرية (EDA) والمبادئ التوجيهية لمسؤولي الصيدلة السريرية.
-          </p>
-          <span class="text-xs text-primary font-extrabold bg-[#222222] px-2 py-0.5 rounded inline-block">v2.0.0 Angular</span>
-        </div>
+        <span class="font-black text-white text-lg">SafeDose AI</span>
       </div>
+      <p class="text-xs text-outline leading-relaxed max-w-sm">
+        نظام استشاري ومساند رقمي معتمد على الذكاء الاصطناعي لفحص التفاعلات الدوائية للحد من الأعراض
+        الجانبية وتوفير سبل الدعم المباشر للأشخاص ومقدمي الرعاية.
+      </p>
+    </div>
 
-      <div class="max-w-6xl mx-auto pt-8 mt-8 border-t border-[#222222] flex flex-col sm:flex-row justify-between items-center gap-4 text-xs">
-        <span>حقوق الطبع محفوظة © ٢٠٢٦ SafeDose AI</span>
-        <div class="flex gap-4">
-          <a href="#" class="hover:text-white">سياسة الخصوصية</a>
-          <a href="#" class="hover:text-white">إخلاء المسؤولية</a>
-        </div>
+    <div class="space-y-3">
+      <h4 class="text-white text-sm font-bold">بوابة الخدمات</h4>
+      <div class="flex flex-col gap-2 text-xs">
+        <a routerLink="/home" class="text-right hover:text-white transition-colors">عن الخدمة</a>
+        <a routerLink="/patient" class="text-right hover:text-white transition-colors"
+          >بوابة المريض</a
+        >
+        <a routerLink="/caregiver" class="text-right hover:text-white transition-colors"
+          >بوابة SafeDose Pro</a
+        >
+        <a routerLink="/interaction-checker" class="text-right hover:text-white transition-colors"
+          >فحص الأدوية</a
+        >
+        <a routerLink="/pricing" class="text-right hover:text-white transition-colors"
+          >خطط الأسعار</a
+        >
       </div>
-    </footer>
+    </div>
+
+    <div class="space-y-3">
+      <h4 class="text-white text-sm font-bold">معلومات قانونية</h4>
+      <p class="text-[11px] text-outline/60 leading-relaxed">
+        خاضع لمعايير هيئة الدواء المصرية (EDA) والمبادئ التوجيهية لمسؤولي الصيدلة السريرية.
+      </p>
+      <span
+        class="text-xs text-primary font-extrabold bg-[#222222] px-2 py-0.5 rounded inline-block"
+        >v2.0.0 Angular</span
+      >
+    </div>
+  </div>
+
+  <div
+    class="max-w-6xl mx-auto pt-8 mt-8 border-t border-[#222222] flex flex-col sm:flex-row justify-between items-center gap-4 text-xs"
+  >
+    <span>حقوق الطبع محفوظة © ٢٠٢٦ SafeDose AI</span>
+    <div class="flex gap-4">
+      <a href="#" class="hover:text-white">سياسة الخصوصية</a>
+      <a href="#" class="hover:text-white">إخلاء المسؤولية</a>
+    </div>
+  </div>
+</footer>

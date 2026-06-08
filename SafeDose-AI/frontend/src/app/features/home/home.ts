@@ -1,8 +1,8 @@
 import { Component, inject } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import {
   Activity,
-  AlertTriangle,
+  TriangleAlert,
   Heart,
   LucideAngularModule,
   Pill,
@@ -12,7 +12,7 @@ import {
 
 @Component({
   selector: 'app-home',
-  imports: [LucideAngularModule],
+  imports: [LucideAngularModule, RouterLink],
   templateUrl: './home.html',
   styleUrl: './home.css',
 })
@@ -23,6 +23,17 @@ export class Home {
   pillIcon = Pill;
   sparklesIcon = Sparkles;
   activityIcon = Activity;
-  alertIcon = AlertTriangle;
+  alertIcon = TriangleAlert;
   heartIcon = Heart;
+  goToPatient(): void {
+    this.router.navigate(['/auth'], {
+      queryParams: { role: 'patient' },
+    });
+  }
+
+  goToCaregiver(): void {
+    this.router.navigate(['/auth'], {
+      queryParams: { role: 'caregiver' },
+    });
+  }
 }

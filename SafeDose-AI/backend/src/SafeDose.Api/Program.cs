@@ -8,9 +8,13 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using SafeDose.Application.Auth.ServicesInterfaces;
+using SafeDose.Application.Interfaces;
+using SafeDose.Application.UseCases;
 using SafeDose.Domain.ApplicationDbContext;
 using SafeDose.Domain.Entities;
 using SafeDose.Infrastructure.Auth;
+using SafeDose.Infrastructure.ExternalServices;
+using SafeDose.Infrastructure.Repositories;
 using SafeDose.Shared.helper;
 using System.Security.Claims;
 using System.Text;
@@ -30,11 +34,15 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddIdentity<Account, IdentityRole>(options => options.User.RequireUniqueEmail = true)
     .AddEntityFrameworkStores<AppDbContext>().AddDefaultTokenProviders();
 
-// TODO: Register repositories and external service clients
-// Example:
-// builder.Services.AddScoped<IPatientRepository, SqlPatientRepository>();
-// builder.Services.AddScoped<ILangflowClient, LangflowClient>();
-// builder.Services.AddScoped<CheckDrugInteractionUseCase>();
+builder.Services.AddHttpClient<ILangflowPrescriptionClient, LangflowPrescriptionClient>(client =>
+{
+    client.Timeout = TimeSpan.FromMinutes(5);
+});
+builder.Services.AddScoped<ParsePrescriptionUseCase>();
+builder.Services.AddScoped<SavePrescriptionUseCase>();
+
+builder.Services.AddScoped<IPatientRepository, SqlPatientRepository>();
+builder.Services.AddScoped<IPrescriptionRepository, SqlPrescriptionRepository>();
 
 builder.Services.AddScoped<IAuthService,AuthService>();
 builder.Services.AddScoped<IUserGlobalServices, UserGlobalServices>();

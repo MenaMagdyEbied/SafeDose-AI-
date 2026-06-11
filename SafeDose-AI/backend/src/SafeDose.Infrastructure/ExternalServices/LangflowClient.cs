@@ -1,5 +1,6 @@
 using SafeDose.Application.Interfaces;
 using System.Net.Http.Json;
+using Microsoft.Extensions.Configuration;
 
 namespace SafeDose.Infrastructure.ExternalServices;
 
@@ -30,6 +31,3 @@ public class LangflowClient : ILangflowClient
             ?? throw new InvalidOperationException("Empty response from Langflow");
     }
 }
-
-// Stub for compile — replace with the real IConfiguration from Microsoft.Extensions.Configuration
-public interface IConfiguration { string? this[string key] { get; } }

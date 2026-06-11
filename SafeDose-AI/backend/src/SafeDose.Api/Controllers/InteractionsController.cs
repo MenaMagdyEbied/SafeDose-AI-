@@ -28,7 +28,7 @@ public class InteractionsController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> Test()
     {
-        Account account = await _userGlobalServices.GerUser(); 
+        Account account = await _userGlobalServices.GetUser(); 
         return Ok("ggggg" + account.UserName);
     }
 

@@ -1,4 +1,4 @@
-﻿namespace SafeDose.Domain.Entities
+namespace SafeDose.Domain.Entities
 {
     public class InteractionCheck
     {

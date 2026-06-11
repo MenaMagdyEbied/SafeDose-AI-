@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using SafeDose.Application.Auth.ServicesInterfaces;
 using SafeDose.Domain.Entities;
@@ -21,7 +21,7 @@ namespace SafeDose.Infrastructure.Auth
             _userManager = userManager;
         }
 
-        public async Task<Account> GerUser()
+        public async Task<Account> GetUser()
         {
             var user = _httpContextAccessor.HttpContext?.User;
             if (user == null) throw new Exception("Not found this User");

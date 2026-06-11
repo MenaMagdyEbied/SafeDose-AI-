@@ -1,4 +1,4 @@
-﻿
+
 
 namespace SafeDose.Domain.Entities
 {
@@ -13,6 +13,11 @@ namespace SafeDose.Domain.Entities
         public string? ChronicConditions { get; set; }
         public string? Allergies { get; set; }
         public DateTime CreatedAt { get; set; }
+
+        // ── Soft delete ──
+        public bool IsActive { get; set; } = true;
+        public DateTime? DeactivatedAt { get; set; }
+
         public Account Account { get; set; } = null!;
         public ICollection<Prescription>? Prescriptions { get; set; } = [];
         public ICollection<PatientMedication>? PatientMedications { get; set; } = [];

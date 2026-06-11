@@ -12,6 +12,7 @@
         public string? RecommendationAction { get; set; }
         public DateTime ReportedAt { get; set; }
 
+        public string AccountId { get; set; }      
         public Patient Patient { get; set; } = null!;
     }
 }

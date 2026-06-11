@@ -15,6 +15,8 @@ namespace SafeDose.Domain.Entities
         public byte? MealTiming { get; set; }
         public byte Status { get; set; }
 
+
+        public string AccountId { get; set; }  
         public Patient Patient { get; set; } = null!;
         public Drug Drug { get; set; }
         public ICollection<PatientMedicationTime> PatientMedicationTimes { get; set; } = [];

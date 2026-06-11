@@ -1,86 +1,124 @@
 // SafeDose AI - .NET 10 Web API
-// Composition root — wires interfaces to implementations.
+// Wire up dependency injection, controllers, and services here
 
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Polly;
-using Polly.Extensions.Http;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
+using SafeDose.Application.Auth.ServicesInterfaces;
 using SafeDose.Application.Interfaces;
 using SafeDose.Application.UseCases;
+using SafeDose.Domain.ApplicationDbContext;
 using SafeDose.Domain.Entities;
-using SafeDose.Domain.Services;
+using SafeDose.Infrastructure.Auth;
 using SafeDose.Infrastructure.ExternalServices;
 using SafeDose.Infrastructure.Repositories;
-using SafeDose.Infrastructure.Seeders;
+using SafeDose.Shared.helper;
+using System.Security.Claims;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ─── Framework services ─────────────────────────────────────────
+// Add services
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddHttpClient();
 
-// ─── Database ───────────────────────────────────────────────────
-builder.Services.AddDbContext<AppDbContext>(opt =>
-    opt.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddDbContext<AppDbContext>(opt => opt.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.Configure<JWT>(builder.Configuration.GetSection("JWT"));
+builder.Services.AddHttpContextAccessor();
 
-// ─── CORS (for Doaa's Angular frontend) ─────────────────────────
-const string CorsPolicy = "SafeDoseFrontend";
-builder.Services.AddCors(options =>
+builder.Services.AddIdentity<Account, IdentityRole>(options => options.User.RequireUniqueEmail = true)
+    .AddEntityFrameworkStores<AppDbContext>().AddDefaultTokenProviders();
+
+builder.Services.AddHttpClient<ILangflowPrescriptionClient, LangflowPrescriptionClient>(client =>
 {
-    options.AddPolicy(CorsPolicy, policy =>
-        policy.WithOrigins(
-                "http://localhost:4200",
-                "http://localhost:3000",
-                "https://safedose.app")
-              .AllowAnyHeader()
-              .AllowAnyMethod()
-              .AllowCredentials());
+    client.Timeout = TimeSpan.FromMinutes(5);
+});
+builder.Services.AddScoped<ParsePrescriptionUseCase>();
+builder.Services.AddScoped<SavePrescriptionUseCase>();
+
+builder.Services.AddScoped<IPatientRepository, SqlPatientRepository>();
+builder.Services.AddScoped<IPrescriptionRepository, SqlPrescriptionRepository>();
+
+builder.Services.AddScoped<IAuthService,AuthService>();
+builder.Services.AddScoped<IUserGlobalServices, UserGlobalServices>();
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+
+})
+    .AddJwtBearer(options =>
+    {
+        options.SaveToken = false;
+        options.RequireHttpsMetadata = false;
+
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            RoleClaimType = ClaimTypes.Role,
+            ValidateIssuer = true,
+            ValidIssuer = builder.Configuration["JWT:Issuer"],
+            ValidateAudience = true,
+            ValidAudience = builder.Configuration["JWT:Audience"],
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JWT:Key"]))
+        };
+    });
+
+
+builder.Services.AddSwaggerGen(option =>
+{
+    option.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.ApiKey,
+        Scheme = "Bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "JWT Authorization header using the Bearer scheme. \r\n\r\n Enter 'Bearer' [space] and then your token in the text input below.\r\n\r\nExample: \"Bearer 12345abcdef\""
+    });
+
+    option.AddSecurityRequirement(new OpenApiSecurityRequirement
+                {
+                     {
+                           new OpenApiSecurityScheme
+                             {
+                                  Reference = new OpenApiReference
+                                     {
+                                        Type = ReferenceType.SecurityScheme,
+                                        Id = "Bearer"
+                                     },
+                                  Name = "Bearer",
+                                  In = ParameterLocation.Header
+                              },
+                          new List<string>()
+                     }
+                 });
+
 });
 
-// ─── Module 5: Drug Interaction Checker ────────────────────────
 
-// Domain services (pure logic, singletons)
-builder.Services.AddSingleton<AllergyCrossReactivityMatcher>();
-builder.Services.AddSingleton<SeverityCalculator>();
-builder.Services.AddSingleton<DuplicateDrugDetector>();
-builder.Services.AddSingleton<CacheKeyHasher>();
 
-// Repositories (Infrastructure)
-builder.Services.AddScoped<IDrugRepository, SqlDrugRepository>();
-builder.Services.AddScoped<IInteractionRepository, SqlInteractionRepository>();
-builder.Services.AddScoped<ICriticalPairLookup, SqlCriticalPairLookup>();
-builder.Services.AddScoped<IPatientRepository, SqlPatientRepository>();
-builder.Services.AddScoped<IPatientMedicationProvider, SqlPatientMedicationProvider>();
-builder.Services.AddScoped<IAuditLogService, SqlAuditLogService>();
 
-// External services with Polly retry (3x exponential backoff per NFR-202)
-builder.Services
-    .AddHttpClient<ILangflowClient, LangflowClient>(client =>
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("allowAll", policy =>
     {
-        client.Timeout = TimeSpan.FromSeconds(30);
-    })
-    .AddPolicyHandler(HttpPolicyExtensions
-        .HandleTransientHttpError()
-        .WaitAndRetryAsync(3, attempt =>
-            TimeSpan.FromMilliseconds(200 * Math.Pow(3, attempt - 1))));
+        policy.AllowAnyOrigin()
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
 
-// Use cases
-builder.Services.AddScoped<SearchDrugsUseCase>();
-builder.Services.AddScoped<CheckDrugInteractionUseCase>();
-builder.Services.AddScoped<CheckStandaloneInteractionUseCase>();
-builder.Services.AddScoped<GetInteractionHistoryUseCase>();
-builder.Services.AddScoped<GetInteractionCheckByIdUseCase>();
-builder.Services.AddScoped<AcknowledgeWarningUseCase>();
-builder.Services.AddScoped<DeleteInteractionCheckUseCase>();
-builder.Services.AddScoped<GetPatientProfileSnapshotUseCase>();
-builder.Services.AddScoped<SeedCriticalPairsUseCase>();
 
-// Seeders + hosted services
-builder.Services.AddScoped<CriticalPairSeeder>();
-builder.Services.AddScoped<ICriticalPairSeeder>(sp => sp.GetRequiredService<CriticalPairSeeder>());
-builder.Services.AddHostedService<CriticalPairSeederHostedService>();
-
-// ─── Pipeline ───────────────────────────────────────────────────
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -90,8 +128,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-app.UseCors(CorsPolicy);
 app.UseAuthorization();
+app.UseCors("allowAll");
 app.MapControllers();
 
 app.Run();

@@ -9,6 +9,6 @@ namespace SafeDose.Application.Auth.ServicesInterfaces
 {
     public interface IUserGlobalServices
     {
-        Task<Account> GetUser();
+        Task<Account> GerUser();
     }
 }

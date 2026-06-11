@@ -1,4 +1,5 @@
 using SafeDose.Application.Interfaces;
+using SafeDose.Domain.ApplicationDbContext;
 using SafeDose.Domain.Entities;
 
 namespace SafeDose.Infrastructure.Repositories;

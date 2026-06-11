@@ -195,10 +195,11 @@ public class PatientConfiguration : IEntityTypeConfiguration<Patient>
 
         b.HasKey(x => x.PatientId);
 
-        b.Property(x => x.FullName).HasMaxLength(150);
+        b.Property(x => x.FullName).HasMaxLength(150).IsRequired();
         b.Property(x => x.BloodType).HasMaxLength(5);
         b.Property(x => x.ChronicConditions).HasColumnType("nvarchar(MAX)");
         b.Property(x => x.Allergies).HasColumnType("nvarchar(MAX)");
+        b.Property(x => x.AccountId).HasMaxLength(450).IsRequired();
         b.Property(x => x.CreatedAt).HasDefaultValueSql("GETDATE()");
 
         // FK to Account (string PK) — AccountId must be string in entity
@@ -206,6 +207,13 @@ public class PatientConfiguration : IEntityTypeConfiguration<Patient>
             .WithMany(a => a.Patients)
             .HasForeignKey(x => x.AccountId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        // Index for fast listing by account
+        b.HasIndex(x => x.AccountId);
+        b.HasIndex(x => new { x.AccountId, x.IsActive });
+
+        // Soft delete filter — hide deactivated by default
+        b.HasQueryFilter(x => x.IsActive);
     }
 }
 

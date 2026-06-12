@@ -22,13 +22,15 @@ export class Interaction {
     if (!query) return this.famousDrugs;
     return this.famousDrugs.filter((d) => d.toLowerCase().includes(query.toLowerCase()));
   }
-
   async checkInteractions(drugs: string[]): Promise<InteractionResult> {
+    // نظف الأسماء - شيل الجزء الإنجليزي
+    const cleanDrugs = drugs.map((d) => d.split('(')[0].trim());
+
     try {
       const resp = await fetch('/api/check-interactions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ drugs }),
+        body: JSON.stringify({ drugs: cleanDrugs }),
       });
       if (!resp.ok) throw new Error('Server error');
       return await resp.json();

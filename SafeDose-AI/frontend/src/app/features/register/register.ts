@@ -24,8 +24,10 @@ import { FormsModule } from '@angular/forms';
 export class Register {
   private readonly router = inject(Router);
   private readonly auth = inject(Auth);
-  screen: 'welcome' | 'phone' | 'otp' | 'consent' | 'wizard' = 'welcome';
-  phone = '01099999999';
+  screen: 'registration' | 'otp' | 'consent' | 'wizard' = 'registration';
+  fullName = '';
+  email = '';
+  phone = '';
   digits: string[] = Array(6).fill('');
   errorText = '';
   loading = false;
@@ -59,11 +61,26 @@ export class Register {
   userIcon = User;
 
   goBack(): void {
-    if (this.screen === 'welcome') this.router.navigate(['/home']);
-    else if (this.screen === 'phone') this.screen = 'welcome';
-    else if (this.screen === 'otp') this.screen = 'phone';
+    if (this.screen === 'registration') this.router.navigate(['/home']);
+    else if (this.screen === 'otp') this.screen = 'registration';
     else if (this.screen === 'consent') this.screen = 'otp';
     else if (this.screen === 'wizard') this.screen = 'consent';
+  }
+
+  startRegistration(): void {
+    this.errorText = '';
+    if (!this.fullName.trim() || !this.email.trim() || !this.phone.trim()) {
+      this.errorText = 'يرجى إدخال الاسم الكامل والبريد الإلكتروني ورقم الهاتف.';
+      return;
+    }
+
+    this.sendOtp();
+  }
+
+  get registrationStep(): number {
+    if (this.screen === 'registration') return 1;
+    if (this.screen === 'otp') return 2;
+    return 3;
   }
 
   onPhoneChange(val: string): void {
@@ -116,6 +133,9 @@ export class Register {
   }
 
   acceptConsent(): void {
+    if (!this.wizardName.trim()) {
+      this.wizardName = this.fullName.trim();
+    }
     this.screen = 'wizard';
   }
 

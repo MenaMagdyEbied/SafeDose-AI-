@@ -31,10 +31,6 @@ export const routes: Routes = [
       },
 
       {
-        path: 'auth',
-        component: Register,
-      },
-      {
         path: 'patient',
         component: PatientHome,
       },
@@ -75,6 +71,14 @@ export const routes: Routes = [
         component: Profile,
       },
     ],
+  },
+  {
+    path: 'register',
+    component: Register,
+  },
+  {
+    path: 'login',
+    component: Register,
   },
   { path: '**', component: NotFound },
 ];

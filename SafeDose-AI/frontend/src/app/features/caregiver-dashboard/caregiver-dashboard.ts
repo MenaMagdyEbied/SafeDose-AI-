@@ -1,22 +1,20 @@
 import { Component } from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
+import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import {
-  Heart,
-  Pill,
-  Stethoscope,
-  Search,
   Bell,
-  Settings,
-  AlertTriangle,
-  CheckCircle,
+  CircleCheck,
+  Heart,
   LucideAngularModule,
-  LucideIconProvider,
-  LUCIDE_ICONS,
+  Search,
+  Settings,
+  Stethoscope,
+  TriangleAlert
 } from 'lucide-angular';
 
 @Component({
   selector: 'app-caregiver-dashboard',
-  imports: [LucideAngularModule,RouterLink],
+  imports: [LucideAngularModule, RouterLink, FormsModule],
   templateUrl: './caregiver-dashboard.html',
   styleUrl: './caregiver-dashboard.css',
 })
@@ -26,8 +24,9 @@ export class CaregiverDashboard {
   searchIcon = Search;
   bellIcon = Bell;
   settingsIcon = Settings;
-  alertTriangleIcon = AlertTriangle;
-  checkCircleIcon = CheckCircle;
+  alertTriangleIcon = TriangleAlert;
+  checkCircleIcon = CircleCheck;
+  searchQuery = '';
 
   patients = [
     {
@@ -63,4 +62,10 @@ export class CaregiverDashboard {
       lastDose: '٧:٠٠ ص',
     },
   ];
+  get filteredPatients() {
+    if (!this.searchQuery.trim()) return this.patients;
+    return this.patients.filter(
+      (p) => p.name.includes(this.searchQuery) || p.statusText.includes(this.searchQuery),
+    );
+  }
 }

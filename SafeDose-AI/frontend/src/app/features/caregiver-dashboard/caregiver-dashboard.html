@@ -1,4 +1,4 @@
-<div class="space-y-6 max-w-5xl mx-auto  pt-16 pb-24">
+<div class="space-y-6 max-w-5xl mx-auto pt-16 pb-24">
   <div class="flex items-center justify-between text-right">
     <div class="space-y-1">
       <h2 class="text-2xl font-extrabold text-primary">SafeDose Pro 🧑‍⚕️</h2>
@@ -45,6 +45,7 @@
       <div class="relative">
         <input
           type="text"
+          [(ngModel)]="searchQuery"
           placeholder="بحث عن مريض..."
           class="h-9 pl-9 pr-3 rounded-lg border border-outline-variant text-sm outline-none focus:border-primary text-right"
         />
@@ -55,7 +56,7 @@
       </div>
     </div>
     <div class="divide-y divide-outline-variant/20">
-      @for (p of patients; track p.id) {
+      @for (p of filteredPatients; track p.id) {
         <div
           class="flex items-center gap-4 p-4 hover:bg-surface-container-low transition-colors text-right"
         >
@@ -91,8 +92,8 @@
 
   <div class="flex justify-center">
     <button
-      routerLink='/caregiver-review'
-      class="bg-primary hover:bg-primary-dark text-white px-6 py-3 rounded-xl font-bold text-sm transition-all"
+      routerLink="/caregiver-review"
+      class="bg-primary hover:bg-primary-dark text-white px-6 py-3 rounded-xl font-bold text-sm transition-all cursor-pointer"
     >
       مسح وصفة طبية جديدة (OCR)
     </button>

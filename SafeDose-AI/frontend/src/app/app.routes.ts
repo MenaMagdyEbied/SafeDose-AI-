@@ -14,6 +14,7 @@ import { NotFound } from './shared/components/not-found/not-found';
 import { MainLayout } from './layouts/main-layout/main-layout';
 import { Register } from './features/register/register';
 import { CaregiverResults } from './features/caregiver-results/caregiver-results';
+import { Login } from './features/login/login';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'home', pathMatch: 'full' },
@@ -78,7 +79,7 @@ export const routes: Routes = [
   },
   {
     path: 'login',
-    component: Register,
+    component: Login,
   },
   { path: '**', component: NotFound },
 ];

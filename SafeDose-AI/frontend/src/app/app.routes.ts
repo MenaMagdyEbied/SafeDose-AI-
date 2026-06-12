@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { Auth } from './core/auth/services/auth';
+import { Auth } from './features/auth/auth';
 import { AdminDashboard } from './features/admin-dashboard/admin-dashboard';
 import { CaregiverDashboard } from './features/caregiver-dashboard/caregiver-dashboard';
 import { CaregiverReview } from './features/caregiver-review/caregiver-review';

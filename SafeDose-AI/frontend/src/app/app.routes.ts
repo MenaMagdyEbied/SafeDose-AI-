@@ -1,5 +1,4 @@
 import { Routes } from '@angular/router';
-import { Auth } from './features/auth/auth';
 import { AdminDashboard } from './features/admin-dashboard/admin-dashboard';
 import { CaregiverDashboard } from './features/caregiver-dashboard/caregiver-dashboard';
 import { CaregiverReview } from './features/caregiver-review/caregiver-review';
@@ -11,8 +10,9 @@ import { PatientHome } from './features/patient-home/patient-home';
 import { Pricing } from './features/pricing/pricing';
 import { Profile } from './features/profile/profile';
 import { Splash } from './features/splash/splash';
-import { NotFound } from './shared/components/chat-bot/not-found/not-found';
+import { NotFound } from './shared/components/not-found/not-found';
 import { MainLayout } from './layouts/main-layout/main-layout';
+import { Register } from './features/register/register';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'home', pathMatch: 'full' },
@@ -31,7 +31,7 @@ export const routes: Routes = [
 
       {
         path: 'auth',
-        component: Auth,
+        component: Register,
       },
       {
         path: 'patient',

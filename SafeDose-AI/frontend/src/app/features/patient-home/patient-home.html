@@ -87,21 +87,21 @@
     <div class="grid grid-cols-3 gap-3">
       <button
         routerLink="/caregiver-review"
-        class="flex flex-col items-center justify-center gap-2 bg-white border border-outline-variant/30 rounded-2xl p-4 min-h-[100px] hover:bg-slate-50 transition-colors"
+        class="flex flex-col items-center justify-center gap-2 bg-white border border-outline-variant/30 rounded-2xl p-4 min-h-25 hover:bg-slate-50 transition-colors cursor-pointer"
       >
         <lucide-icon [img]="cameraIcon" class="w-8 h-8 text-primary"></lucide-icon>
         <span class="text-xs font-bold text-on-background">مسح وصفة</span>
       </button>
       <button
         (click)="showSymptomsReport()"
-        class="flex flex-col items-center justify-center gap-2 bg-white border border-outline-variant/30 rounded-2xl p-4 min-h-[100px] hover:bg-slate-50 transition-colors"
+        class="flex flex-col items-center justify-center gap-2 bg-white border border-outline-variant/30 rounded-2xl p-4 min-h-25 hover:bg-slate-50 transition-colors cursor-pointer"
       >
         <lucide-icon [img]="activityIcon" class="w-8 h-8 text-primary"></lucide-icon>
         <span class="text-xs font-bold text-on-background">تقرير الأعراض</span>
       </button>
       <button
         routerLink="/digital-card"
-        class="flex flex-col items-center justify-center gap-2 bg-white border border-outline-variant/30 rounded-2xl p-4 min-h-[100px] hover:bg-slate-50 transition-colors"
+        class="flex flex-col items-center justify-center gap-2 bg-white border border-outline-variant/30 rounded-2xl p-4 min-h-25 hover:bg-slate-50 transition-colors cursor-pointer"
       >
         <lucide-icon [img]="qrCodeIcon" class="w-8 h-8 text-primary"></lucide-icon>
         <span class="text-xs font-bold text-on-background">كرت العلاج</span>
@@ -135,6 +135,9 @@
   <div
     class="bg-danger-container text-on-danger-container border border-danger/20 p-4 rounded-2xl flex flex-row-reverse items-center justify-between shadow-sm"
   >
+    <span class="text-xs font-bold px-2.5 py-1 bg-white rounded-full text-danger shrink-0 shadow-sm"
+      >تبقي ٣ أيام</span
+    >
     <div class="flex items-center gap-3">
       <lucide-icon [img]="alertTriangleIcon" class="w-6 h-6 text-danger shrink-0"></lucide-icon>
       <div class="text-right">
@@ -144,9 +147,6 @@
         >
       </div>
     </div>
-    <span class="text-xs font-bold px-2.5 py-1 bg-white rounded-full text-danger shrink-0 shadow-sm"
-      >تبقي ٣ أيام</span
-    >
   </div>
 
   <!-- Upgrade Banner (Free users only) -->

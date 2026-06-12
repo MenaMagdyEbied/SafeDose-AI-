@@ -1,1 +1,111 @@
-<p>caregiver-review works!</p>
+<section class="max-w-2xl mx-auto space-y-6 pt-16 pb-24">
+  <div class="text-center mb-4">
+    <h2 class="text-2xl font-extrabold text-primary">مسح الوصفة الطبية 🩺</h2>
+    <p class="text-sm text-outline">ارفع صورة الوصفة ليتم تحليلها بالذكاء الاصطناعي</p>
+  </div>
+
+  @if (showCamera) {
+    <div class="fixed inset-0 bg-black/80 z-50 flex flex-col items-center justify-center gap-4">
+      <video id="cameraFeed" autoplay playsinline class="w-full max-w-lg rounded-xl"></video>
+
+      <div class="flex gap-3">
+        <button
+          (click)="capturePhoto()"
+          class="bg-primary text-white px-6 py-3 rounded-xl font-bold"
+        >
+          📸 التقط الصورة
+        </button>
+        <button
+          (click)="closeCamera()"
+          class="bg-gray-500 text-white px-6 py-3 rounded-xl font-bold"
+        >
+          إلغاء
+        </button>
+      </div>
+    </div>
+  }
+
+  @if (!scanned) {
+    <!-- Upload Area -->
+    <div
+      class="bg-white border-2 border-dashed border-primary/30 rounded-3xl p-12 text-center hover:border-primary/60 transition-all"
+    >
+      <lucide-icon [img]="uploadIcon" class="w-16 h-16 text-primary/30 mx-auto mb-4"></lucide-icon>
+      <h3 class="text-lg font-bold text-on-background mb-2">اسحب وأفلت صورة الوصفة هنا</h3>
+      <p class="text-sm text-outline mb-4">أو اضغط لاختيار صورة من جهازك</p>
+      <div class="flex justify-center gap-3">
+        <button
+          (click)="openCamera()"
+          class="bg-primary hover:bg-primary-dark text-white px-6 py-3 rounded-xl font-bold text-sm transition-all flex items-center gap-2 cursor-pointer"
+        >
+          <lucide-icon [img]="cameraIcon" class="w-5 h-5"></lucide-icon>
+          تصوير وصفة
+        </button>
+        <button
+          (click)="openFilePicker()"
+          class="border border-outline-variant text-on-surface-variant hover:bg-slate-50 px-6 py-3 rounded-xl font-bold text-sm transition-all flex items-center gap-2 cursor-pointer"
+        >
+          <lucide-icon [img]="uploadIcon" class="w-5 h-5"></lucide-icon>
+          رفع صورة
+        </button>
+      </div>
+    </div>
+  } @else {
+    <!-- Scan Results -->
+    <div
+      class="bg-white rounded-2xl border border-outline-variant shadow-sm p-6 space-y-5 text-right"
+    >
+      <div class="flex items-center gap-3 bg-emerald-50 text-emerald-800 p-3 rounded-xl">
+        <lucide-icon [img]="checkCircleIcon" class="w-6 h-6"></lucide-icon>
+        <span class="font-bold text-sm">تم التعرف على الوصفة بنجاح (دقة: ٩٨٪)</span>
+      </div>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div class="bg-surface-container-low rounded-xl p-3">
+          <p class="text-xs text-outline mb-1">اسم الدواء</p>
+          <p class="font-bold text-on-background">بانادول اكسترا</p>
+        </div>
+        <div class="bg-surface-container-low rounded-xl p-3">
+          <p class="text-xs text-outline mb-1">الجرعة</p>
+          <p class="font-bold text-on-background">٥٠٠ ملغ - قرص واحد</p>
+        </div>
+        <div class="bg-surface-container-low rounded-xl p-3">
+          <p class="text-xs text-outline mb-1">التكرار</p>
+          <p class="font-bold text-on-background">٣ مرات يومياً</p>
+        </div>
+        <div class="bg-surface-container-low rounded-xl p-3">
+          <p class="text-xs text-outline mb-1">المدة</p>
+          <p class="font-bold text-on-background">لمدة ٥ أيام</p>
+        </div>
+      </div>
+
+      <div class="bg-danger-container p-3 rounded-xl flex items-center gap-2 text-right">
+        <lucide-icon [img]="alertTriangleIcon" class="w-5 h-5 text-danger shrink-0"></lucide-icon>
+        <p class="text-sm font-bold text-on-danger-container">
+          تحذير: تعارض محتمل مع دواء وارفارين. راجع الطبيب.
+        </p>
+      </div>
+
+      <div class="bg-surface-container-low rounded-xl p-3 text-xs text-outline">
+        <p>رمز السجل: EDA-REG-109283-MET-01</p>
+        <p>الاسم الكيميائي: Metformin Hydrochloride</p>
+      </div>
+    </div>
+
+    <div class="flex gap-3">
+      <button
+        (click)="scanned = false"
+        class="flex-1 border border-outline-variant text-on-surface-variant hover:bg-slate-50 py-3 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 cursor-pointer"
+      >
+        <lucide-icon [img]="rotateCcwIcon" class="w-5 h-5"></lucide-icon>
+        مسح وصفة أخرى
+      </button>
+      <button
+        routerLink="/patient"
+        class="flex-1 bg-primary hover:bg-primary-dark text-white py-3 rounded-xl font-bold text-sm transition-all cursor-pointer"
+      >
+        العودة للرئيسية
+      </button>
+    </div>
+  }
+</section>

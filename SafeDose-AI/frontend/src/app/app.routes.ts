@@ -13,6 +13,7 @@ import { Splash } from './features/splash/splash';
 import { NotFound } from './shared/components/not-found/not-found';
 import { MainLayout } from './layouts/main-layout/main-layout';
 import { Register } from './features/register/register';
+import { CaregiverResults } from './features/caregiver-results/caregiver-results';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'home', pathMatch: 'full' },
@@ -56,6 +57,10 @@ export const routes: Routes = [
       {
         path: 'caregiver-review',
         component: CaregiverReview,
+      },
+      {
+        path: 'caregiver-results',
+        component: CaregiverResults,
       },
       {
         path: 'admin',

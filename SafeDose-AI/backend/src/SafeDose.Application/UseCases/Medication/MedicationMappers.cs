@@ -1,13 +1,14 @@
-using SafeDose.Application.DTOs;
+﻿using SafeDose.Application.DTOs;
 using SafeDose.Domain.Entities;
 
 namespace SafeDose.Application.UseCases.Medication;
 
-// Shared mapping + Arabic label resolvers — used by all medication use cases.
+// Shared mapping + Arabic label resolvers - used by all medication use cases.
 internal static class MedicationMappers
 {
     public static MedicationResponseDto ToDto(PatientMedication pm)
     {
+        var isVerified = pm.Drug?.IsVerified ?? false;
         return new MedicationResponseDto(
             PatientMedicationId: pm.PatientMedicationId,
             PatientId: pm.PatientId,
@@ -22,7 +23,9 @@ internal static class MedicationMappers
             MealTiming: pm.MealTiming,
             Status: pm.Status,
             StatusArabic: StatusLabel(pm.Status),
-            MealTimingArabic: MealTimingLabel(pm.MealTiming)
+            MealTimingArabic: MealTimingLabel(pm.MealTiming),
+            IsVerified: isVerified,
+            VerificationLabelArabic: isVerified ? "موثق" : "غير موثق"
         );
     }
 

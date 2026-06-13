@@ -28,9 +28,9 @@ public class SqlPrescriptionRepository : IPrescriptionRepository
             {
                 foreach (var drug in prescription.Drugs)
                 {
-                    if (drug.PatientMedication != null)
+                    foreach (var patientMedication in drug.PatientMedications)
                     {
-                        drug.PatientMedication.PrescriptionId = prescription.PrescriptionId;
+                        patientMedication.PrescriptionId = prescription.PrescriptionId;
                     }
                 }
                 // Save again to update the PrescriptionId in PatientMedications

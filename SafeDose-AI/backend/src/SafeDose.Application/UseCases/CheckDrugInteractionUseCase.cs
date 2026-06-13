@@ -1,4 +1,4 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 using SafeDose.Application.DTOs;
 using SafeDose.Application.Interfaces;
 using SafeDose.Domain.Entities;
@@ -7,12 +7,12 @@ using SafeDose.Domain.Services;
 
 namespace SafeDose.Application.UseCases;
 
-// THE HERO USE CASE — orchestrates the full Drug Interaction pipeline.
+// Orchestrates the drug interaction pipeline.
 //
-// Order of checks (highest-severity wins):
-//   1. Input validation (1-6 drugs, exist in catalog, no self-duplicates)
-//   2. Duplicate detection (same drug or same name twice)
-//   3. Cache lookup — return recent identical result
+// Order:
+//   1. Validate input (1-6 drugs, exist in catalog)
+//   2. Detect duplicates
+//   3. Cache lookup
 //   4. HARD RULE: allergy match → Level 3 (no LLM needed)
 //   5. HARD RULE: critical-pair table → Level 3 (no LLM needed)
 //   6. Load patient context (allergies, conditions, current meds)
@@ -65,43 +65,54 @@ public class CheckDrugInteractionUseCase
 
     public async Task<CheckInteractionsResponseDto> ExecuteAsync(
         CheckInteractionsRequestDto request,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        string? accountId = null)
     {
-        // ════════════ 1. INPUT VALIDATION ════════════
+        // INPUT VALIDATION
         if (request.DrugIds is null || request.DrugIds.Length == 0)
             throw new ArgumentException("At least one drug must be selected");
         if (request.DrugIds.Length > 6)
             throw new ArgumentException("Maximum 6 drugs per check (UI limit)");
 
         var distinctIds = request.DrugIds.Distinct().ToArray();
-        var drugs = await _drugRepository.GetByIdsAsync(distinctIds);
-        if (drugs.Count != distinctIds.Length)
+        var allDrugs = await _drugRepository.GetByIdsAsync(distinctIds);
+        if (allDrugs.Count != distinctIds.Length)
             throw new ArgumentException("One or more drug IDs not found in catalog");
 
-        // ════════════ 2. DUPLICATE DETECTION ════════════
+        // Skip unverified drugs from the interaction check (they have no catalog match,
+        // so we cannot reliably check what they interact with).
+        var drugs = allDrugs.Where(d => d.IsVerified).ToList();
+        if (drugs.Count == 0)
+            throw new ArgumentException("No verified drugs to check - selected drugs are not in the catalog");
+
+        // DUPLICATE DETECTION
         var duplicates = _duplicateDetector.Detect(drugs);
 
-        // ════════════ 3. CACHE LOOKUP ════════════
+        // CACHE LOOKUP
         var cacheKey = _cacheHasher.Build(distinctIds, request.PatientId);
         var cached = await _interactionRepository.GetCachedByKeyAsync(
             cacheKey, TimeSpan.FromHours(1));
         if (cached != null)
             return MapToResponse(cached, drugs);
 
-        // ════════════ 4. LOAD PATIENT CONTEXT ════════════
+        // LOAD PATIENT CONTEXT
         Patient? patient = null;
         IReadOnlyList<PatientActiveMedication> currentMeds = Array.Empty<PatientActiveMedication>();
         if (request.PatientId.HasValue)
         {
             patient = await _patientRepository.GetByIdAsync(request.PatientId.Value);
-            if (patient != null)
-            {
-                currentMeds = await _patientMeds.GetActiveMedicationsForPatientAsync(
-                    request.PatientId.Value, cancellationToken);
-            }
+            if (patient == null)
+                throw new ArgumentException("Patient not found");
+
+            if (!string.IsNullOrWhiteSpace(accountId) &&
+                !string.Equals(patient.AccountId, accountId, StringComparison.Ordinal))
+                throw new UnauthorizedAccessException("This patient does not belong to you");
+
+            currentMeds = await _patientMeds.GetActiveMedicationsForPatientAsync(
+                request.PatientId.Value, cancellationToken);
         }
 
-        // ════════════ 5. HARD RULE — ALLERGY CHECK ════════════
+        // HARD RULE - ALLERGY CHECK
         var allergyResult = AllergyMatchResult.NoMatch();
         if (patient != null)
         {
@@ -109,7 +120,7 @@ public class CheckDrugInteractionUseCase
             allergyResult = _allergyMatcher.Check(drugs.Select(d => d.DrugName), allergies);
         }
 
-        // ════════════ 6. HARD RULE — CRITICAL-PAIR CHECK ════════════
+        // HARD RULE - CRITICAL-PAIR CHECK
         var allIdsForPairCheck = distinctIds
             .Concat(currentMeds.Select(m => m.DrugId))
             .Distinct()
@@ -125,7 +136,7 @@ public class CheckDrugInteractionUseCase
             .FindByScientificNamesAsync(allScientificNames);
         var allCriticalPairs = criticalPairs.Concat(scientificCriticalPairs).ToArray();
 
-        // ════════════ 7. FAST-FAIL on hard rules ════════════
+        // FAST-FAIL on hard rules
         LangflowInteractionResult verdict;
         if (allergyResult.HasMatch)
         {
@@ -137,7 +148,7 @@ public class CheckDrugInteractionUseCase
         }
         else
         {
-            // ════════════ 8. CALL LANGFLOW ════════════
+            // CALL LANGFLOW
             var langflowRequest = BuildLangflowRequest(drugs, patient, currentMeds);
             LangflowInteractionResult? llmResult = null;
             try
@@ -147,12 +158,12 @@ public class CheckDrugInteractionUseCase
             }
             catch
             {
-                // swallow — fall back below
+                // swallow - fall back below
             }
             verdict = llmResult ?? BuildPrecautionaryVerdict(drugs);
         }
 
-        // ════════════ 9. COMBINE SIGNALS via SeverityCalculator ════════════
+        // COMBINE SIGNALS via SeverityCalculator
         var finalLevel = _severityCalc.Calculate(new SeveritySignals(
             HasAllergyMatch: allergyResult.HasMatch,
             HasCriticalPairMatch: allCriticalPairs.Length > 0,
@@ -165,15 +176,16 @@ public class CheckDrugInteractionUseCase
             verdict = verdict with { Level = finalLevel };
         }
 
-        // ════════════ 10. PERSIST ════════════
+        // PERSIST
         var consentRecordId = await ResolveConsentRecordIdAsync(patient);
         var saved = await PersistAsync(
             request, distinctIds, drugs, cacheKey, verdict,
             modelVersion: verdict.ModelVersion,
             pineconeVersion: "safedose-drugs-v1",
-            consentRecordId: consentRecordId);
+            consentRecordId: consentRecordId,
+            accountId: patient?.AccountId);
 
-        // ════════════ 11. COMPLIANCE AUDIT ════════════
+        // COMPLIANCE AUDIT
         if (patient != null)
         {
             await _audit.WriteAsync(new AuditLogEntry(
@@ -185,13 +197,10 @@ public class CheckDrugInteractionUseCase
             ), cancellationToken);
         }
 
-        // ════════════ 12. RESPONSE ════════════
+        // RESPONSE
         return MapToResponse(saved, drugs);
     }
 
-    // ─────────────────────────────────────────────
-    // Verdict builders
-    // ─────────────────────────────────────────────
     private static LangflowInteractionResult BuildAllergyVerdict(
         IReadOnlyList<Drug> drugs,
         AllergyMatchResult allergy)
@@ -260,9 +269,6 @@ public class CheckDrugInteractionUseCase
         );
     }
 
-    // ─────────────────────────────────────────────
-    // Helpers
-    // ─────────────────────────────────────────────
     private static LangflowInteractionRequest BuildLangflowRequest(
         IReadOnlyList<Drug> drugs,
         Patient? patient,
@@ -295,8 +301,7 @@ public class CheckDrugInteractionUseCase
 
     private async Task<int?> ResolveConsentRecordIdAsync(Patient? patient)
     {
-        // For MVP: skip lookup and return null. When Andrew's IConsentRepository
-        // is wired through, we'll query the latest active consent here.
+        // TODO: query latest active consent record once IConsentRepository is available.
         await Task.CompletedTask;
         return null;
     }
@@ -309,7 +314,8 @@ public class CheckDrugInteractionUseCase
         LangflowInteractionResult verdict,
         string modelVersion,
         string pineconeVersion,
-        int? consentRecordId)
+        int? consentRecordId,
+        string? accountId)
     {
         var check = new InteractionCheck
         {
@@ -329,6 +335,7 @@ public class CheckDrugInteractionUseCase
             PineconeIndexVersion = pineconeVersion,
             CacheKey = cacheKey,
             ConsentRecordId = consentRecordId,
+            AccountId = accountId,
             CheckedAt = DateTime.UtcNow,
         };
 

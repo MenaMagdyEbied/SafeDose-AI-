@@ -2,7 +2,7 @@ using SafeDose.Application.DTOs;
 
 namespace SafeDose.Application.UseCases;
 
-// UC-002 — quick two-drug check WITHOUT patient context.
+// quick two-drug check WITHOUT patient context.
 // Just routes through the main use case with PatientId=null and SaveResult=true.
 // Separate class so the controller has a clean intent + we can change behavior independently.
 public class CheckStandaloneInteractionUseCase

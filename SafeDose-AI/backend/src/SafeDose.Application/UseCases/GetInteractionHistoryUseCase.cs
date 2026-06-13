@@ -9,17 +9,25 @@ namespace SafeDose.Application.UseCases;
 public class GetInteractionHistoryUseCase
 {
     private readonly IInteractionRepository _interactionRepository;
+    private readonly IPatientRepository _patientRepository;
 
-    public GetInteractionHistoryUseCase(IInteractionRepository interactionRepository)
+    public GetInteractionHistoryUseCase(
+        IInteractionRepository interactionRepository,
+        IPatientRepository patientRepository)
     {
         _interactionRepository = interactionRepository;
+        _patientRepository = patientRepository;
     }
 
     public async Task<PaginatedListDto<InteractionHistoryItemDto>> ExecuteAsync(
         int patientId,
+        string accountId,
         int limit = 20,
         int offset = 0)
     {
+        if (!await _patientRepository.ExistsForAccountAsync(patientId, accountId))
+            throw new UnauthorizedAccessException("This patient does not belong to you");
+
         if (limit < 1) limit = 1;
         if (limit > 100) limit = 100;
         if (offset < 0) offset = 0;

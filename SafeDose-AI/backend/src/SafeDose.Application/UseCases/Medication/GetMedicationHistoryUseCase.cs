@@ -3,7 +3,7 @@ using SafeDose.Application.Interfaces;
 
 namespace SafeDose.Application.UseCases.Medication;
 
-// FR-432 — full history grouped by Status.
+// full history grouped by Status.
 public class GetMedicationHistoryUseCase
 {
     private readonly IPatientMedicationRepository _meds;

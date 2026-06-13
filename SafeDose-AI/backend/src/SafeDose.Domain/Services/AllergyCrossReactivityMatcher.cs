@@ -3,7 +3,7 @@ namespace SafeDose.Domain.Services;
 // Pure-logic safety check: does ANY drug in the user's selection
 // match (or cross-react with) any of the patient's known allergies?
 //
-// Fires BEFORE the LLM — if true, return Level 3 immediately.
+// Fires BEFORE the LLM - if true, return Level 3 immediately.
 // No SQL, no HTTP, no DI. Easy to unit-test.
 public class AllergyCrossReactivityMatcher
 {

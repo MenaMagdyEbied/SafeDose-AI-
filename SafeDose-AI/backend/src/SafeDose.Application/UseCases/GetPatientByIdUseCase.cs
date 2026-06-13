@@ -3,7 +3,7 @@ using SafeDose.Application.Interfaces;
 
 namespace SafeDose.Application.UseCases;
 
-// FR-203 — fetch single patient, verify ownership.
+// fetch single patient, verify ownership.
 public class GetPatientByIdUseCase
 {
     private readonly IPatientRepository _patients;

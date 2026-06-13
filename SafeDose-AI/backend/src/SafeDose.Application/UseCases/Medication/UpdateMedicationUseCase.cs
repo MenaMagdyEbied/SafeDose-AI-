@@ -4,8 +4,8 @@ using SafeDose.Domain.Entities;
 
 namespace SafeDose.Application.UseCases.Medication;
 
-// FR-411 — partial update of editable fields.
-// FR-412 — DrugId and PatientId are IMMUTABLE here.
+// partial update of editable fields.
+// DrugId and PatientId are IMMUTABLE here.
 public class UpdateMedicationUseCase
 {
     private readonly IPatientMedicationRepository _meds;

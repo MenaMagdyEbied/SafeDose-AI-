@@ -3,8 +3,8 @@ using SafeDose.Domain.Entities;
 
 namespace SafeDose.Application.UseCases;
 
-// FR-205/FR-206 — soft delete (deactivate) an owned Patient.
-// Never hard delete — medical record retention.
+// soft delete (deactivate) an owned Patient.
+// Never hard delete - medical record retention.
 public class DeactivatePatientUseCase
 {
     private readonly IPatientRepository _patients;

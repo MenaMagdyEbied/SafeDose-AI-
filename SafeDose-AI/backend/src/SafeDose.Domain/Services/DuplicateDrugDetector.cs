@@ -1,8 +1,8 @@
-using SafeDose.Domain.Entities;
+﻿using SafeDose.Domain.Entities;
 
 namespace SafeDose.Domain.Services;
 
-// Pure logic — detects when the user selected:
+// Pure logic - detects when the user selected:
 //   1. The EXACT same drug (same DrugId) twice
 //   2. Different brands with the SAME drug name (e.g. "Aspirin" and "Aspocid")
 public class DuplicateDrugDetector

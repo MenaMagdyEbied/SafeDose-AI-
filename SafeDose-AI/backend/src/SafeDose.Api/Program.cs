@@ -1,6 +1,3 @@
-// SafeDose AI - .NET Web API
-// Composition root — wires interfaces to implementations for ALL modules.
-
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -25,16 +22,14 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ─── Framework services ─────────────────────────────────────────
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddHttpContextAccessor();
 
-// ─── Database ───────────────────────────────────────────────────
 builder.Services.AddDbContext<AppDbContext>(opt =>
     opt.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// ─── Module 1: Identity & Auth (Andrew) ─────────────────────────
+// Identity + JWT
 builder.Services.Configure<JWT>(builder.Configuration.GetSection("JWT"));
 
 builder.Services
@@ -68,22 +63,19 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-// ─── Module 5: Drug Interaction Checker (Mina) ──────────────────
-
-// Domain services (pure logic — singletons)
+// Domain services
 builder.Services.AddSingleton<AllergyCrossReactivityMatcher>();
 builder.Services.AddSingleton<SeverityCalculator>();
 builder.Services.AddSingleton<DuplicateDrugDetector>();
 builder.Services.AddSingleton<CacheKeyHasher>();
 
-// Repositories (Infrastructure)
+// Repositories
 builder.Services.AddScoped<IDrugRepository, SqlDrugRepository>();
 builder.Services.AddScoped<IInteractionRepository, SqlInteractionRepository>();
 builder.Services.AddScoped<ICriticalPairLookup, SqlCriticalPairLookup>();
 builder.Services.AddScoped<IPatientRepository, SqlPatientRepository>();
 
-// Module 4's full repository ALSO implements Module 5's narrow Provider.
-// Register ONCE, expose under both interfaces.
+// One class, two interfaces (full repo + read-only provider)
 builder.Services.AddScoped<SqlPatientMedicationRepository>();
 builder.Services.AddScoped<IPatientMedicationRepository>(
     sp => sp.GetRequiredService<SqlPatientMedicationRepository>());
@@ -92,7 +84,7 @@ builder.Services.AddScoped<IPatientMedicationProvider>(
 
 builder.Services.AddScoped<IAuditLogService, SqlAuditLogService>();
 
-// Langflow HTTP client with 3x exponential-backoff retry (NFR-202)
+// Langflow client with retry
 builder.Services
     .AddHttpClient<ILangflowClient, LangflowClient>(client =>
     {
@@ -103,7 +95,7 @@ builder.Services
         .WaitAndRetryAsync(3, attempt =>
             TimeSpan.FromMilliseconds(200 * Math.Pow(3, attempt - 1))));
 
-// Use cases
+// Drug Interaction use cases
 builder.Services.AddScoped<SearchDrugsUseCase>();
 builder.Services.AddScoped<CheckDrugInteractionUseCase>();
 builder.Services.AddScoped<CheckStandaloneInteractionUseCase>();
@@ -114,19 +106,24 @@ builder.Services.AddScoped<DeleteInteractionCheckUseCase>();
 builder.Services.AddScoped<GetPatientProfileSnapshotUseCase>();
 builder.Services.AddScoped<SeedCriticalPairsUseCase>();
 
-// Seeders + hosted services
+// CriticalPair seeder runs on startup
 builder.Services.AddScoped<CriticalPairSeeder>();
 builder.Services.AddScoped<ICriticalPairSeeder>(sp => sp.GetRequiredService<CriticalPairSeeder>());
 builder.Services.AddHostedService<CriticalPairSeederHostedService>();
 
-// ─── Module 2: Patient Profile (Fady) ───────────────────────────
+// DrugCatalog seeder runs on startup (reads CSV)
+builder.Services.AddScoped<DrugCatalogSeeder>();
+builder.Services.AddScoped<IDrugCatalogSeeder>(sp => sp.GetRequiredService<DrugCatalogSeeder>());
+builder.Services.AddHostedService<DrugCatalogSeederHostedService>();
+
+// Patient use cases
 builder.Services.AddScoped<CreatePatientUseCase>();
 builder.Services.AddScoped<UpdatePatientUseCase>();
 builder.Services.AddScoped<GetMyPatientsUseCase>();
 builder.Services.AddScoped<GetPatientByIdUseCase>();
 builder.Services.AddScoped<DeactivatePatientUseCase>();
 
-// ─── Module 4: Medication Management (Ahmed) ────────────────────
+// Medication use cases
 builder.Services.AddScoped<AddMedicationManuallyUseCase>();
 builder.Services.AddScoped<AddMedicationsFromPrescriptionUseCase>();
 builder.Services.AddScoped<UpdateMedicationUseCase>();
@@ -135,7 +132,7 @@ builder.Services.AddScoped<GetActiveMedicationsUseCase>();
 builder.Services.AddScoped<GetMedicationHistoryUseCase>();
 builder.Services.AddScoped<GetMedicationByIdUseCase>();
 
-// ─── Swagger with JWT bearer ────────────────────────────────────
+// Swagger with JWT bearer
 builder.Services.AddSwaggerGen(option =>
 {
     option.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
@@ -145,7 +142,7 @@ builder.Services.AddSwaggerGen(option =>
         Scheme = "Bearer",
         BearerFormat = "JWT",
         In = ParameterLocation.Header,
-        Description = "JWT Authorization header using the Bearer scheme. \r\n\r\nEnter 'Bearer' [space] and then your token.\r\nExample: \"Bearer 12345abcdef\""
+        Description = "JWT Authorization header using the Bearer scheme.\r\n\r\nEnter 'Bearer' [space] and then your token.\r\nExample: \"Bearer 12345abcdef\""
     });
 
     option.AddSecurityRequirement(new OpenApiSecurityRequirement
@@ -166,7 +163,6 @@ builder.Services.AddSwaggerGen(option =>
     });
 });
 
-// ─── CORS — single policy for Doaa's frontend ───────────────────
 const string CorsPolicy = "allowAll";
 builder.Services.AddCors(options =>
 {
@@ -176,7 +172,6 @@ builder.Services.AddCors(options =>
               .AllowAnyMethod());
 });
 
-// ─── Pipeline ───────────────────────────────────────────────────
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())

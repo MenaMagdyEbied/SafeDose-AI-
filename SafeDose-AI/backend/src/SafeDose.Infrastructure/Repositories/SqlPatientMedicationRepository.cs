@@ -7,7 +7,7 @@ namespace SafeDose.Infrastructure.Repositories;
 
 // Replaces SqlPatientMedicationProvider.
 // Implements BOTH IPatientMedicationRepository (Module 4 full CRUD)
-// AND IPatientMedicationProvider (Module 5 read-only contract) —
+// AND IPatientMedicationProvider (Module 5 read-only contract) -
 // so a single DI registration serves both modules.
 public class SqlPatientMedicationRepository
     : IPatientMedicationRepository, IPatientMedicationProvider
@@ -20,7 +20,7 @@ public class SqlPatientMedicationRepository
         _db = db;
     }
 
-    // ─── IPatientMedicationProvider (Module 5) ──────────────────
+    // ─── IPatientMedicationProvider ──────────────────
     public async Task<IReadOnlyList<PatientActiveMedication>> GetActiveMedicationsForPatientAsync(
         int patientId, CancellationToken cancellationToken = default)
     {
@@ -38,7 +38,7 @@ public class SqlPatientMedicationRepository
             .ToListAsync(cancellationToken);
     }
 
-    // ─── IPatientMedicationRepository (Module 4) ────────────────
+    // ─── IPatientMedicationRepository ────────────────
     public Task<PatientMedication?> GetByIdAsync(int id)
         => _db.PatientMedications
             .Include(pm => pm.Drug)

@@ -3,7 +3,7 @@ using SafeDose.Domain.Entities;
 namespace SafeDose.Application.Interfaces;
 
 // Read-only lookup over the seeded CriticalPair table.
-// This is the SAFETY FLOOR — fires before any LLM is called.
+// This is the SAFETY FLOOR - fires before any LLM is called.
 // If ANY pair from the user's drug list matches a critical pair,
 // we return Level 3 immediately, no LLM needed.
 public interface ICriticalPairLookup

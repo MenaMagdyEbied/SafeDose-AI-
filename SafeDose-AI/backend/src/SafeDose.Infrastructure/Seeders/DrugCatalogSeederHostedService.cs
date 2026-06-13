@@ -1,19 +1,18 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using SafeDose.Application.Interfaces;
 
 namespace SafeDose.Infrastructure.Seeders;
 
-// Runs once on application startup to ensure critical pairs are seeded.
-// Safe to run repeatedly - seeder is idempotent.
-public class CriticalPairSeederHostedService : IHostedService
+public class DrugCatalogSeederHostedService : IHostedService
 {
     private readonly IServiceProvider _services;
-    private readonly ILogger<CriticalPairSeederHostedService> _logger;
+    private readonly ILogger<DrugCatalogSeederHostedService> _logger;
 
-    public CriticalPairSeederHostedService(
+    public DrugCatalogSeederHostedService(
         IServiceProvider services,
-        ILogger<CriticalPairSeederHostedService> logger)
+        ILogger<DrugCatalogSeederHostedService> logger)
     {
         _services = services;
         _logger = logger;
@@ -24,13 +23,12 @@ public class CriticalPairSeederHostedService : IHostedService
         try
         {
             using var scope = _services.CreateScope();
-            var seeder = scope.ServiceProvider.GetRequiredService<CriticalPairSeeder>();
+            var seeder = scope.ServiceProvider.GetRequiredService<IDrugCatalogSeeder>();
             await seeder.SeedAsync(cancellationToken);
         }
         catch (Exception ex)
         {
-            // Never crash the app because seeding failed - log and continue.
-            _logger.LogError(ex, "CriticalPair seeding failed on startup");
+            _logger.LogError(ex, "DrugCatalog seeding failed on startup");
         }
     }
 

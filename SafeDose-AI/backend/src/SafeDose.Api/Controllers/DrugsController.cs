@@ -1,9 +1,9 @@
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using SafeDose.Application.UseCases;
 
 namespace SafeDose.Api.Controllers;
 
-// Powers the Page-1 autocomplete search box for the 22,500-drug catalog.
+// Powers the autocomplete search box for the Egyptian drug catalog (24,892 rows).
 [ApiController]
 [Route("api/drugs")]
 public class DrugsController : ControllerBase
@@ -15,7 +15,6 @@ public class DrugsController : ControllerBase
         _searchDrugs = searchDrugs;
     }
 
-    // GET /api/drugs/search?q=أسبر&limit=10
     // Returns top matches for autocomplete dropdown.
     [HttpGet("search")]
     public async Task<IActionResult> Search(

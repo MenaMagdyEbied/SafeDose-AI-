@@ -4,7 +4,7 @@ using SafeDose.Domain.Entities;
 
 namespace SafeDose.Application.UseCases.Medication;
 
-// FR-402 — bulk-add medications from a confirmed prescription.
+// bulk-add medications from a confirmed prescription.
 // Called by Module 3 after patient confirms OCR results.
 // Validates EVERY drug exists before creating ANY of them (transactional integrity).
 public class AddMedicationsFromPrescriptionUseCase
@@ -13,17 +13,20 @@ public class AddMedicationsFromPrescriptionUseCase
     private readonly IPatientRepository _patients;
     private readonly IDrugRepository _drugs;
     private readonly IAuditLogService _audit;
+    private readonly CheckDrugInteractionUseCase _interactionCheck;
 
     public AddMedicationsFromPrescriptionUseCase(
         IPatientMedicationRepository meds,
         IPatientRepository patients,
         IDrugRepository drugs,
-        IAuditLogService audit)
+        IAuditLogService audit,
+        CheckDrugInteractionUseCase interactionCheck)
     {
         _meds = meds;
         _patients = patients;
         _drugs = drugs;
         _audit = audit;
+        _interactionCheck = interactionCheck;
     }
 
     public async Task<int> ExecuteAsync(
@@ -38,7 +41,7 @@ public class AddMedicationsFromPrescriptionUseCase
             throw new ArgumentException("At least one medication required");
 
         if (dto.Medications.Length > 20)
-            throw new ArgumentException("Maximum 20 medications per bulk add (NFR-403)");
+            throw new ArgumentException("Maximum 20 medications per bulk add");
 
         // Ownership
         var patient = await _patients.GetByIdAsync(dto.PatientId)
@@ -59,6 +62,8 @@ public class AddMedicationsFromPrescriptionUseCase
             AddMedicationManuallyUseCase.ValidateFrequency(item.Frequency);
             AddMedicationManuallyUseCase.ValidateDates(item.StartDate, item.EndDate);
         }
+
+        await TriggerInteractionCheckAsync(dto.PatientId, drugIds, cancellationToken);
 
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
         var medications = dto.Medications.Select(item => new PatientMedication
@@ -82,10 +87,30 @@ public class AddMedicationsFromPrescriptionUseCase
             AccountId: accountId,
             EntityName: nameof(PatientMedication),
             EntityRowId: dto.PrescriptionId,
-            ActionType: 2,
+            ActionType: 1,
             AccessReason: $"Bulk add {medications.Count} medications from Prescription #{dto.PrescriptionId}"
         ), cancellationToken);
 
         return medications.Count;
+    }
+
+    private async Task TriggerInteractionCheckAsync(
+        int patientId,
+        int[] drugIds,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            await _interactionCheck.ExecuteAsync(
+                new CheckInteractionsRequestDto(
+                    DrugIds: drugIds,
+                    PatientId: patientId,
+                    TriggerType: 2),
+                cancellationToken);
+        }
+        catch
+        {
+            // Bulk medication save should remain available during AI pipeline outages.
+        }
     }
 }

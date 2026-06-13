@@ -5,7 +5,7 @@ using SafeDose.Domain.Enums;
 
 namespace SafeDose.Application.UseCases;
 
-// History detail view — when user taps a row in the history list.
+// History detail view - when user taps a row in the history list.
 // Reconstructs the full Page-2 response from the stored InteractionCheck.
 public class GetInteractionCheckByIdUseCase
 {
@@ -20,10 +20,15 @@ public class GetInteractionCheckByIdUseCase
         _drugs = drugs;
     }
 
-    public async Task<CheckInteractionsResponseDto?> ExecuteAsync(int interactionCheckId)
+    public async Task<CheckInteractionsResponseDto?> ExecuteAsync(
+        int interactionCheckId,
+        string accountId)
     {
         var check = await _interactions.GetByIdAsync(interactionCheckId);
         if (check == null) return null;
+
+        if (!string.Equals(check.AccountId, accountId, StringComparison.Ordinal))
+            throw new UnauthorizedAccessException("This interaction check does not belong to you");
 
         // Rebuild the analyzed-drugs list from the stored JSON
         var drugIds = ExtractDrugIds(check.CheckedDrugsJson);

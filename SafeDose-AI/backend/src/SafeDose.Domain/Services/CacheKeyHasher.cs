@@ -3,7 +3,7 @@ using System.Text;
 
 namespace SafeDose.Domain.Services;
 
-// Pure utility — builds a deterministic SHA-256 key for de-duplication caching.
+// Pure utility - builds a deterministic SHA-256 key for de-duplication caching.
 // Same drug set + same patient = same key, regardless of selection order.
 public class CacheKeyHasher
 {

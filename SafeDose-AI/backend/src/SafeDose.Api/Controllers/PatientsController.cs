@@ -7,9 +7,8 @@ using SafeDose.Shared.Errors;
 
 namespace SafeDose.Api.Controllers;
 
-// Module 2 — Patient Profile.
-// Every endpoint requires a valid JWT from Module 1 (Auth).
-// Patients are ALWAYS scoped to the calling Account (ownership enforced in use cases).
+// Every endpoint requires a valid JWT from Module 1 (Auth)
+// Patients are ALWAYS scoped to the calling Account
 [ApiController]
 [Route("api/patients")]
 [Authorize]
@@ -35,7 +34,6 @@ public class PatientsController : ControllerBase
         _deactivate = deactivate;
     }
 
-    // POST /api/patients — create new patient linked to current account
     [HttpPost]
     public async Task<IActionResult> Create(
         [FromBody] CreatePatientDto dto,
@@ -56,7 +54,6 @@ public class PatientsController : ControllerBase
         }
     }
 
-    // GET /api/patients/my — list current account's patients
     [HttpGet("my")]
     public async Task<IActionResult> GetMy([FromQuery] bool includeInactive = false)
     {
@@ -67,7 +64,6 @@ public class PatientsController : ControllerBase
         return Ok(list);
     }
 
-    // GET /api/patients/{id} — single patient (must be owned by current account)
     [HttpGet("{id:int}")]
     public async Task<IActionResult> GetById(int id)
     {
@@ -89,7 +85,6 @@ public class PatientsController : ControllerBase
         }
     }
 
-    // PUT /api/patients/{id} — update editable fields
     [HttpPut("{id:int}")]
     public async Task<IActionResult> Update(
         int id,
@@ -119,7 +114,6 @@ public class PatientsController : ControllerBase
         }
     }
 
-    // DELETE /api/patients/{id} — soft delete (deactivate)
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
     {
@@ -133,10 +127,9 @@ public class PatientsController : ControllerBase
         return NoContent();
     }
 
-    // ─── helpers ────────────────────────────────
     private string? GetAccountId()
     {
-        // Identity sets the user id as NameIdentifier claim (sub for JWT)
+        // Identity sets the user id as NameIdentifier claim 
         return User.FindFirstValue(ClaimTypes.NameIdentifier)
             ?? User.FindFirstValue("sub")
             ?? User.FindFirstValue("uid");

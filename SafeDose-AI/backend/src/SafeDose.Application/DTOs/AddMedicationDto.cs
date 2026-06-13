@@ -1,13 +1,15 @@
 namespace SafeDose.Application.DTOs;
 
-// Used by POST /api/medications — single manual add.
 public record AddMedicationDto(
     int PatientId,
-    int DrugId,
-    string? Dose = null,                    // e.g., "500 mg"
-    int? Frequency = null,                  // times per day
-    DateOnly? StartDate = null,             // defaults to today if null
+    string DrugName,
+    int? DrugCatalogId = null,
+    byte? Route = null,
+    string? Dose = null,
+    string? DoctorName = null,
+    int? Frequency = null,
+    DateOnly? StartDate = null,
     DateOnly? EndDate = null,
-    byte? MealTiming = null,                // 1=before, 2=with, 3=after, 4=bedtime
-    int? PrescriptionId = null              // null for fully-manual adds
+    byte? MealTiming = null,
+    int? PrescriptionId = null
 );

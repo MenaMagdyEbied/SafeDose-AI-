@@ -55,6 +55,7 @@ namespace SafeDose.Domain.ApplicationDbContext
         public DbSet<Payment> Payments { get; set; }
         public DbSet<Patient> Patients { get; set; }
         public DbSet<Drug> Drugs { get; set; }
+        public DbSet<DrugCatalog> DrugCatalogs { get; set; }
         public DbSet<Prescription> Prescriptions { get; set; }
         public DbSet<PatientMedication> PatientMedications { get; set; }
         public DbSet<PatientMedicationTime> PatientMedicationTimes { get; set; }

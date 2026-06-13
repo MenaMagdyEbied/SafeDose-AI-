@@ -5,9 +5,7 @@ using SafeDose.Domain.Entities;
 
 namespace SafeDose.Infrastructure.Repositories;
 
-// Reads PatientMedication directly from SQL.
-// When Ahmed (Module 4) ships his repository, we can swap this implementation
-// or keep this one — both layers will agree on the entity shape.
+// Reads active medications for a patient.
 public class SqlPatientMedicationProvider : IPatientMedicationProvider
 {
     private readonly AppDbContext _db;

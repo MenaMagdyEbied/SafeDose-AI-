@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SafeDose.Domain.ApplicationDbContext;
 
@@ -11,9 +12,11 @@ using SafeDose.Domain.ApplicationDbContext;
 namespace SafeDose.Domain.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260612152127_AlignModule245Contracts")]
+    partial class AlignModule245Contracts
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -446,7 +449,7 @@ namespace SafeDose.Domain.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("DrugId"));
 
                     b.Property<string>("AccountId")
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("DoctorName")
                         .HasMaxLength(150)
@@ -456,16 +459,10 @@ namespace SafeDose.Domain.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
-                    b.Property<int?>("DrugCatalogId")
-                        .HasColumnType("int");
-
                     b.Property<string>("DrugName")
                         .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
-
-                    b.Property<bool>("IsVerified")
-                        .HasColumnType("bit");
 
                     b.Property<int?>("PrescriptionId")
                         .HasColumnType("int");
@@ -475,62 +472,9 @@ namespace SafeDose.Domain.Migrations
 
                     b.HasKey("DrugId");
 
-                    b.HasIndex("AccountId");
-
-                    b.HasIndex("DrugCatalogId");
-
                     b.HasIndex("PrescriptionId");
 
-                    b.HasIndex("AccountId", "IsVerified");
-
                     b.ToTable("Drugs");
-                });
-
-            modelBuilder.Entity("SafeDose.Domain.Entities.DrugCatalog", b =>
-                {
-                    b.Property<int>("DrugCatalogId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("DrugCatalogId"));
-
-                    b.Property<string>("CommercialNameAr")
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
-                    b.Property<string>("CommercialNameEn")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
-                    b.Property<string>("DrugClass")
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
-                    b.Property<string>("Manufacturer")
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
-                    b.Property<decimal?>("PriceEgp")
-                        .HasColumnType("decimal(10,2)");
-
-                    b.Property<string>("Route")
-                        .HasMaxLength(80)
-                        .HasColumnType("nvarchar(80)");
-
-                    b.Property<string>("ScientificName")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.HasKey("DrugCatalogId");
-
-                    b.HasIndex("CommercialNameAr");
-
-                    b.HasIndex("CommercialNameEn");
-
-                    b.HasIndex("ScientificName");
-
-                    b.ToTable("DrugCatalogs");
                 });
 
             modelBuilder.Entity("SafeDose.Domain.Entities.FreeTierUsage", b =>
@@ -1251,17 +1195,10 @@ namespace SafeDose.Domain.Migrations
 
             modelBuilder.Entity("SafeDose.Domain.Entities.Drug", b =>
                 {
-                    b.HasOne("SafeDose.Domain.Entities.DrugCatalog", "DrugCatalog")
-                        .WithMany()
-                        .HasForeignKey("DrugCatalogId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
                     b.HasOne("SafeDose.Domain.Entities.Prescription", "Prescription")
                         .WithMany("Drugs")
                         .HasForeignKey("PrescriptionId")
                         .OnDelete(DeleteBehavior.SetNull);
-
-                    b.Navigation("DrugCatalog");
 
                     b.Navigation("Prescription");
                 });

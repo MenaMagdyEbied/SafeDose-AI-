@@ -1,10 +1,10 @@
-using SafeDose.Domain.Enums;
+﻿using SafeDose.Domain.Enums;
 
 namespace SafeDose.Domain.Entities
 {
     // Hard-coded dangerous drug combinations.
     // These ALWAYS return Level 3 (خطر) regardless of LLM availability.
-    // This is the safety floor — even if Langflow is down, these still fire.
+    // This is the safety floor - even if Langflow is down, these still fire.
     // Seeded once on first run from a static list (see CriticalPairSeeder).
     public class CriticalPair
     {
@@ -15,7 +15,7 @@ namespace SafeDose.Domain.Entities
         public int? DrugIdA { get; set; }
         public int? DrugIdB { get; set; }
 
-        // Used when DrugId is null — match by substring on scientific name
+        // Used when DrugId is null - match by substring on scientific name
         public string? ScientificNameA { get; set; }
         public string? ScientificNameB { get; set; }
 

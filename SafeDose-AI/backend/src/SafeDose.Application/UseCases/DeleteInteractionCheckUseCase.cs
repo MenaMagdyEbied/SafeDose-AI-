@@ -25,6 +25,9 @@ public class DeleteInteractionCheckUseCase
         var check = await _interactions.GetByIdAsync(interactionCheckId);
         if (check == null) return false;
 
+        if (!string.Equals(check.AccountId, requestedByAccountId, StringComparison.Ordinal))
+            throw new UnauthorizedAccessException("This interaction check does not belong to you");
+
         await _interactions.SoftDeleteAsync(interactionCheckId);
 
         await _audit.WriteAsync(new AuditLogEntry(

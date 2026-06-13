@@ -4,24 +4,26 @@ using SafeDose.Domain.Entities;
 
 namespace SafeDose.Application.UseCases.Medication;
 
-// FR-401 — add a single medication manually (no prescription source).
 public class AddMedicationManuallyUseCase
 {
     private readonly IPatientMedicationRepository _meds;
     private readonly IPatientRepository _patients;
     private readonly IDrugRepository _drugs;
     private readonly IAuditLogService _audit;
+    private readonly CheckDrugInteractionUseCase _interactionCheck;
 
     public AddMedicationManuallyUseCase(
         IPatientMedicationRepository meds,
         IPatientRepository patients,
         IDrugRepository drugs,
-        IAuditLogService audit)
+        IAuditLogService audit,
+        CheckDrugInteractionUseCase interactionCheck)
     {
         _meds = meds;
         _patients = patients;
         _drugs = drugs;
         _audit = audit;
+        _interactionCheck = interactionCheck;
     }
 
     public async Task<MedicationResponseDto> ExecuteAsync(
@@ -32,31 +34,54 @@ public class AddMedicationManuallyUseCase
         if (string.IsNullOrWhiteSpace(accountId))
             throw new ArgumentException("AccountId required");
 
-        // Ownership: caller must own the patient
+        if (string.IsNullOrWhiteSpace(dto.DrugName))
+            throw new ArgumentException("DrugName is required");
+
         var patient = await _patients.GetByIdAsync(dto.PatientId)
             ?? throw new ArgumentException("Patient not found");
         if (!string.Equals(patient.AccountId, accountId, StringComparison.Ordinal))
             throw new UnauthorizedAccessException("This patient does not belong to you");
 
-        // Drug must exist
-        var drug = await _drugs.GetByIdAsync(dto.DrugId)
-            ?? throw new ArgumentException("Drug not found in catalog");
-
         ValidateMealTiming(dto.MealTiming);
         ValidateFrequency(dto.Frequency);
         ValidateDates(dto.StartDate, dto.EndDate);
 
+        // Verify against catalog
+        DrugCatalog? catalogEntry = null;
+        if (dto.DrugCatalogId.HasValue)
+        {
+            catalogEntry = await _drugs.GetCatalogByIdAsync(dto.DrugCatalogId.Value);
+        }
+        if (catalogEntry == null)
+        {
+            catalogEntry = await _drugs.FindCatalogByExactNameAsync(dto.DrugName);
+        }
+
+        var drug = new Drug
+        {
+            AccountId = accountId,
+            DrugName = catalogEntry?.CommercialNameEn ?? dto.DrugName.Trim(),
+            Dose = dto.Dose,
+            DoctorName = dto.DoctorName,
+            Route = dto.Route,
+            PrescriptionId = dto.PrescriptionId,
+            DrugCatalogId = catalogEntry?.DrugCatalogId,
+            IsVerified = catalogEntry != null,
+        };
+
+        var drugId = await _drugs.CreateAsync(drug);
+
         var med = new PatientMedication
         {
             PatientId = dto.PatientId,
-            DrugId = dto.DrugId,
+            DrugId = drugId,
             PrescriptionId = dto.PrescriptionId,
             Dose = dto.Dose,
             Frequency = dto.Frequency,
             StartDate = dto.StartDate ?? DateOnly.FromDateTime(DateTime.UtcNow),
             EndDate = dto.EndDate,
             MealTiming = dto.MealTiming,
-            Status = 1,                           // active
+            Status = 1,
             AccountId = accountId,
         };
 
@@ -67,9 +92,17 @@ public class AddMedicationManuallyUseCase
             AccountId: accountId,
             EntityName: nameof(PatientMedication),
             EntityRowId: newId,
-            ActionType: 2,
-            AccessReason: "Medication added manually"
+            ActionType: 1,
+            AccessReason: drug.IsVerified
+                ? "Medication added manually (verified)"
+                : "Medication added manually (unverified)"
         ), cancellationToken);
+
+        // Only trigger interaction check for verified drugs
+        if (drug.IsVerified)
+        {
+            await TriggerInteractionCheckAsync(dto.PatientId, drugId, cancellationToken);
+        }
 
         return MedicationMappers.ToDto(med);
     }
@@ -90,5 +123,25 @@ public class AddMedicationManuallyUseCase
     {
         if (start.HasValue && end.HasValue && end.Value < start.Value)
             throw new ArgumentException("EndDate cannot be before StartDate");
+    }
+
+    private async Task TriggerInteractionCheckAsync(
+        int patientId,
+        int drugId,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            await _interactionCheck.ExecuteAsync(
+                new CheckInteractionsRequestDto(
+                    DrugIds: new[] { drugId },
+                    PatientId: patientId,
+                    TriggerType: 1),
+                cancellationToken);
+        }
+        catch
+        {
+            // Medication save must not fail if AI pipeline is unavailable
+        }
     }
 }

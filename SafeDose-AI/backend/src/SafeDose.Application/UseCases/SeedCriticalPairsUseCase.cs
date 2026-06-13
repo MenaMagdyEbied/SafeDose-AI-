@@ -2,7 +2,7 @@ using SafeDose.Application.Interfaces;
 
 namespace SafeDose.Application.UseCases;
 
-// Admin endpoint — manually trigger the CriticalPair seeder.
+// Admin endpoint - manually trigger the CriticalPair seeder.
 // Used when the table was wiped, or for adding new pairs in production.
 public class SeedCriticalPairsUseCase
 {
@@ -27,7 +27,7 @@ public class SeedCriticalPairsUseCase
             AccountId: adminAccountId,
             EntityName: nameof(SafeDose.Domain.Entities.CriticalPair),
             EntityRowId: 0,
-            ActionType: 2,                              // 2 = Write/Create
+            ActionType: 1,                              // 1 = Create
             AccessReason: $"Admin seeded {inserted} critical pairs"
         ), cancellationToken);
 

@@ -2,7 +2,7 @@ using SafeDose.Domain.Entities;
 
 namespace SafeDose.Application.Interfaces;
 
-// Full CRUD for PatientMedication — Module 4 owns this.
+// Full CRUD for PatientMedication
 // Extends the narrower IPatientMedicationProvider (read-only) used by Module 5.
 // One concrete class implements BOTH so DI stays clean.
 public interface IPatientMedicationRepository : IPatientMedicationProvider

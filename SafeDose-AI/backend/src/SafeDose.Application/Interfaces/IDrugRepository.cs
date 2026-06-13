@@ -3,21 +3,16 @@ using SafeDose.Domain.Entities;
 
 namespace SafeDose.Application.Interfaces;
 
-// Drug catalog access — 22,500 drugs in SQL.
-// Pinecone is a SEPARATE concern (semantic search for prescription parsing).
-// This repository is for fast SQL-indexed lookups: autocomplete + by-ID fetch.
 public interface IDrugRepository
 {
-    // Used by the Page-1 autocomplete dropdown.
-    // Searches BOTH Arabic name + English name + scientific name (LIKE / FREETEXT).
-    Task<IReadOnlyList<DrugSearchResultDto>> SearchAsync(string query, int limit = 10);
+    // Catalog (reference) operations - 24,892 drugs.
+    Task<IReadOnlyList<DrugSearchResultDto>> SearchCatalogAsync(string query, int limit = 10);
+    Task<DrugCatalog?> GetCatalogByIdAsync(int drugCatalogId);
+    Task<DrugCatalog?> FindCatalogByExactNameAsync(string name);
 
-    // Fetch a list of drugs by IDs (used when the user clicks Check with selected IDs).
+    // Patient's own Drug entries.
+    Task<int> CreateAsync(Drug drug);
     Task<IReadOnlyList<Drug>> GetByIdsAsync(IEnumerable<int> drugIds);
-
-    // Get a single drug
     Task<Drug?> GetByIdAsync(int drugId);
-
-    // Total count (for stats / admin)
     Task<int> CountAsync();
 }

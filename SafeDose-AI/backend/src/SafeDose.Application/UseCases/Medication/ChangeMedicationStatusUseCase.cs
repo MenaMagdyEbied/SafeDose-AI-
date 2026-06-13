@@ -1,22 +1,25 @@
 using SafeDose.Application.Interfaces;
+using SafeDose.Application.DTOs;
 using SafeDose.Domain.Entities;
 
 namespace SafeDose.Application.UseCases.Medication;
 
-// Handles all status transitions: pause, resume, stop.
-// FR-421: Active(1) ↔ Paused(2) freely
-// FR-422: any → Stopped(3) but Stopped cannot transition back
+// Handles pause / resume / stop status transitions.
+// Active(1) <-> Paused(2) freely. Any -> Stopped(3) is one-way.
 public class ChangeMedicationStatusUseCase
 {
     private readonly IPatientMedicationRepository _meds;
     private readonly IAuditLogService _audit;
+    private readonly CheckDrugInteractionUseCase _interactionCheck;
 
     public ChangeMedicationStatusUseCase(
         IPatientMedicationRepository meds,
-        IAuditLogService audit)
+        IAuditLogService audit,
+        CheckDrugInteractionUseCase interactionCheck)
     {
         _meds = meds;
         _audit = audit;
+        _interactionCheck = interactionCheck;
     }
 
     public async Task<bool> PauseAsync(int id, string accountId, CancellationToken ct = default)
@@ -45,6 +48,9 @@ public class ChangeMedicationStatusUseCase
         if (!fromAllowed.Contains(med.Status))
             throw new InvalidOperationException($"Cannot {verb} medication from status {med.Status}");
 
+        if (to == 1)
+            await TriggerInteractionCheckAsync(med.PatientId, med.DrugId, ct);
+
         await _meds.ChangeStatusAsync(id, to);
 
         await _audit.WriteAsync(new AuditLogEntry(
@@ -56,5 +62,25 @@ public class ChangeMedicationStatusUseCase
         ), ct);
 
         return true;
+    }
+
+    private async Task TriggerInteractionCheckAsync(
+        int patientId,
+        int drugId,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            await _interactionCheck.ExecuteAsync(
+                new CheckInteractionsRequestDto(
+                    DrugIds: new[] { drugId },
+                    PatientId: patientId,
+                    TriggerType: 1),
+                cancellationToken);
+        }
+        catch
+        {
+            // Resuming medication should not be blocked by an unavailable AI pipeline.
+        }
     }
 }

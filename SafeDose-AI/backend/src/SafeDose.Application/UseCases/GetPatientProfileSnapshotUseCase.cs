@@ -47,12 +47,12 @@ public class GetPatientProfileSnapshotUseCase
             )).ToArray()
         );
 
-        // Compliance audit — PHI access by internal service (Langflow)
+        // Compliance audit - PHI access by internal service (Langflow)
         await _audit.WriteAsync(new AuditLogEntry(
             AccountId: patient.AccountId,
             EntityName: nameof(SafeDose.Domain.Entities.Patient),
             EntityRowId: patientId,
-            ActionType: 1,                             // 1 = Read
+            ActionType: 5,                             // 5 = PHI access
             AccessReason: "DrugInteractionAgent profile fetch"
         ), cancellationToken);
 

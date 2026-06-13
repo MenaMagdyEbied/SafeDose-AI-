@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using SafeDose.Application.Interfaces;
 using SafeDose.Domain.ApplicationDbContext;
@@ -10,7 +10,7 @@ namespace SafeDose.Infrastructure.Seeders;
 // Seeds the CriticalPair table with 30 well-known dangerous combinations.
 // Stored by SCIENTIFIC NAME (not DrugId) so the seeder works
 // regardless of which specific brands are in the catalog.
-// Idempotent — running twice is safe (skips already-seeded pairs).
+// Idempotent - running twice is safe (skips already-seeded pairs).
 public class CriticalPairSeeder : ICriticalPairSeeder
 {
     private readonly AppDbContext _db;
@@ -93,7 +93,7 @@ public class CriticalPairSeeder : ICriticalPairSeeder
         }
         else
         {
-            _logger.LogInformation("Critical pairs already seeded — no changes");
+            _logger.LogInformation("Critical pairs already seeded - no changes");
         }
 
         return inserted;
@@ -103,7 +103,7 @@ public class CriticalPairSeeder : ICriticalPairSeeder
     {
         var aa = (a ?? string.Empty).Trim().ToLowerInvariant();
         var bb = (b ?? string.Empty).Trim().ToLowerInvariant();
-        // Order-independent — Warfarin+Aspirin = Aspirin+Warfarin
+        // Order-independent - Warfarin+Aspirin = Aspirin+Warfarin
         return string.CompareOrdinal(aa, bb) < 0 ? $"{aa}|{bb}" : $"{bb}|{aa}";
     }
 }

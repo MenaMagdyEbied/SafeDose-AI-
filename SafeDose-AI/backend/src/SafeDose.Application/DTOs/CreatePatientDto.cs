@@ -1,7 +1,7 @@
 namespace SafeDose.Application.DTOs;
 
 // Sent by the UI to create a new Patient.
-// Matches the Patient entity fields exactly — no extras.
+// Matches the Patient entity fields exactly - no extras.
 public record CreatePatientDto(
     string FullName,
     DateOnly? DateOfBirth = null,

@@ -3,7 +3,7 @@ using SafeDose.Domain.Enums;
 namespace SafeDose.Application.Interfaces;
 
 // Contract for calling the Langflow Drug Interaction pipeline.
-// Mina's flow expects: list of drugs + patient context → severity verdict in JSON.
+// flow expects: list of drugs + patient context → severity verdict in JSON.
 // Implementation in SafeDose.Infrastructure.ExternalServices.LangflowClient.
 public interface ILangflowClient
 {

@@ -1,4 +1,4 @@
-using SafeDose.Domain.Enums;
+﻿using SafeDose.Domain.Enums;
 
 namespace SafeDose.Application.DTOs;
 

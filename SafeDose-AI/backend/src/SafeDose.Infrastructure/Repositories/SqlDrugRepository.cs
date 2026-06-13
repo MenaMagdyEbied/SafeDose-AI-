@@ -6,9 +6,6 @@ using SafeDose.Domain.Entities;
 
 namespace SafeDose.Infrastructure.Repositories;
 
-// Reads from the SQL Drug table — the 22,500-drug catalog.
-// IMPORTANT: this is SQL-indexed search for fast autocomplete (< 300ms).
-// For semantic search (similar drugs by meaning), use the Pinecone path instead.
 public class SqlDrugRepository : IDrugRepository
 {
     private readonly AppDbContext _db;
@@ -18,30 +15,51 @@ public class SqlDrugRepository : IDrugRepository
         _db = db;
     }
 
-    public async Task<IReadOnlyList<DrugSearchResultDto>> SearchAsync(string query, int limit = 10)
+    public async Task<IReadOnlyList<DrugSearchResultDto>> SearchCatalogAsync(string query, int limit = 10)
     {
         var trimmed = query.Trim();
         if (trimmed.Length < 2) return Array.Empty<DrugSearchResultDto>();
 
-        // Case-insensitive substring search on DrugName.
-        // For better Arabic search performance later, add a computed column or FTS index.
         var lower = trimmed.ToLower();
 
-        var matches = await _db.Drugs
+        return await _db.DrugCatalogs
             .AsNoTracking()
-            .Where(d => d.DrugName.ToLower().Contains(lower))
-            .OrderBy(d => d.DrugName.Length)   // shorter names rank higher (closer match)
+            .Where(d =>
+                d.CommercialNameEn.ToLower().Contains(lower) ||
+                (d.CommercialNameAr != null && d.CommercialNameAr.Contains(trimmed)) ||
+                (d.ScientificName != null && d.ScientificName.ToLower().Contains(lower)))
+            .OrderBy(d => d.CommercialNameEn.Length)
             .Take(limit)
             .Select(d => new DrugSearchResultDto(
-                d.DrugId,
-                d.DrugName,
-                null,   // ScientificName: not in current Drug entity — enrich when Module 8 lands
-                null,   // DrugClass: same
-                d.Dose
+                d.DrugCatalogId,
+                d.CommercialNameEn,
+                d.CommercialNameAr,
+                d.ScientificName,
+                d.DrugClass,
+                d.Route
             ))
             .ToListAsync();
+    }
 
-        return matches;
+    public Task<DrugCatalog?> GetCatalogByIdAsync(int drugCatalogId)
+        => _db.DrugCatalogs.AsNoTracking().FirstOrDefaultAsync(d => d.DrugCatalogId == drugCatalogId);
+
+    public Task<DrugCatalog?> FindCatalogByExactNameAsync(string name)
+    {
+        var trimmed = name.Trim();
+        var lower = trimmed.ToLower();
+        return _db.DrugCatalogs
+            .AsNoTracking()
+            .FirstOrDefaultAsync(d =>
+                d.CommercialNameEn.ToLower() == lower ||
+                (d.CommercialNameAr != null && d.CommercialNameAr == trimmed));
+    }
+
+    public async Task<int> CreateAsync(Drug drug)
+    {
+        await _db.Drugs.AddAsync(drug);
+        await _db.SaveChangesAsync();
+        return drug.DrugId;
     }
 
     public async Task<IReadOnlyList<Drug>> GetByIdsAsync(IEnumerable<int> drugIds)

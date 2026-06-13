@@ -10,7 +10,7 @@ public class SeverityCalculator
     {
         if (signals is null) throw new ArgumentNullException(nameof(signals));
 
-        // HARD RULES first — these override anything the LLM says.
+        // hard rules first (override LLM)
         if (signals.HasAllergyMatch) return InteractionLevel.Danger;
         if (signals.HasCriticalPairMatch) return InteractionLevel.Danger;
 
@@ -21,7 +21,7 @@ public class SeverityCalculator
         // Duplicate detection (warn but don't escalate to danger)
         if (signals.HasDuplicateDrugs) return InteractionLevel.Caution;
 
-        // Default — nothing flagged
+        // Default - nothing flagged
         return InteractionLevel.Safe;
     }
 }

@@ -3,9 +3,9 @@ using SafeDose.Application.Interfaces;
 
 namespace SafeDose.Application.UseCases;
 
-// Powers the Page-1 autocomplete dropdown.
-// User types in the search field → returns top N drugs from the 22,500 SQL catalog.
-// FAST (SQL indexed) — must respond in < 300ms.
+// Powers the autocomplete dropdown when patient adds a medication.
+// User types in the search field, returns top N drugs from the SQL catalog (24,892 rows).
+// Fast - SQL indexed, should respond in under 300ms.
 public class SearchDrugsUseCase
 {
     private readonly IDrugRepository _drugRepository;
@@ -19,7 +19,7 @@ public class SearchDrugsUseCase
         string query,
         int limit = 10)
     {
-        // Reject very short queries — avoid scanning the whole catalog
+        // Reject very short queries - avoid scanning the whole catalog
         if (string.IsNullOrWhiteSpace(query) || query.Trim().Length < 2)
             return Array.Empty<DrugSearchResultDto>();
 
@@ -27,6 +27,6 @@ public class SearchDrugsUseCase
         if (limit < 1) limit = 1;
         if (limit > 25) limit = 25;
 
-        return await _drugRepository.SearchAsync(query.Trim(), limit);
+        return await _drugRepository.SearchCatalogAsync(query.Trim(), limit);
     }
 }

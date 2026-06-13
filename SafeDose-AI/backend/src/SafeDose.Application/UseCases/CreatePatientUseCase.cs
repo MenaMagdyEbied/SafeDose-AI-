@@ -4,7 +4,7 @@ using SafeDose.Domain.Entities;
 
 namespace SafeDose.Application.UseCases;
 
-// FR-201 — create a Patient linked to the authenticated Account.
+// create a Patient linked to the authenticated Account.
 public class CreatePatientUseCase
 {
     private readonly IPatientRepository _patients;
@@ -51,7 +51,7 @@ public class CreatePatientUseCase
             AccountId: accountId,
             EntityName: nameof(Patient),
             EntityRowId: newId,
-            ActionType: 2,                              // 2 = Create
+            ActionType: 1,                              // 1 = Create
             AccessReason: "Patient profile created"
         ), cancellationToken);
 

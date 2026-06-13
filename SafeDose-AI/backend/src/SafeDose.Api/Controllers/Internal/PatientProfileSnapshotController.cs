@@ -5,7 +5,7 @@ using SafeDose.Shared.Errors;
 
 namespace SafeDose.Api.Controllers.Internal;
 
-// Internal endpoint — called by Langflow Stage 2 (Patient Profile Agent).
+// Internal endpoint - called by Langflow Stage 2 (Patient Profile Agent).
 // Authenticated with X-Service-Token header, NOT patient JWT.
 // Do NOT expose this through the public API gateway.
 [ApiController]
@@ -20,7 +20,6 @@ public class PatientProfileSnapshotController : ControllerBase
         _useCase = useCase;
     }
 
-    // GET /api/internal/patients/{patientId}/profile-snapshot
     // Header: X-Service-Token: <service-token>
     // Returns: PatientProfileSnapshotDto with age, conditions, allergies, current meds
     [HttpGet("{patientId:int}/profile-snapshot")]

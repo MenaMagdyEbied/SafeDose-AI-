@@ -3,7 +3,7 @@ using SafeDose.Application.Interfaces;
 
 namespace SafeDose.Application.UseCases;
 
-// FR-202 — list all patients belonging to the current account.
+// list all patients belonging to the current account.
 public class GetMyPatientsUseCase
 {
     private readonly IPatientRepository _patients;

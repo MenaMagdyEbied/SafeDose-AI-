@@ -1,7 +1,6 @@
-namespace SafeDose.Shared.Errors;
+﻿namespace SafeDose.Shared.Errors;
 
-// Unified error shape returned by ALL controllers.
-// Doaa can write ONE error-handling component on the frontend.
+// Unified error shape returned by all controllers.
 public record ErrorResponse(
     string Code,
     string MessageArabic,

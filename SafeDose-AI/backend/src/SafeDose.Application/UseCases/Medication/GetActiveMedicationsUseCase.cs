@@ -3,7 +3,7 @@ using SafeDose.Application.Interfaces;
 
 namespace SafeDose.Application.UseCases.Medication;
 
-// FR-431 — list active medications for a patient.
+// list active medications for a patient.
 public class GetActiveMedicationsUseCase
 {
     private readonly IPatientMedicationRepository _meds;

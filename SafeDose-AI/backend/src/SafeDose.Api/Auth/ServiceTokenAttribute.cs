@@ -5,7 +5,7 @@ using SafeDose.Shared.Errors;
 namespace SafeDose.Api.Auth;
 
 // Used on internal endpoints (Langflow callbacks).
-// NOT for patient routes — those use JWT.
+// NOT for patient routes - those use JWT.
 // Reads X-Service-Token header and matches it to appsettings:Langflow:ServiceToken.
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, Inherited = true)]
 public class ServiceTokenAttribute : Attribute, IAsyncAuthorizationFilter

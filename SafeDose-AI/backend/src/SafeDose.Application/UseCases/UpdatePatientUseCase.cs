@@ -4,7 +4,7 @@ using SafeDose.Domain.Entities;
 
 namespace SafeDose.Application.UseCases;
 
-// FR-204 — update editable fields of an owned Patient.
+// update editable fields of an owned Patient.
 public class UpdatePatientUseCase
 {
     private readonly IPatientRepository _patients;
@@ -25,7 +25,7 @@ public class UpdatePatientUseCase
         var patient = await _patients.GetByIdAsync(patientId);
         if (patient == null) return null;
 
-        // Ownership check (FR-208)
+        // ownership check
         if (!string.Equals(patient.AccountId, accountId, StringComparison.Ordinal))
             throw new UnauthorizedAccessException("This patient does not belong to you");
 

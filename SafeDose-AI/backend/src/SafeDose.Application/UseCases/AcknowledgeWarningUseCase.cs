@@ -2,9 +2,7 @@ using SafeDose.Application.Interfaces;
 
 namespace SafeDose.Application.UseCases;
 
-// FR-307 / Risk R-04 — when patient sees a Level 3 (Danger) verdict and explicitly
-// confirms "I understand, I will consult my doctor", we mark the check as acknowledged.
-// This is liability protection: we can prove the patient was warned.
+// Marks a Level 3 (Danger) check as acknowledged after the patient confirms.
 public class AcknowledgeWarningUseCase
 {
     private readonly IInteractionRepository _interactions;
@@ -25,6 +23,9 @@ public class AcknowledgeWarningUseCase
     {
         var check = await _interactions.GetByIdAsync(interactionCheckId);
         if (check == null) return false;
+
+        if (!string.Equals(check.AccountId, accountId, StringComparison.Ordinal))
+            throw new UnauthorizedAccessException("This interaction check does not belong to you");
 
         if (check.IsAcknowledged) return true; // idempotent
 

@@ -1,4 +1,4 @@
-using System.Security.Claims;
+﻿using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SafeDose.Application.DTOs;
@@ -7,8 +7,6 @@ using SafeDose.Shared.Errors;
 
 namespace SafeDose.Api.Controllers;
 
-// Module 4 — Medication Management.
-// Ahmed owns this. Every endpoint requires JWT + enforces ownership.
 [ApiController]
 [Route("api/medications")]
 [Authorize]
@@ -40,7 +38,6 @@ public class MedicationsController : ControllerBase
         _getById = getById;
     }
 
-    // POST /api/medications — add a single manual medication
     [HttpPost]
     public async Task<IActionResult> Add(
         [FromBody] AddMedicationDto dto,
@@ -58,7 +55,6 @@ public class MedicationsController : ControllerBase
         catch (ArgumentException ex) { return BadValidation(ex.Message); }
     }
 
-    // POST /api/medications/from-prescription — bulk add from confirmed OCR
     [HttpPost("from-prescription")]
     public async Task<IActionResult> AddFromPrescription(
         [FromBody] BulkAddFromPrescriptionDto dto,
@@ -76,7 +72,6 @@ public class MedicationsController : ControllerBase
         catch (ArgumentException ex) { return BadValidation(ex.Message); }
     }
 
-    // GET /api/medications/patient/{patientId} — active meds for a patient
     [HttpGet("patient/{patientId:int}")]
     public async Task<IActionResult> GetActiveForPatient(int patientId)
     {
@@ -91,7 +86,6 @@ public class MedicationsController : ControllerBase
         catch (UnauthorizedAccessException) { return Forbid(); }
     }
 
-    // GET /api/medications/patient/{patientId}/history — grouped by status
     [HttpGet("patient/{patientId:int}/history")]
     public async Task<IActionResult> GetHistory(int patientId)
     {
@@ -109,7 +103,6 @@ public class MedicationsController : ControllerBase
         catch (UnauthorizedAccessException) { return Forbid(); }
     }
 
-    // GET /api/medications/{id} — single med detail
     [HttpGet("{id:int}")]
     public async Task<IActionResult> GetById(int id)
     {
@@ -127,7 +120,6 @@ public class MedicationsController : ControllerBase
         catch (UnauthorizedAccessException) { return Forbid(); }
     }
 
-    // PUT /api/medications/{id} — update dose/freq/timing
     [HttpPut("{id:int}")]
     public async Task<IActionResult> Update(
         int id,
@@ -150,22 +142,18 @@ public class MedicationsController : ControllerBase
         catch (ArgumentException ex) { return BadValidation(ex.Message); }
     }
 
-    // POST /api/medications/{id}/pause
     [HttpPost("{id:int}/pause")]
     public async Task<IActionResult> Pause(int id, CancellationToken ct) =>
         await StatusChange(id, (cid, accId, c) => _status.PauseAsync(cid, accId, c), ct);
 
-    // POST /api/medications/{id}/resume
     [HttpPost("{id:int}/resume")]
     public async Task<IActionResult> Resume(int id, CancellationToken ct) =>
         await StatusChange(id, (cid, accId, c) => _status.ResumeAsync(cid, accId, c), ct);
 
-    // POST /api/medications/{id}/stop
     [HttpPost("{id:int}/stop")]
     public async Task<IActionResult> Stop(int id, CancellationToken ct) =>
         await StatusChange(id, (cid, accId, c) => _status.StopAsync(cid, accId, c), ct);
 
-    // ─── helpers ───────────────────────────────────────────────
     private async Task<IActionResult> StatusChange(
         int id,
         Func<int, string, CancellationToken, Task<bool>> op,

@@ -6,8 +6,6 @@ using SafeDose.Shared.Errors;
 
 namespace SafeDose.Api.Controllers.Admin;
 
-// Admin-only — manually trigger the CriticalPair seeder.
-// Authorize policy "Admin" must be configured in Program.cs (TODO Andrew).
 [ApiController]
 [Route("api/admin/critical-pairs")]
 [Authorize(Roles = "Admin")]
@@ -20,8 +18,6 @@ public class CriticalPairsAdminController : ControllerBase
         _seed = seed;
     }
 
-    // POST /api/admin/critical-pairs/seed
-    // Inserts any pairs not already present. Idempotent.
     [HttpPost("seed")]
     public async Task<IActionResult> Seed(CancellationToken cancellationToken)
     {

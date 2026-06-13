@@ -1,8 +1,6 @@
 namespace SafeDose.Application.Interfaces;
 
-// Cross-module abstraction — Module 4 (Ahmed) owns PatientMedication.
-// We declare what we NEED, his module will provide the real implementation.
-// For now we use a stub so we're not blocked.
+// Read-only contract for fetching a patient's active medications.
 public interface IPatientMedicationProvider
 {
     Task<IReadOnlyList<PatientActiveMedication>> GetActiveMedicationsForPatientAsync(

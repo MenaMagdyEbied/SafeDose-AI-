@@ -100,10 +100,13 @@
       (click)="closeModal()"
     >
       <div
-        class="bg-white rounded-3xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto"
+        class="bg-white rounded-3xl shadow-xl w-full max-w-md flex flex-col max-h-[90vh]"
         (click)="$event.stopPropagation()"
       >
-        <div class="p-6 border-b border-outline-variant/30 flex items-center justify-between">
+        <!-- Header: ثابت -->
+        <div
+          class="p-6 border-b border-outline-variant/30 flex items-center justify-between shrink-0"
+        >
           <h3 class="font-extrabold text-on-background">
             {{ editingId ? 'تعديل بيانات الفرد' : 'إضافة فرد جديد' }}
           </h3>
@@ -115,7 +118,8 @@
           </button>
         </div>
 
-        <div class="p-6 space-y-4 text-right">
+        <!-- Content: هنا بس اللي بيسكرول -->
+        <div class="p-6 space-y-4 text-right overflow-y-auto flex-1">
           <div class="space-y-1">
             <label class="text-xs font-bold text-outline">الاسم الكامل *</label>
             <input
@@ -188,7 +192,8 @@
           </div>
         </div>
 
-        <div class="p-6 border-t border-outline-variant/30 flex gap-3">
+        <!-- Footer: ثابت -->
+        <div class="p-6 border-t border-outline-variant/30 flex gap-3 shrink-0">
           <button
             (click)="closeModal()"
             class="flex-1 h-12 border border-outline-variant text-outline rounded-2xl font-bold text-sm hover:bg-slate-50 transition-all cursor-pointer"

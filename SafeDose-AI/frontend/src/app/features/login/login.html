@@ -64,7 +64,6 @@
               <button
                 (click)="sendOtp()"
                 [disabled]="loading || phone.length < 9"
-                [class]="loading ? 'cursor-pointer' : 'cursor-not-allowed'"
                 class="w-full h-14 bg-primary hover:bg-primary-dark disabled:bg-slate-200 disabled:text-outline text-white rounded-2xl font-bold text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.98] shadow-md"
               >
                 @if (loading) {

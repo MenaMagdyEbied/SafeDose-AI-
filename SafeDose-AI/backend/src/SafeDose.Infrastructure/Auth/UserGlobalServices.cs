@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using SafeDose.Application.Auth.ServicesInterfaces;
 using SafeDose.Domain.Entities;
@@ -25,9 +25,9 @@ namespace SafeDose.Infrastructure.Auth
         {
             var user = _httpContextAccessor.HttpContext?.User;
             if (user == null) throw new Exception("Not found this User");
-            string? userName = _userManager.GetUserId(user);
-            if (userName == null) throw new Exception("Not found this User");
-            Account? userLogin = await _userManager.FindByNameAsync(userName);
+            string? userId = _userManager.GetUserId(user);
+            if (userId == null) throw new Exception("Not found this User");
+            Account? userLogin = await _userManager.FindByIdAsync(userId);
             if (userLogin == null) throw new Exception("Not found this User");
 
             return userLogin;

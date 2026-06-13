@@ -65,7 +65,7 @@ public class SavePrescriptionUseCase
                 Drug = drug
             };
 
-            drug.PatientMedication = patientMedication;
+            drug.PatientMedications.Add(patientMedication);
             prescription.Drugs?.Add(drug);
         }
 

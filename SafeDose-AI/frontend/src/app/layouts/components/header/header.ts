@@ -1,6 +1,15 @@
 import { ChangeDetectorRef, Component, inject } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
-import { ChevronDown, Heart, LogOut, LucideAngularModule, UserCheck } from 'lucide-angular';
+import {
+  ChevronDown,
+  CircleUser,
+  Heart,
+  LogOut,
+  LucideAngularModule,
+  User,
+  UserCheck,
+  Users,
+} from 'lucide-angular';
 
 @Component({
   selector: 'app-header',
@@ -13,11 +22,15 @@ export class Header {
   private cdr = inject(ChangeDetectorRef);
   showLogoutConfirm = false;
   toastMessage: string | null = null;
-
+  accountMenu = false;
   heartIcon = Heart;
   logOutIcon = LogOut;
   chevronDownIcon = ChevronDown;
   userCheckIcon = UserCheck;
+  circleUserIcon = CircleUser;
+  userIcon = User;
+  usersIcon = Users;
+  userCircleIcon = CircleUser;
 
   get currentRoute(): string {
     return this.router.url;
@@ -35,5 +48,9 @@ export class Header {
     }, 3000);
 
     this.router.navigate(['/home']);
+  }
+
+  toggleDropdown() {
+    this.accountMenu = !this.accountMenu;
   }
 }

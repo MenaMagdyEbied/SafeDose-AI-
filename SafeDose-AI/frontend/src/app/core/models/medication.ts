@@ -1,5 +1,6 @@
 export interface Medication {
   name: string;
-  dosage: string;
-  category?: string;
+  dose: string;
+  frequency: string;
+  startDate: string;
 }

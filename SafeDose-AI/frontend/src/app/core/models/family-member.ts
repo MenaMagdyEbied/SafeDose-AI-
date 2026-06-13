@@ -5,4 +5,5 @@ export interface FamilyMember {
   conditions: string[];
   medications: string[];
   relationship: string;
+  allergies: string;
 }

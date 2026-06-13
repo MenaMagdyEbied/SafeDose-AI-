@@ -1,33 +1,5 @@
 <section class="space-y-6 max-w-2xl mx-auto px-1 pt-16 pb-24">
-  <!-- Welcome Header -->
-  <div
-    class="bg-white border border-outline-variant/30 p-5 rounded-3xl text-right flex items-center justify-between gap-4 shadow-xs"
-  >
-    <div class="space-y-1">
-      <h2 class="text-xl font-black text-on-background">
-        أهلاً بك، {{ user?.name || 'أحمد المنسي' }}
-      </h2>
-      <div class="flex gap-1.5 flex-wrap items-center mt-1">
-        @for (c of user?.conditions || defaultConditions; track c) {
-          <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-primary/10 text-primary">{{
-            c
-          }}</span>
-        }
-        <span class="text-[10px] text-outline mr-2">| العمر: {{ user?.age || 62 }} سنة</span>
-      </div>
-      @if (user?.subscriptionPlan === 'family') {
-        <span
-          class="text-[10px] font-bold px-2 py-0.5 rounded bg-secondary-container text-on-secondary"
-          >⭐ باقة العائلة</span
-        >
-      }
-    </div>
-    <div
-      class="w-12 h-12 bg-primary/10 text-primary rounded-full flex items-center justify-center font-bold text-lg border border-primary-container"
-    >
-      {{ user?.name ? user.name[0] : 'أ' }}
-    </div>
-  </div>
+
 
   <!-- Interaction Checker Button -->
   <section>

@@ -71,6 +71,10 @@ export const routes: Routes = [
         path: 'profile',
         component: Profile,
       },
+      {
+        path: 'family-plan',
+        loadComponent: () => import('./features/family-plan/family-plan').then((c) => c.FamilyPlan),
+      },
     ],
   },
   {

@@ -16,86 +16,27 @@
     </div>
 
     <!-- Nav -->
-    <!-- <nav class="hidden md:flex items-center gap-5 text-xs font-bold text-on-surface-variant">
-      <a
-        routerLink="/home"
-        class="flex gap-1 items-center"
-        routerLinkActive="text-primary"
-        [class]="currentRoute === '/home' ? 'text-primary' : 'hover:text-primary'"
-        ><lucide-icon name="activity" [size]="20"></lucide-icon>
-        الرئيسية
-      </a>
-      <a
-        routerLink="/caregiver"
-        class="flex gap-1 items-center"
-        routerLinkActive="text-primary"
-        [class]="currentRoute === '/caregiver' ? 'text-primary' : 'hover:text-primary'"
-      >
-        <lucide-icon name="shield" [size]="20"></lucide-icon> SafeDose Pro
-      </a>
-      <a
-        routerLink="/patient"
-        class="flex gap-1 items-center"
-        routerLinkActive="text-primary"
-        [class]="currentRoute === '/patient' ? 'text-primary' : 'hover:text-primary'"
-      >
-        <lucide-icon name="heart" [size]="20"></lucide-icon> بوابة المريض
-      </a>
-      <a
-        routerLink="/pricing"
-        class="flex gap-1 items-center"
-        [class]="currentRoute === '/pricing' ? 'text-primary' : 'hover:text-primary'"
-      >
-        <lucide-icon name="pill" [size]="20"></lucide-icon> الأسعار
-      </a>
-
-      <a
-        routerLink="/profile"
-        class="flex gap-1 items-center"
-        [class]="currentRoute === '/profile' ? 'text-primary' : 'hover:text-primary'"
-      >
-        <lucide-icon name="user" [size]="20"></lucide-icon>
-        الملف الشخصي
-      </a>
-
-      <a
-        routerLink="/family-plan"
-        class="flex gap-1 items-center"
-        [class]="currentRoute === '/family' ? 'text-primary' : 'hover:text-primary'"
-      >
-        <lucide-icon name="users" [size]="20"></lucide-icon>
-        العيلة
-      </a>
-    </nav> -->
-
-    <!-- Nav -->
     <nav class="hidden md:flex items-center gap-5 text-xs font-bold text-on-surface-variant">
       <a
         routerLink="/home"
-        class="flex gap-1 items-center"
-        [class]="currentRoute === '/home' ? 'text-primary' : 'hover:text-primary'"
+        routerLinkActive="text-primary"
+        class="flex gap-1 items-center hover:text-primary"
       >
         <lucide-icon name="activity" [size]="20"></lucide-icon>
         الرئيسية
       </a>
-      <a
-        routerLink="/caregiver"
-        class="flex gap-1 items-center"
-        [class]="currentRoute === '/caregiver' ? 'text-primary' : 'hover:text-primary'"
-      >
-        <lucide-icon name="shield" [size]="20"></lucide-icon> SafeDose Pro
-      </a>
+
       <a
         routerLink="/patient"
-        class="flex gap-1 items-center"
-        [class]="currentRoute === '/patient' ? 'text-primary' : 'hover:text-primary'"
+        routerLinkActive="text-primary"
+        class="flex gap-1 items-center hover:text-primary"
       >
         <lucide-icon name="heart" [size]="20"></lucide-icon> بوابة المريض
       </a>
       <a
         routerLink="/pricing"
-        class="flex gap-1 items-center"
-        [class]="currentRoute === '/pricing' ? 'text-primary' : 'hover:text-primary'"
+        routerLinkActive="text-primary"
+        class="flex gap-1 items-center hover:text-primary"
       >
         <lucide-icon name="pill" [size]="20"></lucide-icon> الأسعار
       </a>
@@ -104,12 +45,7 @@
     <div class="flex items-center gap-1 sm:gap-3">
       <!-- Dropdown للحساب -->
       <div class="relative" (mouseenter)="accountMenu = true" (mouseleave)="accountMenu = false">
-        <button
-          class="flex gap-1 items-center hover:text-primary transition-colors cursor-pointer"
-          [class]="
-            currentRoute === '/profile' || currentRoute === '/family-plan' ? 'text-primary' : ''
-          "
-        >
+        <button class="flex gap-1 items-center hover:text-primary transition-colors cursor-pointer">
           <lucide-icon [img]="circleUserIcon" class="w-5 h-5"></lucide-icon>
           دعاء
           <lucide-icon [img]="chevronDownIcon" class="w-3.5 h-3.5"></lucide-icon>
@@ -121,6 +57,7 @@
           >
             <a
               routerLink="/profile"
+              routerLinkActive="text-primary"
               (click)="accountMenu = false"
               class="flex items-center gap-2.5 px-4 py-3 text-xs font-bold hover:bg-surface-container-low transition-colors text-on-surface-variant hover:text-primary"
             >
@@ -130,6 +67,7 @@
             <a
               routerLink="/family-plan"
               (click)="accountMenu = false"
+              routerLinkActive="text-primary"
               class="flex items-center gap-2.5 px-4 py-3 text-xs font-bold hover:bg-surface-container-low transition-colors text-on-surface-variant hover:text-primary border-t border-outline-variant/30"
             >
               <lucide-icon [img]="usersIcon" class="w-4 h-4"></lucide-icon>

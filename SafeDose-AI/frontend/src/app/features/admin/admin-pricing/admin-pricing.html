@@ -1,0 +1,140 @@
+<section class="pt-10 pb-24 max-w-5xl mx-auto px-4 space-y-8" dir="rtl">
+  <!-- Header -->
+  <div class="flex items-center justify-between">
+    <div>
+      <h2 class="text-2xl font-extrabold text-on-background">تعديل خطط الأسعار</h2>
+      <p class="text-sm text-outline mt-1">تحكم في أسعار وميزات الباقات المعروضة للمستخدمين</p>
+    </div>
+    <button
+      (click)="saveAll()"
+      class="flex items-center gap-2 px-5 py-3 bg-primary hover:bg-primary-dark text-white rounded-xl font-bold text-sm transition-all shadow-md cursor-pointer"
+    >
+      <lucide-icon [img]="saveIcon" class="w-4 h-4"></lucide-icon>
+      حفظ التغييرات
+    </button>
+  </div>
+
+  @if (savedMessage) {
+    <div
+      class="p-3.5 bg-tertiary-container border-r-4 border-tertiary text-on-tertiary-container text-xs font-bold rounded-l-xl flex items-center gap-2.5 animate-fade-in"
+    >
+      <lucide-icon [img]="checkCircleIcon" class="w-5 h-5 shrink-0"></lucide-icon>
+      <p>{{ savedMessage }}</p>
+    </div>
+  }
+
+  <!-- Plans Grid -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    @for (plan of plans; track plan.id) {
+      <div class="bg-white rounded-3xl border border-outline-variant shadow-sm overflow-hidden">
+        <!-- Plan Header -->
+        <div
+          [class]="
+            plan.id === 'family'
+              ? 'p-5 bg-secondary-container flex items-center justify-between'
+              : 'p-5 bg-primary-container flex items-center justify-between'
+          "
+        >
+          <div class="flex items-center gap-3">
+            <div
+              [class]="
+                plan.id === 'family'
+                  ? 'w-10 h-10 bg-white/60 rounded-xl flex items-center justify-center'
+                  : 'w-10 h-10 bg-white/60 rounded-xl flex items-center justify-center'
+              "
+            >
+              @if (plan.id === 'family') {
+                <lucide-icon [img]="crownIcon" class="w-5 h-5 text-on-secondary-container"></lucide-icon>
+              } @else {
+                <lucide-icon [img]="shieldIcon" class="w-5 h-5 text-primary"></lucide-icon>
+              }
+            </div>
+            <div>
+              <h3 class="font-extrabold text-on-background">{{ plan.nameAr }}</h3>
+              <p class="text-xs text-outline">{{ plan.nameEn }}</p>
+            </div>
+          </div>
+          @if (plan.id === 'family') {
+            <span class="px-3 py-1 bg-secondary text-white text-xs font-bold rounded-full">⭐ الأكثر طلباً</span>
+          }
+        </div>
+
+        <!-- Editable Fields -->
+        <div class="p-5 space-y-4">
+          <div class="grid grid-cols-2 gap-3">
+            <div class="space-y-1">
+              <label class="text-xs font-bold text-outline">الاسم بالعربي</label>
+              <input
+                [(ngModel)]="plan.nameAr"
+                class="w-full h-10 px-3 bg-surface-container-low border border-outline-variant rounded-xl text-sm font-bold outline-none focus:border-primary text-right"
+              />
+            </div>
+            <div class="space-y-1">
+              <label class="text-xs font-bold text-outline">الاسم بالإنجليزي</label>
+              <input
+                [(ngModel)]="plan.nameEn"
+                class="w-full h-10 px-3 bg-surface-container-low border border-outline-variant rounded-xl text-sm font-bold outline-none focus:border-primary text-left"
+                dir="ltr"
+              />
+            </div>
+          </div>
+
+          <div class="space-y-1">
+            <label class="text-xs font-bold text-outline">السعر الشهري (ج.م)</label>
+            <div class="relative">
+              <input
+                [(ngModel)]="plan.price"
+                type="number"
+                min="0"
+                class="w-full h-12 px-3 bg-surface-container-low border border-outline-variant rounded-xl text-lg font-black outline-none focus:border-primary text-right"
+              />
+              <span class="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-outline">ج.م / شهرياً</span>
+            </div>
+            @if (plan.price > 0) {
+              <p class="text-xs text-outline">
+                السعر السنوي المعروض: <span class="font-bold text-secondary">{{ plan.price * 10 }} ج.م</span>
+                (خصم ٢٠٪)
+              </p>
+            }
+          </div>
+
+          <!-- Features -->
+          <div class="space-y-2">
+            <label class="text-xs font-bold text-outline">الميزات</label>
+            <div class="space-y-2">
+              @for (feature of plan.features; track $index) {
+                <div class="flex items-center gap-2">
+                  <input
+                    [(ngModel)]="plan.features[$index]"
+                    class="flex-1 h-10 px-3 bg-surface-container-low border border-outline-variant rounded-xl text-sm font-bold outline-none focus:border-primary text-right"
+                  />
+                  <button
+                    (click)="removeFeature(plan, $index)"
+                    class="w-10 h-10 rounded-xl border border-danger/20 text-danger hover:bg-danger-container flex items-center justify-center shrink-0 transition-all cursor-pointer"
+                  >
+                    <lucide-icon [img]="trashIcon" class="w-4 h-4"></lucide-icon>
+                  </button>
+                </div>
+              }
+            </div>
+            <button
+              (click)="addFeature(plan)"
+              class="w-full h-10 border border-dashed border-outline-variant text-outline hover:border-primary hover:text-primary rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all cursor-pointer"
+            >
+              <lucide-icon [img]="plusIcon" class="w-4 h-4"></lucide-icon>
+              إضافة ميزة
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- Live Preview Note -->
+  <div class="bg-surface-container-low rounded-2xl p-5 flex items-center gap-3 text-right">
+    <lucide-icon [img]="infoIcon" class="w-5 h-5 text-primary shrink-0"></lucide-icon>
+    <p class="text-sm text-on-surface-variant">
+      التغييرات هتنعكس على صفحة الأسعار للمستخدمين فوراً بعد الحفظ.
+    </p>
+  </div>
+</section>

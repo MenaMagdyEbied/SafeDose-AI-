@@ -1,8 +1,5 @@
 import { Component, inject, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { Home } from './features/home/home';
-import { Footer } from './layouts/components/footer/footer';
-import { Header } from './layouts/components/header/header';
 import { Auth } from './core/auth/services/auth';
 
 @Component({

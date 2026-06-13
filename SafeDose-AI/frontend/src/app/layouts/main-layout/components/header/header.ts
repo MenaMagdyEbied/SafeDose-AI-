@@ -32,17 +32,12 @@ export class Header {
   usersIcon = Users;
   userCircleIcon = CircleUser;
 
-  get currentRoute(): string {
-    return this.router.url;
-  }
-
   logout(): void {
     this.showLogoutConfirm = false;
     this.toastMessage = 'تم تسجيل الخروج بنجاح 🔒';
 
     setTimeout(() => {
       this.toastMessage = null;
-      // 3. أجبري الواجهة على التحديث بعد تغيير القيمة
       this.cdr.detectChanges();
       console.log('تم مسح الرسالة!');
     }, 3000);

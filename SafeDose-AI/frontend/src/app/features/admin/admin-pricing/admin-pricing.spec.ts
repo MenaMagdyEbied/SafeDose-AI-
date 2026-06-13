@@ -1,17 +1,17 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { CaregiverDashboard } from './caregiver-dashboard';
+import { AdminPricing } from './admin-pricing';
 
-describe('CaregiverDashboard', () => {
-  let component: CaregiverDashboard;
-  let fixture: ComponentFixture<CaregiverDashboard>;
+describe('AdminPricing', () => {
+  let component: AdminPricing;
+  let fixture: ComponentFixture<AdminPricing>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [CaregiverDashboard],
+      imports: [AdminPricing],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(CaregiverDashboard);
+    fixture = TestBed.createComponent(AdminPricing);
     component = fixture.componentInstance;
     await fixture.whenStable();
   });

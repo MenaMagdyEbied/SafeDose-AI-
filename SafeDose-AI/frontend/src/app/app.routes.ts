@@ -1,6 +1,5 @@
 import { Routes } from '@angular/router';
-import { AdminDashboard } from './features/admin-dashboard/admin-dashboard';
-import { CaregiverDashboard } from './features/caregiver-dashboard/caregiver-dashboard';
+import { CaregiverResults } from './features/caregiver-results/caregiver-results';
 import { CaregiverReview } from './features/caregiver-review/caregiver-review';
 import { DigitalCard } from './features/digital-card/digital-card';
 import { Home } from './features/home/home';
@@ -8,13 +7,11 @@ import { InteractionChecker } from './features/interaction-checker/interaction-c
 import { InteractionResults } from './features/interaction-results/interaction-results';
 import { PatientHome } from './features/patient-home/patient-home';
 import { Pricing } from './features/pricing/pricing';
-import { Profile } from './features/profile/profile';
-import { Splash } from './features/splash/splash';
-import { NotFound } from './shared/components/not-found/not-found';
 import { MainLayout } from './layouts/main-layout/main-layout';
-import { Register } from './features/register/register';
-import { CaregiverResults } from './features/caregiver-results/caregiver-results';
-import { Login } from './features/login/login';
+import { NotFound } from './shared/components/not-found/not-found';
+import { AdminLayout } from './layouts/admin-layout/admin-layout';
+import { Login } from './features/auth/login/login';
+import { Register } from './features/auth/register/register';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'home', pathMatch: 'full' },
@@ -22,68 +19,63 @@ export const routes: Routes = [
     path: '',
     component: MainLayout,
     children: [
-      {
-        path: 'home',
-        component: Home,
-      },
-      {
-        path: 'splash',
-        component: Splash,
-      },
-
-      {
-        path: 'patient',
-        component: PatientHome,
-      },
+      { path: 'home', component: Home, title: 'الرئيسية | SafeDose AI' },
+      { path: 'patient', component: PatientHome, title: 'بوابة المريض | SafeDose AI' },
       {
         path: 'interaction-checker',
         component: InteractionChecker,
+        title: 'فحص التفاعلات | SafeDose AI',
       },
       {
         path: 'interaction-results',
         component: InteractionResults,
+        title: 'نتائج الفحص | SafeDose AI',
       },
-      {
-        path: 'digital-card',
-        component: DigitalCard,
-      },
-      {
-        path: 'caregiver',
-        component: CaregiverDashboard,
-      },
+      { path: 'digital-card', component: DigitalCard, title: 'البطاقة الرقمية | SafeDose AI' },
       {
         path: 'caregiver-review',
         component: CaregiverReview,
+        title: 'مراجعة الطاقم | SafeDose AI',
       },
       {
         path: 'caregiver-results',
         component: CaregiverResults,
+        title: 'نتائج الطاقم | SafeDose AI',
       },
-      {
-        path: 'admin',
-        component: AdminDashboard,
-      },
-      {
-        path: 'pricing',
-        component: Pricing,
-      },
+      { path: 'pricing', component: Pricing, title: 'الأسعار | SafeDose AI' },
       {
         path: 'profile',
-        component: Profile,
+        loadComponent: () => import('./features/profile/profile').then((c) => c.Profile),
+        title: 'الملف الشخصي | SafeDose AI',
       },
       {
         path: 'family-plan',
         loadComponent: () => import('./features/family-plan/family-plan').then((c) => c.FamilyPlan),
+        title: 'خطة العيلة | SafeDose AI',
       },
     ],
   },
   {
-    path: 'register',
-    component: Register,
+    path: 'admin',
+    component: AdminLayout,
+    // canActivate: [adminGuard],
+    children: [
+      {
+        path: '',
+        loadComponent: () =>
+          import('./features/admin/admin-dashboard/admin-dashboard').then((c) => c.AdminDashboard),
+        title: 'لوحة التحكم | SafeDose AI',
+      },
+      {
+        path: 'pricing',
+        loadComponent: () =>
+          import('./features/admin/admin-pricing/admin-pricing').then((c) => c.AdminPricing),
+        title: 'تعديل الأسعار | SafeDose AI',
+      },
+    ],
   },
-  {
-    path: 'login',
-    component: Login,
-  },
-  { path: '**', component: NotFound },
+
+  { path: 'login', component: Login, title: 'تسجيل الدخول | SafeDose AI' },
+  { path: 'register', component: Register, title: 'إنشاء حساب | SafeDose AI' },
+  { path: '**', component: NotFound, title: 'الصفحة غير موجودة | SafeDose AI' },
 ];

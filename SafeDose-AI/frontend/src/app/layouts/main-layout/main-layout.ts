@@ -1,8 +1,11 @@
 import { Component } from '@angular/core';
-import { Header } from '../components/header/header';
-import { Footer } from '../components/footer/footer';
+
 import { RouterOutlet } from '@angular/router';
 import { ChatBot } from '../../shared/components/chat-bot/chat-bot';
+import { Header } from './components/header/header';
+import { Footer } from './components/footer/footer';
+
+
 
 @Component({
   selector: 'app-main-layout',

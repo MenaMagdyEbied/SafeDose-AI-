@@ -4,13 +4,18 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using SafeDose.Application.Auth.ServicesInterfaces;
+using SafeDose.Application.UserProfile.RepositoryInterface;
+using SafeDose.Application.UserProfile.ServicesInterface;
 using SafeDose.Domain.ApplicationDbContext;
 using SafeDose.Domain.Entities;
 using SafeDose.Infrastructure.Auth;
+using SafeDose.Infrastructure.UserProfile.RepositoryImplementation;
+using SafeDose.Infrastructure.UserProfile.ServicesImplementation;
 using SafeDose.Shared.helper;
 using System.Security.Claims;
 using System.Text;
@@ -27,7 +32,23 @@ builder.Services.AddDbContext<AppDbContext>(opt => opt.UseSqlServer(builder.Conf
 builder.Services.Configure<JWT>(builder.Configuration.GetSection("JWT"));
 builder.Services.AddHttpContextAccessor();
 
-builder.Services.AddIdentity<Account, IdentityRole>(options => options.User.RequireUniqueEmail = true)
+
+
+builder.Services.Configure<DataProtectionTokenProviderOptions>(options =>
+{
+    options.TokenLifespan = TimeSpan.FromMinutes(3);
+});
+
+
+builder.Services.AddIdentity<Account, IdentityRole>(options => { 
+    options.User.RequireUniqueEmail = true;
+    options.SignIn.RequireConfirmedEmail = true;
+    // options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(3);
+
+    //email confiramtion shortly
+    options.Tokens.EmailConfirmationTokenProvider = TokenOptions.DefaultEmailProvider;
+    options.Tokens.PasswordResetTokenProvider = TokenOptions.DefaultEmailProvider;
+})
     .AddEntityFrameworkStores<AppDbContext>().AddDefaultTokenProviders();
 
 // TODO: Register repositories and external service clients
@@ -38,12 +59,16 @@ builder.Services.AddIdentity<Account, IdentityRole>(options => options.User.Requ
 
 builder.Services.AddScoped<IAuthService,AuthService>();
 builder.Services.AddScoped<IUserGlobalServices, UserGlobalServices>();
+builder.Services.AddScoped<IEmailSender,EmailSernder>();
+builder.Services.AddScoped<IUserProfileRepository, UserProfileRepository>();
+builder.Services.AddScoped<IUserProfileServices, UserProfileServices>();
+
 
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
     options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-
+    
 })
     .AddJwtBearer(options =>
     {

@@ -20,7 +20,7 @@ public class AccountConfiguration : IEntityTypeConfiguration<Account>
 {
     public void Configure(EntityTypeBuilder<Account> b)
     {
-        // string PK — Identity generates a GUID string by default
+        // string PK - Identity generates a GUID string by default
         b.Property(x => x.Id).HasMaxLength(450);
 
         b.Property(x => x.Name).HasMaxLength(150).IsRequired();
@@ -60,7 +60,7 @@ public class OTPRequestConfiguration : IEntityTypeConfiguration<OTPRequest>
         b.Property(x => x.HashedCode).HasMaxLength(255).IsRequired();
         b.Property(x => x.CreatedAt).HasDefaultValueSql("GETDATE()");
 
-        // FK to Account (string PK) — AccountId must be string in entity
+        // FK to Account (string PK) - AccountId must be string in entity
         b.HasOne(x => x.Account)
             .WithMany(a => a.OTPRequests)
             .HasForeignKey(x => x.AccountId)
@@ -78,7 +78,7 @@ public class ConsentRecordConfiguration : IEntityTypeConfiguration<ConsentRecord
         b.Property(x => x.ConsentVersion).HasMaxLength(20).IsRequired();
         b.Property(x => x.GrantedAt).HasDefaultValueSql("GETDATE()");
 
-        // FK to Account (string PK) — AccountId must be string in entity
+        // FK to Account (string PK) - AccountId must be string in entity
         b.HasOne(x => x.Account)
             .WithMany(a => a.ConsentRecords)
             .HasForeignKey(x => x.AccountId)
@@ -99,7 +99,7 @@ public class FreeTierUsageConfiguration : IEntityTypeConfiguration<FreeTierUsage
         b.Property(x => x.ResetDate).HasColumnType("date");
         b.Property(x => x.StartDate).HasDefaultValueSql("GETDATE()");
 
-        // FK to Account (string PK) — AccountId must be string in entity
+        // FK to Account (string PK) - AccountId must be string in entity
         b.HasOne(x => x.Account)
             .WithOne(a => a.FreeTierUsage)
             .HasForeignKey<FreeTierUsage>(x => x.AccountId)
@@ -140,7 +140,7 @@ public class PricingChangeHistoryConfiguration : IEntityTypeConfiguration<Pricin
             .HasForeignKey(x => x.PricingTierId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        // FK to Account (string PK) — ChangedByAccountId must be string in entity
+        // FK to Account (string PK) - ChangedByAccountId must be string in entity
         b.HasOne(x => x.ChangedByAccount)
             .WithMany(a => a.PricingChangeHistories)
             .HasForeignKey(x => x.ChangedByAccountId)
@@ -154,7 +154,7 @@ public class SubscriptionConfiguration : IEntityTypeConfiguration<Subscription>
     {
 
         b.HasKey(x => x.SubscriptionId);
-        // FK to Account (string PK) — AccountId must be string in entity
+        // FK to Account (string PK) - AccountId must be string in entity
         b.HasOne(x => x.Account)
             .WithMany(a => a.Subscriptions)
             .HasForeignKey(x => x.AccountId)
@@ -195,17 +195,26 @@ public class PatientConfiguration : IEntityTypeConfiguration<Patient>
 
         b.HasKey(x => x.PatientId);
 
-        b.Property(x => x.FullName).HasMaxLength(150);
+        b.Property(x => x.FullName).HasMaxLength(150).IsRequired();
         b.Property(x => x.BloodType).HasMaxLength(5);
         b.Property(x => x.ChronicConditions).HasColumnType("nvarchar(MAX)");
         b.Property(x => x.Allergies).HasColumnType("nvarchar(MAX)");
+        b.Property(x => x.AccountId).HasMaxLength(450).IsRequired();
+        b.Property(x => x.IsActive).HasDefaultValue(true);
         b.Property(x => x.CreatedAt).HasDefaultValueSql("GETDATE()");
 
-        // FK to Account (string PK) — AccountId must be string in entity
+        // FK to Account (string PK) - AccountId must be string in entity
         b.HasOne(x => x.Account)
             .WithMany(a => a.Patients)
             .HasForeignKey(x => x.AccountId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        // Index for fast listing by account
+        b.HasIndex(x => x.AccountId);
+        b.HasIndex(x => new { x.AccountId, x.IsActive });
+
+        // Soft delete filter - hide deactivated by default
+        b.HasQueryFilter(x => x.IsActive);
     }
 }
 
@@ -226,6 +235,35 @@ public class DrugConfiguration : IEntityTypeConfiguration<Drug>
                    .WithMany(p => p.Drugs)
                    .HasForeignKey(x => x.PrescriptionId)
                    .OnDelete(DeleteBehavior.SetNull);
+
+        b.HasOne(x => x.DrugCatalog)
+            .WithMany()
+            .HasForeignKey(x => x.DrugCatalogId)
+            .OnDelete(DeleteBehavior.SetNull)
+            .IsRequired(false);
+
+        b.HasIndex(x => x.AccountId);
+        b.HasIndex(x => new { x.AccountId, x.IsVerified });
+    }
+}
+
+public class DrugCatalogConfiguration : IEntityTypeConfiguration<DrugCatalog>
+{
+    public void Configure(EntityTypeBuilder<DrugCatalog> b)
+    {
+        b.HasKey(x => x.DrugCatalogId);
+
+        b.Property(x => x.CommercialNameEn).HasMaxLength(255).IsRequired();
+        b.Property(x => x.CommercialNameAr).HasMaxLength(255);
+        b.Property(x => x.ScientificName).HasMaxLength(500);
+        b.Property(x => x.Manufacturer).HasMaxLength(255);
+        b.Property(x => x.DrugClass).HasMaxLength(255);
+        b.Property(x => x.Route).HasMaxLength(80);
+        b.Property(x => x.PriceEgp).HasColumnType("decimal(10,2)");
+
+        b.HasIndex(x => x.CommercialNameEn);
+        b.HasIndex(x => x.CommercialNameAr);
+        b.HasIndex(x => x.ScientificName);
     }
 }
 
@@ -264,9 +302,9 @@ public class PatientMedicationConfiguration : IEntityTypeConfiguration<PatientMe
             .OnDelete(DeleteBehavior.Cascade);
 
         b.HasOne(x => x.Drug)
-        .WithOne(d => d.PatientMedication)
-        .HasForeignKey<PatientMedication>(x => x.DrugId)
-        .OnDelete(DeleteBehavior.Cascade);
+            .WithMany(d => d.PatientMedications)
+            .HasForeignKey(x => x.DrugId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }
 
@@ -292,17 +330,72 @@ public class InteractionCheckConfiguration : IEntityTypeConfiguration<Interactio
     {
         b.HasKey(x => x.InteractionCheckId);
 
-
-        b.Property(x => x.ArabicExplanation).HasColumnType("nvarchar(MAX)");
-        b.Property(x => x.RecommendationAction).HasColumnType("nvarchar(MAX)");
-        b.Property(x => x.SourceCitation).HasMaxLength(255);
-        b.Property(x => x.SafetyDisclaimer).HasMaxLength(500);
+        b.Property(x => x.CheckedDrugsJson).HasColumnType("nvarchar(MAX)").IsRequired();
+        b.Property(x => x.ConflictingPairsJson).HasColumnType("nvarchar(MAX)");
+        b.Property(x => x.SourcesJson).HasColumnType("nvarchar(MAX)");
+        b.Property(x => x.LabelArabic).HasMaxLength(50);
+        b.Property(x => x.TitleArabic).HasMaxLength(255);
+        b.Property(x => x.ExplanationArabic).HasColumnType("nvarchar(MAX)");
+        b.Property(x => x.RecommendedActionArabic).HasColumnType("nvarchar(MAX)");
+        b.Property(x => x.SafetyDisclaimerArabic).HasMaxLength(500);
+        b.Property(x => x.ModelVersion).HasMaxLength(80);
+        b.Property(x => x.PineconeIndexVersion).HasMaxLength(80);
+        b.Property(x => x.CacheKey).HasMaxLength(64);
         b.Property(x => x.CheckedAt).HasDefaultValueSql("GETDATE()");
+        b.Property(x => x.AcknowledgedByAccountId).HasMaxLength(450);  // Identity user ID length
 
+        // Optional patient - UI supports anonymous multi-drug check
         b.HasOne(x => x.Patient)
             .WithMany(p => p.InteractionChecks)
             .HasForeignKey(x => x.PatientId)
-            .OnDelete(DeleteBehavior.Cascade);
+            .OnDelete(DeleteBehavior.SetNull)
+            .IsRequired(false);
+
+        // Optional consent link (for compliance audit)
+        b.HasOne(x => x.ConsentRecord)
+            .WithMany()
+            .HasForeignKey(x => x.ConsentRecordId)
+            .OnDelete(DeleteBehavior.SetNull)
+            .IsRequired(false);
+
+        // Indexes for common queries
+        b.HasIndex(x => x.PatientId);
+        b.HasIndex(x => new { x.PatientId, x.CheckedAt });
+        b.HasIndex(x => x.CacheKey);  // for de-duplication lookups
+        b.HasIndex(x => x.AcknowledgedByAccountId);
+
+        // Soft delete filter - hide deleted rows by default
+        b.HasQueryFilter(x => !x.IsDeleted);
+    }
+}
+
+public class CriticalPairConfiguration : IEntityTypeConfiguration<CriticalPair>
+{
+    public void Configure(EntityTypeBuilder<CriticalPair> b)
+    {
+        b.HasKey(x => x.CriticalPairId);
+
+        b.Property(x => x.ScientificNameA).HasMaxLength(255);
+        b.Property(x => x.ScientificNameB).HasMaxLength(255);
+        b.Property(x => x.ReasonArabic).HasColumnType("nvarchar(MAX)").IsRequired();
+        b.Property(x => x.ReasonEnglish).HasColumnType("nvarchar(MAX)");
+        b.Property(x => x.Source).HasMaxLength(255);
+        b.Property(x => x.CreatedAt).HasDefaultValueSql("GETDATE()");
+
+        b.HasOne(x => x.DrugA)
+            .WithMany()
+            .HasForeignKey(x => x.DrugIdA)
+            .OnDelete(DeleteBehavior.NoAction)
+            .IsRequired(false);
+
+        b.HasOne(x => x.DrugB)
+            .WithMany()
+            .HasForeignKey(x => x.DrugIdB)
+            .OnDelete(DeleteBehavior.NoAction)
+            .IsRequired(false);
+
+        b.HasIndex(x => new { x.DrugIdA, x.DrugIdB });
+        b.HasIndex(x => x.IsActive);
     }
 }
 
@@ -376,7 +469,7 @@ public class AuditLogConfiguration : IEntityTypeConfiguration<AuditLog>
         b.Property(x => x.PHIAccessReason).HasMaxLength(255);
         b.Property(x => x.CreatedAt).HasDefaultValueSql("GETDATE()");
 
-        // FK to Account (string PK) — AccountId must be string in entity
+        // FK to Account (string PK) - AccountId must be string in entity
         b.HasOne(x => x.Account)
             .WithMany(a => a.AuditLogs)
             .HasForeignKey(x => x.AccountId)

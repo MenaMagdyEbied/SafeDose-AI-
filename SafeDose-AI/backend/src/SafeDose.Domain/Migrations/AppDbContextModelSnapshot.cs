@@ -380,6 +380,63 @@ namespace SafeDose.Domain.Migrations
                     b.ToTable("ConsentRecords");
                 });
 
+            modelBuilder.Entity("SafeDose.Domain.Entities.CriticalPair", b =>
+                {
+                    b.Property<int>("CriticalPairId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("CriticalPairId"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETDATE()");
+
+                    b.Property<byte>("DefaultLevel")
+                        .HasColumnType("tinyint");
+
+                    b.Property<int?>("DrugIdA")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("DrugIdB")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("ReasonArabic")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(MAX)");
+
+                    b.Property<string>("ReasonEnglish")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(MAX)");
+
+                    b.Property<string>("ScientificNameA")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("ScientificNameB")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.HasKey("CriticalPairId");
+
+                    b.HasIndex("DrugIdB");
+
+                    b.HasIndex("IsActive");
+
+                    b.HasIndex("DrugIdA", "DrugIdB");
+
+                    b.ToTable("CriticalPairs");
+                });
+
             modelBuilder.Entity("SafeDose.Domain.Entities.Drug", b =>
                 {
                     b.Property<int>("DrugId")
@@ -389,8 +446,7 @@ namespace SafeDose.Domain.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("DrugId"));
 
                     b.Property<string>("AccountId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("DoctorName")
                         .HasMaxLength(150)
@@ -400,10 +456,16 @@ namespace SafeDose.Domain.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
+                    b.Property<int?>("DrugCatalogId")
+                        .HasColumnType("int");
+
                     b.Property<string>("DrugName")
                         .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
+
+                    b.Property<bool>("IsVerified")
+                        .HasColumnType("bit");
 
                     b.Property<int?>("PrescriptionId")
                         .HasColumnType("int");
@@ -413,9 +475,62 @@ namespace SafeDose.Domain.Migrations
 
                     b.HasKey("DrugId");
 
+                    b.HasIndex("AccountId");
+
+                    b.HasIndex("DrugCatalogId");
+
                     b.HasIndex("PrescriptionId");
 
+                    b.HasIndex("AccountId", "IsVerified");
+
                     b.ToTable("Drugs");
+                });
+
+            modelBuilder.Entity("SafeDose.Domain.Entities.DrugCatalog", b =>
+                {
+                    b.Property<int>("DrugCatalogId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("DrugCatalogId"));
+
+                    b.Property<string>("CommercialNameAr")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("CommercialNameEn")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("DrugClass")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("Manufacturer")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<decimal?>("PriceEgp")
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<string>("Route")
+                        .HasMaxLength(80)
+                        .HasColumnType("nvarchar(80)");
+
+                    b.Property<string>("ScientificName")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.HasKey("DrugCatalogId");
+
+                    b.HasIndex("CommercialNameAr");
+
+                    b.HasIndex("CommercialNameEn");
+
+                    b.HasIndex("ScientificName");
+
+                    b.ToTable("DrugCatalogs");
                 });
 
             modelBuilder.Entity("SafeDose.Domain.Entities.FreeTierUsage", b =>
@@ -469,31 +584,83 @@ namespace SafeDose.Domain.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("InteractionCheckId"));
 
                     b.Property<string>("AccountId")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("ArabicExplanation")
-                        .HasColumnType("nvarchar(MAX)");
+                    b.Property<DateTime?>("AcknowledgedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("AcknowledgedByAccountId")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("CacheKey")
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
 
                     b.Property<DateTime>("CheckedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime2")
                         .HasDefaultValueSql("GETDATE()");
 
-                    b.Property<int>("PatientId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("RecommendationAction")
+                    b.Property<string>("CheckedDrugsJson")
+                        .IsRequired()
                         .HasColumnType("nvarchar(MAX)");
 
-                    b.Property<string>("SafetyDisclaimer")
+                    b.Property<string>("ConflictingPairsJson")
+                        .HasColumnType("nvarchar(MAX)");
+
+                    b.Property<int?>("ConsentRecordId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<byte>("DrugCount")
+                        .HasColumnType("tinyint");
+
+                    b.Property<string>("ExplanationArabic")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(MAX)");
+
+                    b.Property<bool>("IsAcknowledged")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("LabelArabic")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("ModelVersion")
+                        .HasMaxLength(80)
+                        .HasColumnType("nvarchar(80)");
+
+                    b.Property<int?>("PatientId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("PineconeIndexVersion")
+                        .HasMaxLength(80)
+                        .HasColumnType("nvarchar(80)");
+
+                    b.Property<string>("RecommendedActionArabic")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(MAX)");
+
+                    b.Property<string>("SafetyDisclaimerArabic")
+                        .IsRequired()
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
-                    b.Property<byte?>("SeverityLevel")
+                    b.Property<byte>("SeverityLevel")
                         .HasColumnType("tinyint");
 
-                    b.Property<string>("SourceCitation")
+                    b.Property<string>("SourcesJson")
+                        .HasColumnType("nvarchar(MAX)");
+
+                    b.Property<string>("TitleArabic")
+                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
@@ -502,7 +669,15 @@ namespace SafeDose.Domain.Migrations
 
                     b.HasKey("InteractionCheckId");
 
+                    b.HasIndex("AcknowledgedByAccountId");
+
+                    b.HasIndex("CacheKey");
+
+                    b.HasIndex("ConsentRecordId");
+
                     b.HasIndex("PatientId");
+
+                    b.HasIndex("PatientId", "CheckedAt");
 
                     b.ToTable("InteractionChecks");
                 });
@@ -560,6 +735,7 @@ namespace SafeDose.Domain.Migrations
 
                     b.Property<string>("AccountId")
                         .IsRequired()
+                        .HasMaxLength(450)
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("Allergies")
@@ -580,6 +756,9 @@ namespace SafeDose.Domain.Migrations
                     b.Property<DateOnly?>("DateOfBirth")
                         .HasColumnType("date");
 
+                    b.Property<DateTime?>("DeactivatedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("FullName")
                         .IsRequired()
                         .HasMaxLength(150)
@@ -588,9 +767,16 @@ namespace SafeDose.Domain.Migrations
                     b.Property<byte?>("Gender")
                         .HasColumnType("tinyint");
 
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
                     b.HasKey("PatientId");
 
                     b.HasIndex("AccountId");
+
+                    b.HasIndex("AccountId", "IsActive");
 
                     b.ToTable("Patients");
                 });
@@ -637,8 +823,7 @@ namespace SafeDose.Domain.Migrations
 
                     b.HasKey("PatientMedicationId");
 
-                    b.HasIndex("DrugId")
-                        .IsUnique();
+                    b.HasIndex("DrugId");
 
                     b.HasIndex("PatientId");
 
@@ -1047,12 +1232,36 @@ namespace SafeDose.Domain.Migrations
                     b.Navigation("Account");
                 });
 
+            modelBuilder.Entity("SafeDose.Domain.Entities.CriticalPair", b =>
+                {
+                    b.HasOne("SafeDose.Domain.Entities.Drug", "DrugA")
+                        .WithMany()
+                        .HasForeignKey("DrugIdA")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("SafeDose.Domain.Entities.Drug", "DrugB")
+                        .WithMany()
+                        .HasForeignKey("DrugIdB")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.Navigation("DrugA");
+
+                    b.Navigation("DrugB");
+                });
+
             modelBuilder.Entity("SafeDose.Domain.Entities.Drug", b =>
                 {
+                    b.HasOne("SafeDose.Domain.Entities.DrugCatalog", "DrugCatalog")
+                        .WithMany()
+                        .HasForeignKey("DrugCatalogId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("SafeDose.Domain.Entities.Prescription", "Prescription")
                         .WithMany("Drugs")
                         .HasForeignKey("PrescriptionId")
                         .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("DrugCatalog");
 
                     b.Navigation("Prescription");
                 });
@@ -1070,11 +1279,17 @@ namespace SafeDose.Domain.Migrations
 
             modelBuilder.Entity("SafeDose.Domain.Entities.InteractionCheck", b =>
                 {
+                    b.HasOne("SafeDose.Domain.Entities.ConsentRecord", "ConsentRecord")
+                        .WithMany()
+                        .HasForeignKey("ConsentRecordId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("SafeDose.Domain.Entities.Patient", "Patient")
                         .WithMany("InteractionChecks")
                         .HasForeignKey("PatientId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("ConsentRecord");
 
                     b.Navigation("Patient");
                 });
@@ -1104,9 +1319,9 @@ namespace SafeDose.Domain.Migrations
             modelBuilder.Entity("SafeDose.Domain.Entities.PatientMedication", b =>
                 {
                     b.HasOne("SafeDose.Domain.Entities.Drug", "Drug")
-                        .WithOne("PatientMedication")
-                        .HasForeignKey("SafeDose.Domain.Entities.PatientMedication", "DrugId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .WithMany("PatientMedications")
+                        .HasForeignKey("DrugId")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("SafeDose.Domain.Entities.Patient", "Patient")
@@ -1232,8 +1447,7 @@ namespace SafeDose.Domain.Migrations
 
             modelBuilder.Entity("SafeDose.Domain.Entities.Drug", b =>
                 {
-                    b.Navigation("PatientMedication")
-                        .IsRequired();
+                    b.Navigation("PatientMedications");
                 });
 
             modelBuilder.Entity("SafeDose.Domain.Entities.Patient", b =>

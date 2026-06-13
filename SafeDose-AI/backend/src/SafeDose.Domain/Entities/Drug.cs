@@ -1,5 +1,3 @@
-﻿
-
 namespace SafeDose.Domain.Entities
 {
     public class Drug
@@ -11,9 +9,12 @@ namespace SafeDose.Domain.Entities
         public string? Dose { get; set; }
         public string? DoctorName { get; set; }
 
+        public bool IsVerified { get; set; }
+        public int? DrugCatalogId { get; set; }
+        public DrugCatalog? DrugCatalog { get; set; }
 
-        public string AccountId {  get; set; } 
-        public PatientMedication PatientMedication { get; set; }
+        public string? AccountId { get; set; }
+        public ICollection<PatientMedication> PatientMedications { get; set; } = [];
         public Prescription? Prescription { get; set; }
     }
 }

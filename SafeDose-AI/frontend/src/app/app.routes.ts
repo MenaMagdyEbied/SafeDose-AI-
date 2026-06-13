@@ -1,5 +1,4 @@
 import { Routes } from '@angular/router';
-import { CaregiverResults } from './features/caregiver-results/caregiver-results';
 import { CaregiverReview } from './features/caregiver-review/caregiver-review';
 import { DigitalCard } from './features/digital-card/digital-card';
 import { Home } from './features/home/home';
@@ -37,11 +36,7 @@ export const routes: Routes = [
         component: CaregiverReview,
         title: 'مراجعة الطاقم | SafeDose AI',
       },
-      {
-        path: 'caregiver-results',
-        component: CaregiverResults,
-        title: 'نتائج الطاقم | SafeDose AI',
-      },
+
       { path: 'pricing', component: Pricing, title: 'الأسعار | SafeDose AI' },
       {
         path: 'profile',

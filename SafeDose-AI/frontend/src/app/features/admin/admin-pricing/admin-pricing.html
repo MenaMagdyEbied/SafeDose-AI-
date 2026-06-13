@@ -1,4 +1,4 @@
-<section class="pt-10 pb-24 max-w-5xl mx-auto px-4 space-y-8" dir="rtl">
+<section class="p-6 mx-auto px-4 space-y-8" dir="rtl">
   <!-- Header -->
   <div class="flex items-center justify-between">
     <div>
@@ -44,7 +44,10 @@
               "
             >
               @if (plan.id === 'family') {
-                <lucide-icon [img]="crownIcon" class="w-5 h-5 text-on-secondary-container"></lucide-icon>
+                <lucide-icon
+                  [img]="crownIcon"
+                  class="w-5 h-5 text-on-secondary-container"
+                ></lucide-icon>
               } @else {
                 <lucide-icon [img]="shieldIcon" class="w-5 h-5 text-primary"></lucide-icon>
               }
@@ -55,7 +58,9 @@
             </div>
           </div>
           @if (plan.id === 'family') {
-            <span class="px-3 py-1 bg-secondary text-white text-xs font-bold rounded-full">⭐ الأكثر طلباً</span>
+            <span class="px-3 py-1 bg-secondary text-white text-xs font-bold rounded-full"
+              >⭐ الأكثر طلباً</span
+            >
           }
         </div>
 
@@ -88,11 +93,14 @@
                 min="0"
                 class="w-full h-12 px-3 bg-surface-container-low border border-outline-variant rounded-xl text-lg font-black outline-none focus:border-primary text-right"
               />
-              <span class="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-outline">ج.م / شهرياً</span>
+              <span class="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-outline"
+                >ج.م / شهرياً</span
+              >
             </div>
             @if (plan.price > 0) {
               <p class="text-xs text-outline">
-                السعر السنوي المعروض: <span class="font-bold text-secondary">{{ plan.price * 10 }} ج.م</span>
+                السعر السنوي المعروض:
+                <span class="font-bold text-secondary">{{ plan.price * 10 }} ج.م</span>
                 (خصم ٢٠٪)
               </p>
             }

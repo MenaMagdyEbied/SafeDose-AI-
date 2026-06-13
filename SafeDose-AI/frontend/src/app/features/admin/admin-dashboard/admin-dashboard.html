@@ -1,11 +1,13 @@
-<section class="p-6 space-y-6" dir="rtl">
+<section class="p-6 space-y-6">
   <!-- Header -->
   <div class="flex items-center justify-between">
     <div>
       <h2 class="text-2xl font-extrabold text-on-background">لوحة التحكم</h2>
       <p class="text-sm text-outline mt-1">نظرة عامة على أداء النظام والمستخدمين</p>
     </div>
-    <div class="flex items-center gap-2 text-xs font-bold text-outline bg-white px-4 py-2 rounded-xl border border-outline-variant">
+    <div
+      class="flex items-center gap-2 text-xs font-bold text-outline bg-white px-4 py-2 rounded-xl border border-outline-variant"
+    >
       <lucide-icon [img]="calendarIcon" class="w-4 h-4"></lucide-icon>
       آخر تحديث: اليوم 11:47 م
     </div>
@@ -26,7 +28,10 @@
                 : 'text-xs font-bold text-danger flex items-center gap-0.5'
             "
           >
-            <lucide-icon [img]="kpi.trend > 0 ? trendUpIcon : trendDownIcon" class="w-3.5 h-3.5"></lucide-icon>
+            <lucide-icon
+              [img]="kpi.trend > 0 ? trendUpIcon : trendDownIcon"
+              class="w-3.5 h-3.5"
+            ></lucide-icon>
             {{ kpi.trend > 0 ? '+' : '' }}{{ kpi.trend }}%
           </span>
         </div>
@@ -50,9 +55,10 @@
         <div class="flex bg-slate-100 rounded-full p-1 gap-1">
           <button
             (click)="revenuePeriod = 'monthly'"
+            class="cursor-pointer"
             [class]="
               revenuePeriod === 'monthly'
-                ? 'bg-primary text-white px-3 py-1.5 rounded-full text-xs font-bold transition-all'
+                ? 'bg-primary text-white px-3 py-1.5 rounded-full text-xs font-bold transition-all '
                 : 'px-3 py-1.5 rounded-full text-xs font-bold text-outline transition-all'
             "
           >
@@ -60,9 +66,10 @@
           </button>
           <button
             (click)="revenuePeriod = 'yearly'"
+            class="cursor-pointer"
             [class]="
               revenuePeriod === 'yearly'
-                ? 'bg-primary text-white px-3 py-1.5 rounded-full text-xs font-bold transition-all'
+                ? 'bg-primary text-white px-3 py-1.5 rounded-full text-xs font-bold transition-all '
                 : 'px-3 py-1.5 rounded-full text-xs font-bold text-outline transition-all'
             "
           >
@@ -96,7 +103,10 @@
                 class="w-full bg-primary/15 hover:bg-primary/25 rounded-t-lg transition-all relative"
                 [style.height.%]="bar.percent"
               >
-                <div class="absolute bottom-0 inset-x-0 bg-primary rounded-t-lg" [style.height.%]="bar.subPercent"></div>
+                <div
+                  class="absolute bottom-0 inset-x-0 bg-primary rounded-t-lg"
+                  [style.height.%]="bar.subPercent"
+                ></div>
               </div>
             </div>
             <span class="text-[10px] font-bold text-outline">{{ bar.label }}</span>
@@ -114,20 +124,35 @@
       <div class="flex-1 flex items-center justify-center">
         <div class="relative w-40 h-40">
           <svg viewBox="0 0 100 100" class="w-full h-full -rotate-90">
-            <circle cx="50" cy="50" r="40" fill="none" stroke="var(--color-surface-container)" stroke-width="14" />
             <circle
-              cx="50" cy="50" r="40" fill="none"
-              stroke="var(--color-primary)" stroke-width="14"
+              cx="50"
+              cy="50"
+              r="40"
+              fill="none"
+              stroke="var(--color-surface-container)"
+              stroke-width="14"
+            />
+            <circle
+              cx="50"
+              cy="50"
+              r="40"
+              fill="none"
+              stroke="var(--color-primary)"
+              stroke-width="14"
               stroke-dasharray="251.2"
-              [attr.stroke-dashoffset]="251.2 - (251.2 * genderSplit.female / 100)"
+              [attr.stroke-dashoffset]="251.2 - (251.2 * genderSplit.female) / 100"
               stroke-linecap="round"
             />
             <circle
-              cx="50" cy="50" r="40" fill="none"
-              stroke="var(--color-secondary)" stroke-width="14"
+              cx="50"
+              cy="50"
+              r="40"
+              fill="none"
+              stroke="var(--color-secondary)"
+              stroke-width="14"
               stroke-dasharray="251.2"
-              [attr.stroke-dashoffset]="251.2 - (251.2 * genderSplit.male / 100)"
-              [style.transform]="'rotate(' + (genderSplit.female * 3.6) + 'deg)'"
+              [attr.stroke-dashoffset]="251.2 - (251.2 * genderSplit.male) / 100"
+              [style.transform]="'rotate(' + genderSplit.female * 3.6 + 'deg)'"
               style="transform-origin: 50% 50%"
               stroke-linecap="round"
             />
@@ -212,7 +237,9 @@
     <div class="bg-white rounded-2xl border border-outline-variant p-5 shadow-sm">
       <h3 class="font-extrabold text-on-background mb-4">كروت العلاج</h3>
       <div class="flex items-center gap-4 mb-4">
-        <div class="w-14 h-14 bg-tertiary-container rounded-2xl flex items-center justify-center shrink-0">
+        <div
+          class="w-14 h-14 bg-tertiary-container rounded-2xl flex items-center justify-center shrink-0"
+        >
           <lucide-icon [img]="creditCardIcon" class="w-7 h-7 text-tertiary"></lucide-icon>
         </div>
         <div>
@@ -242,7 +269,11 @@
     <div class="divide-y divide-outline-variant/20">
       @for (activity of recentActivity; track $index) {
         <div class="p-4 flex items-center gap-3">
-          <div [class]="'w-9 h-9 rounded-full flex items-center justify-center shrink-0 ' + activity.bg">
+          <div
+            [class]="
+              'w-9 h-9 rounded-full flex items-center justify-center shrink-0 ' + activity.bg
+            "
+          >
             <lucide-icon [img]="activity.icon" [class]="'w-4 h-4 ' + activity.color"></lucide-icon>
           </div>
           <div class="flex-1">

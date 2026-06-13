@@ -1,0 +1,66 @@
+.not-found-container {
+  min-height: 82vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1.5rem;
+  color: var(--color-on-background);
+  text-align: center;
+  font-family: var(--font-sans);
+}
+
+.status-code {
+  margin: 0;
+  font-size: clamp(5rem, 12vw, 8rem);
+  color: var(--color-primary);
+  line-height: 0.9;
+}
+
+.status-message {
+  margin: 0.5rem 0 1.25rem;
+  font-size: clamp(2rem, 4vw, 3rem);
+  color: var(--color-on-background);
+}
+
+.status-description {
+  margin: 0 auto 2rem;
+  max-width: 420px;
+  color: var(--color-on-surface-variant);
+  line-height: 1.8;
+  font-size: 1rem;
+}
+
+.back-button {
+  appearance: none;
+  border: none;
+  cursor: pointer;
+  padding: 12px 30px;
+  border-radius: 6px;
+  background-color: var(--color-primary);
+  color: var(--color-on-primary);
+  font-weight: 700;
+  font-size: 1rem;
+  transition:
+    background-color 0.2s ease,
+    transform 0.2s ease;
+  -webkit-transition:
+    background-color 0.2s ease,
+    transform 0.2s ease;
+  -moz-transition:
+    background-color 0.2s ease,
+    transform 0.2s ease;
+  -ms-transition:
+    background-color 0.2s ease,
+    transform 0.2s ease;
+  -o-transition:
+    background-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.back-button:hover,
+.back-button:focus-visible {
+  background-color: var(--color-primary-dark);
+  transform: translateY(-1px);
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(0, 94, 184, 0.18);
+}

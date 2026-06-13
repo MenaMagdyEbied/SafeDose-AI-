@@ -1,0 +1,215 @@
+<div class="min-h-screen">
+  <!-- Hero Section -->
+  <section class="relative pt-16 pb-24 px-6 overflow-hidden">
+    <div
+      class="absolute inset-0 pointer-events-none bg-[radial-gradient(var(--color-primary)_0.5px,transparent_0.5px)] [background-size:24px_24px] opacity-10"
+    ></div>
+    <div
+      class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center relative z-10"
+    >
+      <div class="space-y-8 text-right order-2 lg:order-1 animate-slide-in-top">
+        <div
+          class="inline-flex items-center px-4 py-2 rounded-full bg-primary-container text-primary gap-2"
+        >
+          <lucide-icon [img]="shieldIcon" class="w-5 h-5"></lucide-icon>
+          <span class="text-xs font-semibold">موثوق ومصادق عليه من قبل المتخصصين الطبيين</span>
+        </div>
+
+        <h1 class="text-3xl sm:text-5xl font-black text-on-background leading-tight">
+          سلامتكم هي أولويتنا القصوى في <span class="text-primary">SafeDose AI</span>
+        </h1>
+
+        <p class="text-on-surface-variant text-lg leading-relaxed max-w-xl">
+          منصة ذكاء اصطناعي متطورة تضمن لك ولعائلتك تجنب مخاطر التفاعلات الدوائية والتداخلات الطبية
+          وتناول الأدوية بأمن وسلامة تامة عبر فحص فوري وذكي.
+        </p>
+
+        <div class="flex flex-col sm:flex-row-reverse gap-4 justify-start">
+          <a
+            routerLink="/register"
+            class="bg-primary w-1/2 hover:bg-primary-dark text-white px-8 py-4 rounded-xl text-md font-bold transition-all shadow-lg active:scale-95 text-center"
+          >
+            سجّل حسابك مجاناً
+          </a>
+          <a
+            routerLink="/register"
+            class="border-2 w-1/2 border-primary text-primary hover:bg-primary/5 px-8 py-4 rounded-xl text-md font-bold transition-all text-center"
+          >
+            انضم كطاقم طبي
+          </a>
+        </div>
+      </div>
+
+      <div class="order-1 lg:order-2 flex justify-center animate-fade-in">
+        <div class="relative w-full max-w-[450px]">
+          <div
+            class="absolute -top-6 -right-6 w-32 h-32 bg-primary-container/40 rounded-full blur-3xl"
+          ></div>
+          <div
+            class="absolute -bottom-10 -left-10 w-48 h-48 bg-secondary-container/40 rounded-full blur-3xl"
+          ></div>
+          <div
+            class="bg-white border border-outline-variant/80 p-4 rounded-[2.5rem] shadow-2xl relative overflow-hidden group"
+          >
+            <div
+              class="w-full h-[300px] bg-gradient-to-br from-primary/10 to-tertiary/10 rounded-3xl flex items-center justify-center"
+            >
+              <lucide-icon [img]="pillIcon" class="w-32 h-32 text-primary/30"></lucide-icon>
+            </div>
+            <div
+              class="absolute top-8 left-8 bg-danger-container text-on-danger-container p-3 rounded-xl flex items-center gap-2 shadow-md animate-bounce-slow"
+            >
+              <lucide-icon [img]="alertIcon" class="w-5 h-5 text-danger"></lucide-icon>
+
+              <span class="text-xs font-bold">تنبيه: تداخل دوائي محتمل!</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Bento Section -->
+  <section class="py-16 px-6 bg-background">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-16 space-y-3">
+        <h2 class="text-3xl font-bold text-primary">ذكاء اصطناعي فائق في خدمة صحتك</h2>
+        <p class="text-on-surface-variant max-w-xl mx-auto text-md">
+          صممنا SafeDose AI ليكون رفيقك الصحي الدائم، مع ميزات متطورة تضمن لك ولأحبابك أعلى مستويات
+          الأمان.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- Feature 1 -->
+        <div
+          class="md:col-span-2 bg-white border border-outline-variant/30 rounded-3xl p-8 hover:shadow-lg transition-all flex flex-col md:flex-row-reverse gap-8 items-center text-right"
+        >
+          <div
+            class="w-20 h-20 bg-primary-container text-primary rounded-2xl flex items-center justify-center shrink-0"
+          >
+            <lucide-icon [img]="pillIcon" class="w-10 h-10"></lucide-icon>
+          </div>
+          <div class="flex-1 space-y-2">
+            <h3 class="text-xl font-bold text-on-background">فحص التداخلات الدوائية الفوري</h3>
+            <p class="text-on-surface-variant text-sm leading-relaxed">
+              بمجرد إدخال أو تصوير أدويتك، يقوم النظام بتحليلها ومطابقتها فورياً بقاعدة بيانات
+              الأدوية المصرية والعالمية المحدثة بالذكاء الاصطناعي لكشف أي خطورة علاجية.
+            </p>
+          </div>
+        </div>
+
+        <!-- Feature 2 -->
+        <div
+          class="bg-secondary-container/40 p-8 rounded-3xl border border-secondary/30 hover:shadow-lg transition-all flex flex-col justify-between text-right"
+        >
+          <div
+            class="w-14 h-14 bg-secondary text-white rounded-xl flex items-center justify-center mb-6"
+          >
+            <lucide-icon [img]="sparklesIcon" class="w-8 h-8"></lucide-icon>
+          </div>
+          <div class="space-y-2">
+            <h3 class="text-lg font-bold text-on-secondary">تذكيرات معززة ذكية</h3>
+            <p class="text-on-surface-variant text-xs leading-relaxed">
+              تذكيرات وجداول جرعات متوافقة كلياً مع أوقاتك وحالتك الصحية للتأكد من تناولك العلاج في
+              الموعد الصحيح وبدقة فائقة.
+            </p>
+          </div>
+        </div>
+
+        <!-- Feature 3 -->
+        <div
+          class="bg-surface-container-low p-8 rounded-3xl border border-outline-variant hover:shadow-lg transition-all flex flex-col justify-between text-right"
+        >
+          <div
+            class="w-14 h-14 bg-tertiary text-white rounded-xl flex items-center justify-center mb-6"
+          >
+            <lucide-icon [img]="activityIcon" class="w-8 h-8"></lucide-icon>
+          </div>
+          <div class="space-y-2">
+            <h3 class="text-lg font-bold text-on-background">تنبيهات مقدمي الرعاية</h3>
+            <p class="text-on-surface-variant text-xs leading-relaxed">
+              إرسال إشعارات وتنبيهات فورية لأفراد عائلتك أو طبيبك الخاص في الطوارئ أو في حالة تخطي
+              وحاجة إعادة تعبئة الأدوية الحرجة.
+            </p>
+          </div>
+        </div>
+
+        <!-- Feature 4 -->
+        <div
+          class="md:col-span-2 bg-neutral-dark p-8 rounded-3xl border border-[#222222] hover:shadow-lg transition-all flex items-center text-right"
+        >
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center w-full">
+            <div class="space-y-2">
+              <h3 class="text-xl font-bold text-secondary">أمان وحماية البيانات المطلق</h3>
+              <p class="text-neutral-light/80 text-xs leading-relaxed">
+                جميع سجلاتك ووصفاتك الطبية مشفرة بالكامل ومتوافقة مع معايير HIPAA الطبية العالمية
+                لمنع مشاركتها على الإطلاق. خصوصيتك هي أماننا.
+              </p>
+            </div>
+            <div class="flex justify-center">
+              <lucide-icon [img]="shieldIcon" class="w-24 h-24 text-primary/20"></lucide-icon>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Trust & Review -->
+  <section class="py-12 px-6 bg-white text-center">
+    <div class="max-w-4xl mx-auto space-y-12">
+      <div class="flex flex-wrap justify-center gap-12 items-center opacity-60">
+        <div class="flex items-center gap-2">
+          <lucide-icon [img]="activityIcon" class="w-6 h-6 text-primary"></lucide-icon>
+          <span class="font-bold text-on-surface-variant text-sm">وزارة الصحة المصرية</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <lucide-icon [img]="shieldIcon" class="w-6 h-6 text-primary"></lucide-icon>
+          <span class="font-bold text-on-surface-variant text-sm">معايير HIPAA الطبية</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <lucide-icon [img]="sparklesIcon" class="w-6 h-6 text-secondary"></lucide-icon>
+          <span class="font-bold text-on-surface-variant text-sm">شهادة الجودة الرقمية</span>
+        </div>
+      </div>
+
+      <div class="space-y-4">
+        <div class="flex justify-center text-secondary text-2xl">★★★★★</div>
+        <p class="text-lg italic text-on-background leading-relaxed">
+          "لقد غير هذا التطبيق المبتكر تماماً أسلوب متابعتي لأدوية والديّ المسنين. لم أعد أشعر
+          بالقلق حيال نسيانهم للجرعات أو تداخل أدوية السكري والسيولة مجدداً."
+        </p>
+        <p class="text-sm font-bold text-primary">
+          — د. أحمد كمال، استشاري الطب الباطني والأوعية الدموية
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="py-16 px-6">
+    <div
+      class="max-w-4xl mx-auto bg-gradient-to-br from-primary to-primary-dark rounded-3xl p-8 sm:p-12 text-center text-white relative overflow-hidden shadow-xl"
+    >
+      <div class="absolute -right-20 -top-20 opacity-10">
+        <lucide-icon [img]="sparklesIcon" class="w-[300px] h-[300px]"></lucide-icon>
+      </div>
+      <div class="relative z-10 space-y-6">
+        <h2 class="text-3xl font-extrabold">كن أول من يحمي صحته</h2>
+        <p class="text-primary-container max-w-xl mx-auto text-sm">
+          انضم إلينا الآن للتمتع بمزايا الحماية الحصرية والحصول على إشعارات فحص الأدوية الفوري.
+        </p>
+        <a
+          routerLink="/pricing"
+          class="bg-neutral-dark block w-fit mx-auto hover:bg-[#222222] text-secondary px-8 py-4 rounded-xl font-bold transition-all"
+        >
+          ابدأ الآن — خطط الأسعار
+        </a>
+        <p class="text-xs text-white/40">
+          لا نقوم أبداً بمشاركة أو بيع بياناتك الطبية مع أي طرف ثالث.
+        </p>
+      </div>
+    </div>
+  </section>
+</div>

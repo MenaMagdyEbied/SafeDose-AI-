@@ -1,0 +1,178 @@
+<section class="pt-16 pb-24 max-w-4xl mx-auto space-y-8">
+  <div class="text-center space-y-3">
+    <h2 class="text-3xl font-extrabold text-primary">خطط الأسعار</h2>
+    <p class="text-on-surface-variant max-w-xl mx-auto">
+      اختر الباقة المناسبة لك ولعائلتك. ابدأ مجاناً وقم بالترقية في أي وقت.
+    </p>
+  </div>
+
+  <!-- Toggle Monthly/Annual -->
+  <div class="flex justify-center">
+    <div class="bg-slate-100 rounded-full p-1 flex items-center gap-1">
+      <button
+        class="cursor-pointer"
+        (click)="isAnnual = false"
+        [class]="
+          !isAnnual
+            ? 'bg-primary text-white px-4 py-2 rounded-full text-xs font-bold transition-all'
+            : 'px-4 py-2 rounded-full text-xs font-bold text-outline transition-all'
+        "
+      >
+        شهري
+      </button>
+      <button
+        class="cursor-pointer"
+        (click)="isAnnual = true"
+        [class]="
+          isAnnual
+            ? 'bg-primary text-white px-4 py-2 rounded-full text-xs font-bold transition-all'
+            : 'px-4 py-2 rounded-full text-xs font-bold text-outline transition-all'
+        "
+      >
+        سنوي (وفر ٢٠٪)
+      </button>
+    </div>
+  </div>
+
+  <!-- Plan Cards -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    @for (plan of plans; track plan.id) {
+      <div
+        [class]="
+          plan.id === 'family'
+            ? 'bg-white border-2 border-secondary rounded-3xl p-8 shadow-lg relative overflow-hidden'
+            : 'bg-white border border-outline-variant rounded-3xl p-8 shadow-sm relative overflow-hidden'
+        "
+      >
+        @if (plan.id === 'family') {
+          <div
+            class="absolute top-0 left-0 right-0 bg-secondary text-white text-center py-1.5 text-xs font-bold"
+          >
+            ⭐ الأكثر طلباً
+          </div>
+        }
+        <div class="space-y-4" [class]="plan.id === 'family' ? 'pt-4' : ''">
+          <div class="flex items-center gap-3">
+            <div
+              [class]="
+                plan.id === 'family'
+                  ? 'w-12 h-12 bg-secondary-container rounded-xl flex items-center justify-center'
+                  : 'w-12 h-12 bg-primary-container rounded-xl flex items-center justify-center'
+              "
+            >
+              @if (plan.id === 'family') {
+                <lucide-icon [img]="crownIcon" class="w-6 h-6 text-on-secondary"></lucide-icon>
+              } @else {
+                <lucide-icon [img]="shieldIcon" class="w-6 h-6 text-primary"></lucide-icon>
+              }
+            </div>
+            <div>
+              <h3 class="text-xl font-bold text-on-background">{{ plan.nameAr }}</h3>
+              <p class="text-xs text-outline">{{ plan.nameEn }}</p>
+            </div>
+          </div>
+
+          <div class="flex items-baseline gap-1">
+            @if (plan.price === 0) {
+              <span class="text-4xl font-black text-primary">مجاني</span>
+            } @else {
+              <span class="text-4xl font-black text-secondary">{{
+                isAnnual ? plan.price * 10 : plan.price
+              }}</span>
+              <span class="text-outline text-sm">ج.م / {{ isAnnual ? 'سنوياً' : 'شهرياً' }}</span>
+            }
+          </div>
+          @if (isAnnual && plan.price > 0) {
+            <p class="text-xs text-emerald-600 font-bold">
+              وفر {{ plan.price * 12 - plan.price * 10 }} ج.م سنوياً!
+            </p>
+          }
+
+          <div class="space-y-3 pt-2">
+            @for (feature of plan.features; track feature) {
+              <div class="flex items-center gap-3 text-right">
+                <lucide-icon
+                  [img]="checkIcon"
+                  [class]="
+                    plan.id === 'family'
+                      ? 'w-4 h-4 text-secondary shrink-0'
+                      : 'w-4 h-4 text-primary shrink-0'
+                  "
+                ></lucide-icon>
+                <span class="text-sm text-on-surface-variant">{{ feature }}</span>
+              </div>
+            }
+          </div>
+
+          <button
+            (click)="subscribe(plan.id)"
+            [class]="
+              plan.id === 'family'
+                ? 'w-full bg-secondary hover:bg-secondary-dark text-white py-4 rounded-xl font-bold text-md transition-all shadow-md'
+                : 'w-full bg-primary hover:bg-primary-dark text-white py-4 rounded-xl font-bold text-md transition-all shadow-md'
+            "
+          >
+            @if (plan.id === 'free') {
+              ابدأ مجاناً
+            } @else {
+              اشترك الآن
+            }
+          </button>
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- Feature Comparison -->
+  <div class="bg-white rounded-2xl border border-outline-variant shadow-sm overflow-hidden">
+    <div class="p-4 border-b border-outline-variant/30">
+      <h3 class="font-bold text-on-background text-right">مقارنة الميزات</h3>
+    </div>
+    <table class="w-full text-sm">
+      <thead class="bg-slate-50 text-outline">
+        <tr>
+          <th class="px-4 py-3 text-right font-bold">الميزة</th>
+          <th class="px-4 py-3 text-center font-bold">المجاني</th>
+          <th class="px-4 py-3 text-center font-bold text-secondary">العائلي ⭐</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-outline-variant/20">
+        <tr>
+          <td class="px-4 py-3 text-right">إنشاء حساب</td>
+          <td class="px-4 py-3 text-center">✓</td>
+          <td class="px-4 py-3 text-center">✓</td>
+        </tr>
+        <tr>
+          <td class="px-4 py-3 text-right">فحص التداخلات الدوائية</td>
+          <td class="px-4 py-3 text-center text-outline">٣ شهرياً</td>
+          <td class="px-4 py-3 text-center text-secondary font-bold">غير محدود</td>
+        </tr>
+        <tr>
+          <td class="px-4 py-3 text-right">عدد الأدوية المتتبعة</td>
+          <td class="px-4 py-3 text-center text-outline">١</td>
+          <td class="px-4 py-3 text-center text-secondary font-bold">غير محدود</td>
+        </tr>
+        <tr>
+          <td class="px-4 py-3 text-right">أفراد العائلة</td>
+          <td class="px-4 py-3 text-center text-outline">—</td>
+          <td class="px-4 py-3 text-center text-secondary font-bold">حتى ٥</td>
+        </tr>
+        <tr>
+          <td class="px-4 py-3 text-right">المساعد الذكي</td>
+          <td class="px-4 py-3 text-center">أساسي</td>
+          <td class="px-4 py-3 text-center text-secondary font-bold">متقدم</td>
+        </tr>
+        <tr>
+          <td class="px-4 py-3 text-right">تقارير للطبيب</td>
+          <td class="px-4 py-3 text-center text-outline">—</td>
+          <td class="px-4 py-3 text-center text-secondary font-bold">✓</td>
+        </tr>
+        <tr>
+          <td class="px-4 py-3 text-right">أولوية الدعم</td>
+          <td class="px-4 py-3 text-center text-outline">—</td>
+          <td class="px-4 py-3 text-center text-secondary font-bold">✓</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>

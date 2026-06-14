@@ -94,6 +94,7 @@ builder.Services.AddScoped<IDrugRepository, SqlDrugRepository>();
 builder.Services.AddScoped<IInteractionRepository, SqlInteractionRepository>();
 builder.Services.AddScoped<ICriticalPairLookup, SqlCriticalPairLookup>();
 builder.Services.AddScoped<IPatientRepository, SqlPatientRepository>();
+builder.Services.AddScoped<IPrescriptionRepository, SqlPrescriptionRepository>();
 
 // One class, two interfaces (full repo + read-only provider)
 builder.Services.AddScoped<SqlPatientMedicationRepository>();
@@ -116,6 +117,16 @@ builder.Services
         .WaitAndRetryAsync(3, attempt =>
             TimeSpan.FromMilliseconds(200 * Math.Pow(3, attempt - 1))));
 
+builder.Services
+    .AddHttpClient<ILangflowPrescriptionClient, LangflowPrescriptionClient>(client =>
+    {
+        client.Timeout = TimeSpan.FromSeconds(500);
+    })
+    .AddPolicyHandler(HttpPolicyExtensions
+        .HandleTransientHttpError()
+        .WaitAndRetryAsync(3, attempt =>
+            TimeSpan.FromMilliseconds(200 * Math.Pow(3, attempt - 1))));
+
 // Drug Interaction use cases
 builder.Services.AddScoped<SearchDrugsUseCase>();
 builder.Services.AddScoped<CheckDrugInteractionUseCase>();
@@ -127,6 +138,7 @@ builder.Services.AddScoped<AcknowledgeWarningUseCase>();
 builder.Services.AddScoped<DeleteInteractionCheckUseCase>();
 builder.Services.AddScoped<GetPatientProfileSnapshotUseCase>();
 builder.Services.AddScoped<SeedCriticalPairsUseCase>();
+builder.Services.AddScoped<ParsePrescriptionUseCase>();
 
 // CriticalPair seeder runs on startup
 builder.Services.AddScoped<CriticalPairSeeder>();
@@ -153,6 +165,7 @@ builder.Services.AddScoped<ChangeMedicationStatusUseCase>();
 builder.Services.AddScoped<GetActiveMedicationsUseCase>();
 builder.Services.AddScoped<GetMedicationHistoryUseCase>();
 builder.Services.AddScoped<GetMedicationByIdUseCase>();
+builder.Services.AddScoped<SavePrescriptionUseCase>();
 
 // Swagger with JWT bearer
 builder.Services.AddSwaggerGen(option =>

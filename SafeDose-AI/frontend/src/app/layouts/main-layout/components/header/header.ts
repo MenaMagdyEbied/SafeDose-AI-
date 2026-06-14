@@ -1,11 +1,13 @@
 import { ChangeDetectorRef, Component, inject } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import {
+  Bell,
   ChevronDown,
   CircleUser,
   Heart,
   LogOut,
   LucideAngularModule,
+  Pill,
   ShieldAlert,
   User,
   UserCheck,
@@ -28,11 +30,13 @@ export class Header {
   logOutIcon = LogOut;
   chevronDownIcon = ChevronDown;
   userCheckIcon = UserCheck;
+  bellIcon = Bell;
   circleUserIcon = CircleUser;
   userIcon = User;
   usersIcon = Users;
   userCircleIcon = CircleUser;
   shieldAlertIcon = ShieldAlert;
+  pill = Pill;
 
   logout(): void {
     this.showLogoutConfirm = false;
@@ -49,5 +53,8 @@ export class Header {
 
   toggleDropdown() {
     this.accountMenu = !this.accountMenu;
+  }
+  get unreadCount(): number {
+    return 2;
   }
 }

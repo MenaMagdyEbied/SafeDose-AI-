@@ -39,12 +39,11 @@ export class Pricing {
     return this.subscriptionService.getPlans();
   }
 
-  subscribe(planId: 'free' | 'family'): void {
-    if (!this.auth.isLoggedIn) {
-      this.router.navigate(['/auth']);
-      return;
+  subscribe(planId: string) {
+    if (planId === 'free') {
+      this.router.navigate(['/register']);
+    } else {
+      this.router.navigate(['/payment'], { queryParams: { plan: planId } });
     }
-    this.auth.updateProfile({ subscriptionPlan: planId });
-    this.router.navigate(['/patient']);
   }
 }

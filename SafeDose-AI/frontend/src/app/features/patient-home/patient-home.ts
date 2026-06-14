@@ -14,7 +14,7 @@ import { Auth } from '../../core/auth/services/auth';
 
 @Component({
   selector: 'app-patient-home',
-  imports: [LucideAngularModule,RouterLink],
+  imports: [LucideAngularModule, RouterLink],
   templateUrl: './patient-home.html',
   styleUrl: './patient-home.css',
 })
@@ -35,7 +35,7 @@ export class PatientHome {
   get user() {
     return {
       phone: '+201099999999',
-      name:  'دعاء أشرف',
+      name: 'دعاء أشرف',
       age: 30,
       conditions: ['السكري', 'الضغط', 'القلب'],
       allergies: 'لا يوجد',

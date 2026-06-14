@@ -1,0 +1,340 @@
+<section class="flex min-h-screen items-center justify-center bg-background p-6">
+  <!-- Form Side -->
+  <div
+    class="w-full bg-white rounded-3xl shadow-xl overflow-hidden flex flex-col lg:flex-row max-w-5xl"
+  >
+    <div
+      class="w-full lg:w-1/2 flex flex-col justify-center items-center px-8 py-10 order-2 lg:order-1"
+    >
+      <div class="max-w-[480px] w-full">
+        <!-- Brand -->
+        <div class="mb-10 text-right">
+          <h1 class="text-3xl font-extrabold text-primary mb-1">SafeDose AI</h1>
+          <p class="text-sm text-outline">خطوتك الأولى نحو إدارة صحية أكثر أماناً وذكاءً</p>
+        </div>
+
+        <!-- Progress Bars -->
+        <div class="flex items-center gap-2 mb-10">
+          @for (step of [1, 2, 3, 4]; track step) {
+            <div
+              class="h-1.5 flex-1 rounded-full transition-all duration-300"
+              [class]="currentStep >= step ? 'bg-primary' : 'bg-surface-container-high'"
+            ></div>
+          }
+        </div>
+
+        <!-- Step 1: Basic Info -->
+        @if (currentStep === 1) {
+          <div class="space-y-5 animate-fade-in">
+            <h2 class="text-xs font-extrabold text-outline uppercase tracking-widest">
+              المعلومات الأساسية
+            </h2>
+
+            <div class="space-y-1">
+              <label class="text-sm font-bold text-on-background block">الاسم الكامل</label>
+              <input
+                type="text"
+                placeholder="أدخل اسمك الثلاثي"
+                [(ngModel)]="form.fullName"
+                class="w-full h-12 px-4 bg-white border border-outline-variant rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none text-sm font-medium transition-all"
+              />
+            </div>
+
+            <div class="space-y-1">
+              <label class="text-sm font-bold text-on-background block">رقم الهاتف</label>
+              <input
+                type="tel"
+                placeholder="+20 1X XXXX XXXX"
+                [(ngModel)]="form.phone"
+                dir="ltr"
+                class="w-full h-12 px-4 bg-white border border-outline-variant rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none text-sm font-medium transition-all text-left"
+              />
+            </div>
+
+            <div class="space-y-1">
+              <label class="text-sm font-bold text-on-background block">البريد الإلكتروني</label>
+              <input
+                type="email"
+                placeholder="example@health.com"
+                [(ngModel)]="form.email"
+                dir="ltr"
+                class="w-full h-12 px-4 bg-white border border-outline-variant rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none text-sm font-medium transition-all text-left"
+              />
+            </div>
+
+            <button
+              (click)="nextStep()"
+              class="w-full h-14 bg-primary hover:bg-primary-dark text-white rounded-2xl font-bold text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.98] shadow-md mt-2"
+            >
+              <span>المتابعة</span>
+              <lucide-icon [img]="arrowLeftIcon" class="w-5 h-5"></lucide-icon>
+            </button>
+          </div>
+        }
+
+        <!-- Step 2: Health Details -->
+        @if (currentStep === 2) {
+          <div class="space-y-5 animate-fade-in">
+            <h2 class="text-xs font-extrabold text-outline uppercase tracking-widest">
+              التفاصيل الصحية
+            </h2>
+
+            <div class="space-y-1">
+              <label class="text-sm font-bold text-on-background block">العمر</label>
+              <input
+                type="number"
+                placeholder="سنوات"
+                [(ngModel)]="form.age"
+                class="w-full h-12 px-4 bg-white border border-outline-variant rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none text-sm font-medium transition-all"
+              />
+            </div>
+
+            <div class="space-y-2">
+              <label class="text-sm font-bold text-on-background block"
+                >الحالات المزمنة (اختر ما ينطبق)</label
+              >
+              <div class="flex flex-wrap gap-2">
+                @for (cond of conditions; track cond) {
+                  <button
+                    (click)="toggleCondition(cond)"
+                    [class]="
+                      form.conditions.includes(cond)
+                        ? 'px-4 py-2 rounded-full text-xs font-bold bg-primary text-white border border-primary transition-all'
+                        : 'px-4 py-2 rounded-full text-xs font-bold bg-surface-container-low border border-outline-variant text-on-background hover:bg-surface-container transition-all'
+                    "
+                  >
+                    {{ cond }}
+                  </button>
+                }
+              </div>
+            </div>
+
+            <div class="space-y-1">
+              <label class="text-sm font-bold text-on-background block">رقم الطوارئ</label>
+              <input
+                type="tel"
+                placeholder="رقم شخص مقرب"
+                [(ngModel)]="form.emergency"
+                dir="ltr"
+                class="w-full h-12 px-4 bg-white border border-outline-variant rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none text-sm font-medium transition-all text-left"
+              />
+            </div>
+
+            <div class="flex gap-3 mt-2">
+              <button
+                (click)="prevStep()"
+                class="flex-1 h-14 bg-surface-container-high hover:bg-surface-container text-on-background rounded-2xl font-bold text-sm flex items-center justify-center gap-2 transition-all"
+              >
+                <lucide-icon [img]="arrowRightIcon" class="w-5 h-5"></lucide-icon>
+                <span>السابق</span>
+              </button>
+              <button
+                (click)="nextStep()"
+                class="flex-[2] h-14 bg-primary hover:bg-primary-dark text-white rounded-2xl font-bold text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.98] shadow-md"
+              >
+                <span>المتابعة</span>
+                <lucide-icon [img]="arrowLeftIcon" class="w-5 h-5"></lucide-icon>
+              </button>
+            </div>
+          </div>
+        }
+
+        <!-- Step 3: Consent / Permissions -->
+        @if (currentStep === 3) {
+          <div class="space-y-5 animate-fade-in">
+            <div class="text-right space-y-1">
+              <h2 class="text-xs font-extrabold text-outline uppercase tracking-widest">
+                الصلاحيات والموافقات
+              </h2>
+              <p class="text-xs text-outline leading-relaxed">
+                اختر الصلاحيات التي تمنحها للتطبيق لتحسين تجربتك الصحية
+              </p>
+            </div>
+
+            <div class="space-y-3">
+              @for (perm of permissions; track perm.id) {
+                <label
+                  class="flex items-start gap-4 p-4 bg-white border rounded-2xl cursor-pointer transition-all hover:border-primary/40"
+                  [class]="
+                    form.permissions.includes(perm.id)
+                      ? 'border-primary bg-primary/5'
+                      : 'border-outline-variant'
+                  "
+                >
+                  <input
+                    type="checkbox"
+                    [checked]="form.permissions.includes(perm.id)"
+                    (change)="togglePermission(perm.id)"
+                    class="mt-0.5 w-5 h-5 accent-primary rounded shrink-0"
+                  />
+                  <div class="flex-1 text-right space-y-0.5">
+                    <div class="flex items-center gap-2 justify-end">
+                      <span class="text-sm font-bold text-on-background">{{ perm.title }}</span>
+                      @if (perm.required) {
+                        <span
+                          class="text-[10px] font-extrabold bg-danger-container text-on-danger-container px-2 py-0.5 rounded-full"
+                          >مطلوب</span
+                        >
+                      }
+                    </div>
+                    <p class="text-xs text-outline leading-relaxed">{{ perm.description }}</p>
+                  </div>
+                  <div
+                    class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                    [class]="perm.color"
+                  >
+                    <lucide-icon [img]="perm.icon" class="w-5 h-5"></lucide-icon>
+                  </div>
+                </label>
+              }
+            </div>
+
+            <div class="flex gap-3 mt-2">
+              <button
+                (click)="prevStep()"
+                class="flex-1 h-14 bg-surface-container-high hover:bg-surface-container text-on-background rounded-2xl font-bold text-sm flex items-center justify-center gap-2 transition-all"
+              >
+                <lucide-icon [img]="arrowRightIcon" class="w-5 h-5"></lucide-icon>
+                <span>السابق</span>
+              </button>
+              <button
+                (click)="nextStep()"
+                [disabled]="!requiredPermissionsAccepted"
+                class="flex-[2] h-14 bg-primary hover:bg-primary-dark text-white disabled:bg-slate-300 disabled:text-outline disabled:cursor-not-allowed rounded-2xl font-bold text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.98] shadow-md"
+              >
+                <span>المتابعة</span>
+                <lucide-icon [img]="arrowLeftIcon" class="w-5 h-5"></lucide-icon>
+              </button>
+            </div>
+          </div>
+        }
+
+        <!-- Step 4: Password -->
+        @if (currentStep === 4) {
+          <div class="space-y-5 animate-fade-in">
+            <h2 class="text-xs font-extrabold text-outline uppercase tracking-widest">
+              الأمان والحساب
+            </h2>
+
+            <div class="space-y-1">
+              <label class="text-sm font-bold text-on-background block">كلمة المرور</label>
+              <div class="relative">
+                <input
+                  [type]="showPassword ? 'text' : 'password'"
+                  placeholder="••••••••"
+                  [(ngModel)]="form.password"
+                  class="w-full h-12 px-4 pl-12 bg-white border border-outline-variant rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none text-sm font-medium transition-all"
+                />
+                <button
+                  type="button"
+                  (click)="showPassword = !showPassword"
+                  class="absolute left-3 top-1/2 -translate-y-1/2 text-outline hover:text-on-background transition-colors p-1"
+                >
+                  <lucide-icon
+                    [img]="showPassword ? eyeOffIcon : eyeIcon"
+                    class="w-5 h-5"
+                  ></lucide-icon>
+                </button>
+              </div>
+            </div>
+
+            <div class="space-y-1">
+              <label class="text-sm font-bold text-on-background block">تأكيد كلمة المرور</label>
+              <div class="relative">
+                <input
+                  [type]="showConfirm ? 'text' : 'password'"
+                  placeholder="••••••••"
+                  [(ngModel)]="form.confirmPassword"
+                  class="w-full h-12 px-4 pl-12 bg-white border border-outline-variant rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none text-sm font-medium transition-all"
+                />
+                <button
+                  type="button"
+                  (click)="showConfirm = !showConfirm"
+                  class="absolute left-3 top-1/2 -translate-y-1/2 text-outline hover:text-on-background transition-colors p-1"
+                >
+                  <lucide-icon
+                    [img]="showConfirm ? eyeOffIcon : eyeIcon"
+                    class="w-5 h-5"
+                  ></lucide-icon>
+                </button>
+              </div>
+              @if (form.confirmPassword && form.password !== form.confirmPassword) {
+                <p class="text-xs text-danger font-bold mt-1">كلمتا المرور غير متطابقتان</p>
+              }
+            </div>
+
+            <div class="flex gap-3 mt-2">
+              <button
+                (click)="prevStep()"
+                class="flex-1 h-14 bg-surface-container-high hover:bg-surface-container text-on-background rounded-2xl font-bold text-sm flex items-center justify-center gap-2 transition-all"
+              >
+                <lucide-icon [img]="arrowRightIcon" class="w-5 h-5"></lucide-icon>
+                <span>السابق</span>
+              </button>
+              <button
+                (click)="submit()"
+                [disabled]="!canSubmit"
+                class="flex-[2] h-14 bg-primary hover:bg-primary-dark text-white disabled:bg-slate-300 disabled:text-outline disabled:cursor-not-allowed rounded-2xl font-bold text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.98] shadow-md"
+              >
+                <lucide-icon [img]="shieldCheckIcon" class="w-5 h-5"></lucide-icon>
+                <span>إنشاء الحساب</span>
+              </button>
+            </div>
+          </div>
+        }
+
+        <div class="mt-8 text-center">
+          <p class="text-sm text-outline">
+            لديك حساب بالفعل؟
+            <a
+              routerLink="/login"
+              class="text-primary font-bold hover:underline mr-1 cursor-pointer"
+            >
+              تسجيل الدخول</a
+            >
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Illustration Side -->
+    <div
+      class="hidden lg:flex w-full lg:w-1/2 order-1 lg:order-2 relative overflow-hidden flex-col justify-center items-center text-center p-16"
+      style="background: linear-gradient(135deg, #005eb8 0%, #003366 60%, #007f7c 100%)"
+    >
+      <!-- Background Image -->
+      <img
+        src="/images/register.png"
+        alt=""
+        class="absolute inset-0 w-full h-full object-cover opacity-20 mix-blend-luminosity"
+      />
+
+      <!-- Content -->
+      <div class="max-w-[440px] z-10 relative">
+        <h2 class="text-4xl font-extrabold text-white mb-4 leading-tight">
+          رعاية صحية شاملة لعائلتك
+        </h2>
+        <p class="text-base text-white/70 mb-8 leading-relaxed">
+          نستخدم الذكاء الاصطناعي لضمان حصولك على الجرعة الصحيحة في الوقت الصحيح
+        </p>
+        <div class="grid grid-cols-2 gap-3 text-right">
+          @for (feat of features; track feat) {
+            <div
+              class="flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-xl px-3 py-2.5 border border-white/20"
+            >
+              <lucide-icon
+                [img]="checkCircleIcon"
+                class="w-4 h-4 text-white shrink-0"
+              ></lucide-icon>
+              <span class="text-xs font-bold text-white">{{ feat }}</span>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Decorative blobs -->
+      <div class="absolute -bottom-24 -right-24 w-96 h-96 bg-white/5 rounded-full blur-3xl"></div>
+      <div class="absolute top-12 -left-12 w-64 h-64 bg-white/10 rounded-full blur-2xl"></div>
+    </div>
+  </div>
+</section>

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -9,6 +10,8 @@ using SafeDose.Application.Auth.ServicesInterfaces;
 using SafeDose.Application.Interfaces;
 using SafeDose.Application.UseCases;
 using SafeDose.Application.UseCases.Medication;
+using SafeDose.Application.UserProfile.RepositoryInterface;
+using SafeDose.Application.UserProfile.ServicesInterface;
 using SafeDose.Domain.ApplicationDbContext;
 using SafeDose.Domain.Entities;
 using SafeDose.Domain.Services;
@@ -16,6 +19,8 @@ using SafeDose.Infrastructure.Auth;
 using SafeDose.Infrastructure.ExternalServices;
 using SafeDose.Infrastructure.Repositories;
 using SafeDose.Infrastructure.Seeders;
+using SafeDose.Infrastructure.UserProfile.RepositoryImplementation;
+using SafeDose.Infrastructure.UserProfile.ServicesImplementation;
 using SafeDose.Shared.helper;
 using System.Security.Claims;
 using System.Text;
@@ -29,16 +34,29 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddDbContext<AppDbContext>(opt =>
     opt.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Identity + JWT
+builder.Services.Configure<DataProtectionTokenProviderOptions>(options =>
+{
+    options.TokenLifespan = TimeSpan.FromMinutes(3);
+});
+
 builder.Services.Configure<JWT>(builder.Configuration.GetSection("JWT"));
 
 builder.Services
-    .AddIdentity<Account, IdentityRole>(options => options.User.RequireUniqueEmail = true)
+    .AddIdentity<Account, IdentityRole>(options =>
+    {
+        options.User.RequireUniqueEmail = true;
+        options.SignIn.RequireConfirmedEmail = true;
+        options.Tokens.EmailConfirmationTokenProvider = TokenOptions.DefaultEmailProvider;
+        options.Tokens.PasswordResetTokenProvider = TokenOptions.DefaultEmailProvider;
+    })
     .AddEntityFrameworkStores<AppDbContext>()
     .AddDefaultTokenProviders();
 
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserGlobalServices, UserGlobalServices>();
+builder.Services.AddScoped<IEmailSender, EmailSernder>();
+builder.Services.AddScoped<IUserProfileRepository, UserProfileRepository>();
+builder.Services.AddScoped<IUserProfileServices, UserProfileServices>();
 
 builder.Services.AddAuthentication(options =>
 {
@@ -49,6 +67,8 @@ builder.Services.AddAuthentication(options =>
 {
     options.SaveToken = false;
     options.RequireHttpsMetadata = false;
+    // Don't let the middleware remap "sub" to NameIdentifier - keeps user.Id distinct from userName
+    options.MapInboundClaims = false;
     options.TokenValidationParameters = new TokenValidationParameters
     {
         RoleClaimType = ClaimTypes.Role,
@@ -89,7 +109,8 @@ builder.Services.AddScoped<IAuditLogService, SqlAuditLogService>();
 builder.Services
     .AddHttpClient<ILangflowClient, LangflowClient>(client =>
     {
-        client.Timeout = TimeSpan.FromSeconds(30);
+        // Langflow LLM calls can take a while on cold start - 30s wasn't enough
+        client.Timeout = TimeSpan.FromSeconds(120);
     })
     .AddPolicyHandler(HttpPolicyExtensions
         .HandleTransientHttpError()
@@ -110,6 +131,7 @@ builder.Services
 builder.Services.AddScoped<SearchDrugsUseCase>();
 builder.Services.AddScoped<CheckDrugInteractionUseCase>();
 builder.Services.AddScoped<CheckStandaloneInteractionUseCase>();
+builder.Services.AddScoped<CheckCatalogInteractionsUseCase>();
 builder.Services.AddScoped<GetInteractionHistoryUseCase>();
 builder.Services.AddScoped<GetInteractionCheckByIdUseCase>();
 builder.Services.AddScoped<AcknowledgeWarningUseCase>();
@@ -156,6 +178,7 @@ builder.Services.AddSwaggerGen(option =>
         BearerFormat = "JWT",
         In = ParameterLocation.Header,
         Description = "JWT Authorization header using the Bearer scheme.\r\n\r\nEnter 'Bearer' [space] and then your token.\r\nExample: \"Bearer 12345abcdef\""
+
     });
 
     option.AddSecurityRequirement(new OpenApiSecurityRequirement

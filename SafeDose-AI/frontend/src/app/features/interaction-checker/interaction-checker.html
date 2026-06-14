@@ -1,0 +1,193 @@
+<section class="container-app space-y-6 pt-16 pb-24">
+  <div class="text-center mb-6 space-y-2">
+    <h2 class="text-2xl sm:text-3xl font-extrabold text-primary">فحص التداخل الدوائي الفوري</h2>
+    <p class="text-sm text-outline">
+      ابحث عن الأدوية أو امسح الوصفة المكتوبة بالكامل للتأكد من توافقها الطبي
+    </p>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+    <!-- Search Area -->
+    <div class="md:col-span-8 flex flex-col gap-4">
+      <div class="bg-white p-4 sm:p-6 rounded-2xl border border-outline-variant shadow-sm relative">
+        <label class="block text-sm font-bold text-primary mb-3">ابحث عن دواء بالاسم</label>
+        <div class="relative flex items-center">
+          <input
+            type="text"
+            placeholder="مثلاً: بانادول، أسبرين، وارفارين..."
+            [(ngModel)]="searchWord"
+            (ngModelChange)="onSearchChange($event)"
+            (focus)="resultsOpen = true"
+            class="w-full h-[56px] pr-12 pl-4 rounded-xl border-2 border-outline-variant outline-none focus:border-primary text-right"
+          />
+          <lucide-icon
+            [img]="searchIcon"
+            class="absolute right-4 text-outline w-5 h-5"
+          ></lucide-icon>
+        </div>
+        @if (resultsOpen) {
+          <div
+            class="absolute top-[100%] right-0 left-0 mt-2 bg-white border border-outline-variant rounded-xl shadow-lg z-30 overflow-hidden"
+          >
+            <div
+              class="bg-slate-50 px-4 py-2 text-xs font-bold text-outline border-b border-outline-variant/30 text-right"
+            >
+              أدوية شائعة:
+            </div>
+            @for (d of filteredDrugs; track d) {
+              <div
+                (click)="addMed(d)"
+                class="px-4 py-3 hover:bg-surface-container-low transition-colors cursor-pointer border-b border-outline-variant/20 text-right text-sm hover:text-primary font-medium"
+              >
+                {{ d }}
+              </div>
+            }
+            @if (filteredDrugs.length === 0 && searchWord) {
+              <div
+                (click)="addMed(searchWord)"
+                class="px-4 py-3 hover:bg-surface-container-low transition-colors cursor-pointer text-right text-sm text-primary font-bold"
+              >
+                إضافة دواء مخصص: "{{ searchWord }}"
+              </div>
+            }
+            <div
+              (click)="resultsOpen = false"
+              class="px-4 py-1.5 bg-slate-50 text-center text-xs text-outline cursor-pointer hover:bg-slate-100 font-semibold"
+            >
+              إغلاق القائمة ✕
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Selected Meds Chips -->
+      <div
+        class="bg-surface-container-low p-4 sm:p-6 rounded-2xl border border-outline-variant shadow-sm min-h-[160px] flex flex-col justify-between"
+      >
+        <div class="flex flex-wrap justify-between items-center gap-2 mb-4">
+          <h3 class="text-md font-bold text-on-background">الأدوية المختارة للفحص</h3>
+          <span class="text-xs text-outline">يمكنك إضافة حتى ٦ أدوية</span>
+        </div>
+        @if (selectedMeds.length === 0) {
+          <div class="flex-1 flex flex-col items-center justify-center text-outline py-6">
+            <lucide-icon [img]="pillIcon" class="w-10 h-10 mb-2 opacity-50"></lucide-icon>
+            <span class="text-xs">لم يتم اختيار أي أدوية بعد</span>
+          </div>
+        } @else {
+          <div class="flex flex-wrap gap-2.5">
+            @for (med of selectedMeds; track med; let i = $index) {
+              <div
+                class="inline-flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-full shadow-sm text-sm font-bold"
+              >
+                <span>{{ med }}</span>
+                <button
+                  (click)="removeMed(i)"
+                  class="hover:bg-white/20 p-0.5 rounded-full transition-colors cursor-pointer"
+                >
+                  <lucide-icon [img]="xIcon" class="w-4 h-4"></lucide-icon>
+                </button>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Quick Actions Panel -->
+    <div class="md:col-span-4 flex flex-col gap-4">
+      <button
+        (click)="loadFromProfile()"
+        class="flex items-center justify-between w-full p-4 bg-white hover:bg-slate-50 rounded-2xl border border-outline-variant shadow-sm transition-all text-right group cursor-pointer"
+      >
+        <div class="flex items-center gap-4">
+          <div
+            class="w-12 h-12 bg-primary-container text-primary rounded-full flex items-center justify-center shrink-0"
+          >
+            <lucide-icon [img]="bookOpenIcon" class="w-6 h-6 animate-pulse"></lucide-icon>
+          </div>
+          <div>
+            <span class="text-sm font-bold block text-on-background">من ملف أدويتي</span>
+            <span class="text-[11px] text-outline leading-tight">تحميل وصفتك الطبية</span>
+          </div>
+        </div>
+        <lucide-icon
+          [img]="chevronRightIcon"
+          class="w-5 h-5 text-outline group-hover:-translate-x-1 transition-transform shrink-0"
+        ></lucide-icon>
+      </button>
+
+      <button
+        (click)="scanBarcode()"
+        class="flex items-center justify-between w-full p-4 bg-white hover:bg-slate-50 rounded-2xl border border-outline-variant shadow-sm transition-all text-right group cursor-pointer"
+      >
+        <div class="flex items-center gap-4">
+          <div
+            class="w-12 h-12 bg-tertiary-container text-tertiary rounded-full flex items-center justify-center shrink-0"
+          >
+            <lucide-icon [img]="qrCodeIcon" class="w-6 h-6"></lucide-icon>
+          </div>
+          <div>
+            <span class="text-sm font-bold block text-on-background">مسح باركود العلبة</span>
+            <span class="text-[11px] text-outline leading-tight">توجيه الكاميرا</span>
+          </div>
+        </div>
+        <lucide-icon
+          [img]="chevronRightIcon"
+          class="w-5 h-5 text-outline group-hover:-translate-x-1 transition-transform shrink-0"
+        ></lucide-icon>
+      </button>
+
+      <button
+        (click)="voiceInput()"
+        class="flex items-center justify-between w-full p-4 bg-white hover:bg-slate-50 rounded-2xl border border-outline-variant shadow-sm transition-all text-right group cursor-pointer"
+      >
+        <div class="flex items-center gap-4">
+          <div
+            class="w-12 h-12 bg-secondary-container text-on-secondary rounded-full flex items-center justify-center shrink-0"
+          >
+            <lucide-icon [img]="sparklesIcon" class="w-6 h-6"></lucide-icon>
+          </div>
+          <div>
+            <span class="text-sm font-bold block text-on-background">إضافة صوتية ذكية</span>
+            <span class="text-[11px] text-outline leading-tight">تحدث بأسماء أدويتك</span>
+          </div>
+        </div>
+        <lucide-icon
+          [img]="chevronRightIcon"
+          class="w-5 h-5 text-outline group-hover:-translate-x-1 transition-transform shrink-0"
+        ></lucide-icon>
+      </button>
+    </div>
+  </div>
+
+  <!-- Check Button -->
+  <div class="mt-8 flex flex-col items-center justify-center gap-4">
+    <button
+      (click)="runCheck()"
+      [disabled]="selectedMeds.length < 2 || loading"
+      class="w-full max-w-lg h-[60px] bg-primary hover:bg-primary-dark text-white rounded-full font-bold text-base sm:text-lg flex items-center justify-center gap-3 transition-all active:scale-95 shadow-md disabled:bg-slate-300 disabled:text-outline disabled:cursor-not-allowed cursor-pointer"
+    >
+      @if (loading) {
+        <div
+          class="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"
+        ></div>
+        <span>جاري فحص تعارض الأدوية...</span>
+      } @else {
+        <span>افحص التداخلات الدوائية الآن</span>
+        <lucide-icon [img]="activityIcon" class="w-6 h-6 animate-pulse"></lucide-icon>
+      }
+    </button>
+    <div
+      class="bg-danger-container text-on-danger-container p-4 rounded-xl flex items-start gap-4 max-w-lg w-full"
+    >
+      <lucide-icon
+        [img]="alertTriangleIcon"
+        class="w-5 h-5 shrink-0 text-danger mt-0.5"
+      ></lucide-icon>
+      <p class="text-xs text-right leading-relaxed">
+        تنبيه: محرك فحص التداخلات هو نظام استشاري رقمي مساند بالذكاء الاصطناعي ولا يغني عن مراجعة
+        طبيبك المختص.
+      </p>
+    </div>
+  </div>
+</section>

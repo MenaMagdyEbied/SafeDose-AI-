@@ -1,0 +1,327 @@
+<!-- Hero Section -->
+<section class="relative pt-16 pb-24 overflow-hidden">
+  <div
+    class="absolute inset-0 pointer-events-none bg-[radial-gradient(var(--color-primary)_0.5px,transparent_0.5px)] [background-size:24px_24px] opacity-10"
+  ></div>
+  <div class="container-app grid grid-cols-1 lg:grid-cols-2 gap-12 items-center relative z-10">
+    <div class="space-y-6 sm:space-y-8 text-right order-2 lg:order-1 animate-slide-in-top">
+      <div
+        class="inline-flex items-center px-4 py-2 rounded-full bg-primary-container text-primary gap-2"
+      >
+        <lucide-icon [img]="shieldIcon" class="w-5 h-5 shrink-0"></lucide-icon>
+        <span class="text-xs font-semibold">موثوق ومصادق عليه من قبل المتخصصين الطبيين</span>
+      </div>
+
+      <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black text-on-background leading-tight">
+        سلامتكم هي أولويتنا القصوى في <span class="text-primary">SafeDose AI</span>
+      </h1>
+
+      <p class="text-on-surface-variant text-base sm:text-lg leading-relaxed max-w-xl">
+        منصة ذكاء اصطناعي متطورة تضمن لك ولعائلتك تجنب مخاطر التفاعلات الدوائية والتداخلات الطبية
+        وتناول الأدوية بأمن وسلامة تامة عبر فحص فوري وذكي.
+      </p>
+
+      <div class="flex flex-col sm:flex-row-reverse gap-4">
+        <a
+          routerLink="/register"
+          class="bg-primary sm:flex-1 hover:bg-primary-dark text-white px-8 py-4 rounded-xl text-md font-bold transition-all shadow-lg active:scale-95 text-center"
+        >
+          سجّل حسابك مجاناً
+        </a>
+        <a
+          routerLink="/login"
+          class="border-2 sm:flex-1 border-primary text-primary hover:bg-primary/5 px-8 py-4 rounded-xl text-md font-bold transition-all text-center"
+        >
+          تسجيل الدخول
+        </a>
+      </div>
+    </div>
+
+    <div class="order-1 lg:order-2 flex justify-center animate-fade-in">
+      <div class="relative w-full max-w-[450px]">
+        <div
+          class="absolute -top-6 -right-6 w-32 h-32 bg-primary-container/40 rounded-full blur-3xl"
+        ></div>
+        <div
+          class="absolute -bottom-10 -left-10 w-48 h-48 bg-secondary-container/40 rounded-full blur-3xl"
+        ></div>
+        <div
+          class="bg-white border border-outline-variant/80 p-4 rounded-[2.5rem] shadow-2xl relative overflow-hidden group"
+        >
+          <div
+            class="w-full h-[220px] sm:h-[300px] bg-gradient-to-br from-primary/10 to-tertiary/10 rounded-3xl flex items-center justify-center"
+          >
+            <lucide-icon
+              [img]="pillIcon"
+              class="w-24 h-24 sm:w-32 sm:h-32 text-primary/30"
+            ></lucide-icon>
+          </div>
+          <div
+            class="absolute top-6 left-6 sm:top-8 sm:left-8 bg-danger-container text-on-danger-container p-2.5 sm:p-3 rounded-xl flex items-center gap-2 shadow-md animate-bounce-slow max-w-[85%]"
+          >
+            <lucide-icon [img]="alertIcon" class="w-5 h-5 text-danger shrink-0"></lucide-icon>
+            <span class="text-xs font-bold">تنبيه: تداخل دوائي محتمل!</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Features Bento Section -->
+<section class="py-16 bg-background">
+  <div class="container-app">
+    <div class="text-center mb-12 sm:mb-16 space-y-3">
+      <h2 class="text-2xl sm:text-3xl font-bold text-primary">ذكاء اصطناعي فائق في خدمة صحتك</h2>
+      <p class="text-on-surface-variant max-w-xl mx-auto text-sm sm:text-md">
+        صممنا SafeDose AI ليكون رفيقك الصحي الدائم، مع ميزات متطورة تضمن لك ولأحبابك أعلى مستويات
+        الأمان.
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
+      <!-- Feature 1 -->
+      <div
+        class="md:col-span-2 bg-white border border-outline-variant/30 rounded-3xl p-6 sm:p-8 hover:shadow-lg transition-all flex flex-col md:flex-row-reverse gap-6 sm:gap-8 items-center text-right"
+      >
+        <div
+          class="w-16 h-16 sm:w-20 sm:h-20 bg-primary-container text-primary rounded-2xl flex items-center justify-center shrink-0"
+        >
+          <lucide-icon [img]="pillIcon" class="w-8 h-8 sm:w-10 sm:h-10"></lucide-icon>
+        </div>
+        <div class="flex-1 space-y-2">
+          <h3 class="text-lg sm:text-xl font-bold text-on-background">
+            فحص التداخلات الدوائية الفوري
+          </h3>
+          <p class="text-on-surface-variant text-sm leading-relaxed">
+            بمجرد إدخال أو تصوير أدويتك، يقوم النظام بتحليلها ومطابقتها فورياً بقاعدة بيانات الأدوية
+            المصرية والعالمية المحدثة بالذكاء الاصطناعي لكشف أي خطورة علاجية.
+          </p>
+        </div>
+      </div>
+
+      <!-- Feature 2 -->
+      <div
+        class="bg-secondary-container/40 p-6 sm:p-8 rounded-3xl border border-secondary/30 hover:shadow-lg transition-all flex flex-col justify-between text-right"
+      >
+        <div
+          class="w-12 h-12 sm:w-14 sm:h-14 bg-secondary text-white rounded-xl flex items-center justify-center mb-6"
+        >
+          <lucide-icon [img]="sparklesIcon" class="w-6 h-6 sm:w-8 sm:h-8"></lucide-icon>
+        </div>
+        <div class="space-y-2">
+          <h3 class="text-base sm:text-lg font-bold text-on-secondary">تذكيرات معززة ذكية</h3>
+          <p class="text-on-surface-variant text-xs leading-relaxed">
+            تذكيرات وجداول جرعات متوافقة كلياً مع أوقاتك وحالتك الصحية للتأكد من تناولك العلاج في
+            الموعد الصحيح وبدقة فائقة.
+          </p>
+        </div>
+      </div>
+
+      <!-- Feature 3 -->
+      <div
+        class="bg-surface-container-low p-6 sm:p-8 rounded-3xl border border-outline-variant hover:shadow-lg transition-all flex flex-col justify-between text-right"
+      >
+        <div
+          class="w-12 h-12 sm:w-14 sm:h-14 bg-tertiary text-white rounded-xl flex items-center justify-center mb-6"
+        >
+          <lucide-icon [img]="activityIcon" class="w-6 h-6 sm:w-8 sm:h-8"></lucide-icon>
+        </div>
+        <div class="space-y-2">
+          <h3 class="text-base sm:text-lg font-bold text-on-background">تنبيهات مقدمي الرعاية</h3>
+          <p class="text-on-surface-variant text-xs leading-relaxed">
+            إرسال إشعارات وتنبيهات فورية لأفراد عائلتك أو طبيبك الخاص في الطوارئ أو في حالة تخطي
+            وحاجة إعادة تعبئة الأدوية الحرجة.
+          </p>
+        </div>
+      </div>
+
+      <!-- Feature 4 -->
+      <div
+        class="md:col-span-2 bg-neutral-dark p-6 sm:p-8 rounded-3xl border border-[#222222] hover:shadow-lg transition-all flex items-center text-right"
+      >
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 items-center w-full">
+          <div class="space-y-2">
+            <h3 class="text-lg sm:text-xl font-bold text-secondary">أمان وحماية البيانات المطلق</h3>
+            <p class="text-neutral-light/80 text-xs leading-relaxed">
+              جميع سجلاتك ووصفاتك الطبية مشفرة بالكامل ومتوافقة مع معايير HIPAA الطبية العالمية لمنع
+              مشاركتها على الإطلاق. خصوصيتك هي أماننا.
+            </p>
+          </div>
+          <div class="flex justify-center">
+            <lucide-icon
+              [img]="shieldIcon"
+              class="w-16 h-16 sm:w-24 sm:h-24 text-primary/20"
+            ></lucide-icon>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Trust & Review -->
+<section class="py-12 bg-white text-center">
+  <div class="container-app space-y-12">
+    <!-- Trust Badges -->
+    <div class="flex flex-wrap justify-center gap-6 sm:gap-12 items-center opacity-60">
+      <div class="flex items-center gap-2">
+        <lucide-icon
+          [img]="activityIcon"
+          class="w-5 h-5 sm:w-6 sm:h-6 text-primary shrink-0"
+        ></lucide-icon>
+        <span class="font-bold text-on-surface-variant text-xs sm:text-sm"
+          >وزارة الصحة المصرية</span
+        >
+      </div>
+      <div class="flex items-center gap-2">
+        <lucide-icon
+          [img]="shieldIcon"
+          class="w-5 h-5 sm:w-6 sm:h-6 text-primary shrink-0"
+        ></lucide-icon>
+        <span class="font-bold text-on-surface-variant text-xs sm:text-sm"
+          >معايير HIPAA الطبية</span
+        >
+      </div>
+      <div class="flex items-center gap-2">
+        <lucide-icon
+          [img]="sparklesIcon"
+          class="w-5 h-5 sm:w-6 sm:h-6 text-secondary shrink-0"
+        ></lucide-icon>
+        <span class="font-bold text-on-surface-variant text-xs sm:text-sm"
+          >شهادة الجودة الرقمية</span
+        >
+      </div>
+    </div>
+
+    <!-- Reviews Header -->
+    <div class="space-y-2">
+      <h2 class="text-2xl sm:text-3xl font-bold text-primary">آراء مستخدمينا</h2>
+      <p class="text-on-surface-variant text-sm">شاركنا تجربتك مع SafeDose AI</p>
+    </div>
+
+    <!-- Reviews Grid -->
+    <div class="flex gap-4 overflow-x-auto pb-3 text-right snap-x snap-mandatory reviews-scroll">
+      @for (review of reviews; track review.id) {
+        <div
+          class="bg-surface-container-low rounded-2xl p-5 border border-outline-variant/30 space-y-3 shrink-0 w-[280px] sm:w-[320px] snap-start"
+        >
+          <div class="flex items-center justify-between">
+            <div class="flex text-secondary text-sm">
+              @for (star of getStars(review.rating); track $index) {
+                <span>★</span>
+              }
+              @for (star of getEmptyStars(review.rating); track $index) {
+                <span class="opacity-30">★</span>
+              }
+            </div>
+            <div
+              class="w-9 h-9 bg-primary/10 rounded-full flex items-center justify-center text-sm font-extrabold text-primary"
+            >
+              {{ review.name[0] }}
+            </div>
+          </div>
+          <p class="text-sm text-on-surface-variant leading-relaxed">"{{ review.text }}"</p>
+          <p class="text-xs font-bold text-primary">— {{ review.name }}</p>
+        </div>
+      }
+    </div>
+    <!-- Add Review -->
+    @if (!showReviewForm) {
+      <button
+        (click)="showReviewForm = true"
+        class="mx-auto flex items-center gap-2 px-6 py-3 bg-primary text-white rounded-xl font-bold text-sm hover:bg-primary-dark transition-all cursor-pointer"
+      >
+        <lucide-icon [img]="plusIcon" class="w-4 h-4"></lucide-icon>
+        أضف تعليقك
+      </button>
+    }
+
+    @if (showReviewForm) {
+      <div
+        class="bg-surface-container-low rounded-2xl p-5 sm:p-6 border border-outline-variant/30 text-right max-w-lg mx-auto space-y-4"
+      >
+        <h3 class="font-extrabold text-on-background text-sm">أضف تقييمك</h3>
+
+        <!-- Star Rating -->
+        <div class="space-y-1">
+          <label class="text-xs font-bold text-outline">التقييم</label>
+          <div class="flex gap-1 text-2xl cursor-pointer">
+            @for (star of [1, 2, 3, 4, 5]; track star) {
+              <span
+                (click)="newReview.rating = star"
+                [class]="star <= newReview.rating ? 'text-secondary' : 'text-outline/30'"
+                >★</span
+              >
+            }
+          </div>
+        </div>
+
+        <div class="space-y-1">
+          <label class="text-xs font-bold text-outline">اسمك</label>
+          <input
+            [(ngModel)]="newReview.name"
+            placeholder="مثال: د. أحمد محمد"
+            class="w-full h-10 px-3 bg-white border border-outline-variant rounded-xl text-sm font-bold outline-none focus:border-primary"
+          />
+        </div>
+
+        <div class="space-y-1">
+          <label class="text-xs font-bold text-outline">تعليقك</label>
+          <textarea
+            [(ngModel)]="newReview.text"
+            rows="3"
+            placeholder="شاركنا تجربتك مع SafeDose AI..."
+            class="w-full px-3 py-2 bg-white border border-outline-variant rounded-xl text-sm font-bold outline-none focus:border-primary resize-none"
+          ></textarea>
+        </div>
+
+        <div class="flex gap-3">
+          <button
+            (click)="showReviewForm = false"
+            class="flex-1 h-10 border border-outline-variant text-outline rounded-xl font-bold text-sm hover:bg-slate-50 transition-all cursor-pointer"
+          >
+            إلغاء
+          </button>
+          <button
+            (click)="submitReview()"
+            [disabled]="!newReview.name.trim() || !newReview.text.trim()"
+            class="flex-[2] h-10 bg-primary hover:bg-primary-dark disabled:bg-slate-200 disabled:text-outline text-white rounded-xl font-bold text-sm transition-all cursor-pointer"
+          >
+            نشر التعليق
+          </button>
+        </div>
+      </div>
+    }
+  </div>
+</section>
+<!-- CTA -->
+<section class="py-16">
+  <div class="container-app">
+    <div
+      class="bg-gradient-to-br from-primary to-primary-dark rounded-3xl p-6 sm:p-12 text-center text-white relative overflow-hidden shadow-xl"
+    >
+      <div class="absolute -right-20 -top-20 opacity-10">
+        <lucide-icon
+          [img]="sparklesIcon"
+          class="w-[200px] h-[200px] sm:w-[300px] sm:h-[300px]"
+        ></lucide-icon>
+      </div>
+      <div class="relative z-10 space-y-6">
+        <h2 class="text-2xl sm:text-3xl font-extrabold">كن أول من يحمي صحته</h2>
+        <p class="text-primary-container max-w-xl mx-auto text-sm">
+          انضم إلينا الآن للتمتع بمزايا الحماية الحصرية والحصول على إشعارات فحص الأدوية الفوري.
+        </p>
+        <a
+          routerLink="/pricing"
+          class="bg-neutral-dark block w-full sm:w-fit sm:mx-auto hover:bg-[#222222] text-secondary px-8 py-4 rounded-xl font-bold transition-all"
+        >
+          ابدأ الآن — خطط الأسعار
+        </a>
+        <p class="text-xs text-white/40">
+          لا نقوم أبداً بمشاركة أو بيع بياناتك الطبية مع أي طرف ثالث.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>

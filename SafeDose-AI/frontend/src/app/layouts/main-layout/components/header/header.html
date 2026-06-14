@@ -1,0 +1,256 @@
+<header class="sticky top-0 z-40 bg-white border-b border-outline-variant/50 shadow-xs">
+  <div class="container-app h-16 flex items-center justify-between">
+    <!-- Logo -->
+    <div class="flex items-center gap-2.5 cursor-pointer" routerLink="/home">
+      <div
+        class="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-md shrink-0"
+      >
+        <lucide-icon [img]="heartIcon" class="w-5 h-5 text-white animate-pulse"></lucide-icon>
+      </div>
+      <div class="text-right block">
+        <span class="font-sans font-black text-lg tracking-tight text-primary block"
+          >SafeDose AI</span
+        >
+        <span class="text-[10px] text-outline font-sans block leading-none"
+          >أمانك الدوائي، خطوة بخطوة</span
+        >
+      </div>
+    </div>
+
+    <!-- Nav -->
+    <nav class="hidden md:flex items-center gap-5 text-xs font-bold text-on-surface-variant">
+      <a
+        routerLink="/home"
+        routerLinkActive="text-primary"
+        class="flex gap-1 items-center hover:text-primary"
+      >
+        <lucide-icon name="activity" [size]="20"></lucide-icon>
+        الرئيسية
+      </a>
+      <a
+        routerLink="/patient"
+        routerLinkActive="text-primary"
+        class="flex gap-1 items-center hover:text-primary"
+      >
+        <lucide-icon name="heart" [size]="20"></lucide-icon> بوابة المريض
+      </a>
+
+      <a
+        routerLink="/interaction-checker"
+        routerLinkActive="text-primary"
+        class="flex gap-1 items-center hover:text-primary"
+      >
+        <lucide-icon [name]="shieldAlertIcon" [size]="20"></lucide-icon>
+        فحص التداخلات
+      </a>
+
+      <a
+        routerLink="/pricing"
+        routerLinkActive="text-primary"
+        class="flex gap-1 items-center hover:text-primary"
+      >
+        <lucide-icon [name]="pill" [size]="20"></lucide-icon> الأسعار
+      </a>
+    </nav>
+    <!-- 
+    <div class="flex items-center gap-1 sm:gap-3">
+      @if (true) {
+        <button
+          (click)="showLogoutConfirm = true"
+          class="flex items-center gap-1.5 cursor-pointer px-3 py-1.5 bg-red-50 text-danger hover:bg-red-100 border border-danger/20 hover:border-danger/30 rounded-xl text-xs font-bold transition-all min-h-[44px]"
+        >
+          <span class="hidden sm:inline">تسجيل خروج دعاء</span>
+          <lucide-icon [img]="logOutIcon" class="w-3.5 h-3.5"></lucide-icon>
+        </button>
+      }
+      <a routerLink="/notifications" class="relative cursor-pointer">
+        <lucide-icon [name]="bellIcon" [size]="20"></lucide-icon>
+        @if (unreadCount > 0) {
+          <span
+            class="absolute -top-1 -right-1 w-4 h-4 bg-danger text-white text-[10px] font-black rounded-full flex items-center justify-center"
+          >
+            {{ unreadCount }}
+          </span>
+        }
+      </a>
+      <div class="relative" (mouseenter)="accountMenu = true" (mouseleave)="accountMenu = false">
+        <button class="flex gap-1 items-center hover:text-primary transition-colors cursor-pointer">
+          <lucide-icon [img]="circleUserIcon" class="w-5 h-5"></lucide-icon>
+          <span class="hidden sm:inline">دعاء</span>
+          <lucide-icon [img]="chevronDownIcon" class="w-3.5 h-3.5"></lucide-icon>
+        </button>
+
+        @if (accountMenu) {
+          <div
+            class="absolute top-full left-0 w-44 bg-white border border-outline-variant rounded-2xl shadow-lg overflow-hidden z-50"
+          >
+            <a
+              routerLink="/profile"
+              routerLinkActive="text-primary"
+              (click)="accountMenu = false"
+              class="flex items-center gap-2.5 px-4 py-3 text-xs font-bold hover:bg-surface-container-low transition-colors text-on-surface-variant hover:text-primary"
+            >
+              <lucide-icon [img]="userIcon" class="w-4 h-4"></lucide-icon>
+              الملف الشخصي
+            </a>
+            <a
+              routerLink="/family-plan"
+              (click)="accountMenu = false"
+              routerLinkActive="text-primary"
+              class="flex items-center gap-2.5 px-4 py-3 text-xs font-bold hover:bg-surface-container-low transition-colors text-on-surface-variant hover:text-primary border-t border-outline-variant/30"
+            >
+              <lucide-icon [img]="usersIcon" class="w-4 h-4"></lucide-icon>
+              العيلة
+            </a>
+          </div>
+        }
+      </div>
+    </div> -->
+
+    <div class="flex items-center gap-1 sm:gap-3">
+      <!-- Bell -->
+      <a
+        routerLink="/notifications"
+        class="relative cursor-pointer w-9 h-9 rounded-xl hover:bg-slate-100 flex items-center justify-center transition-all"
+      >
+        <lucide-icon [img]="bellIcon" class="w-5 h-5 text-on-surface-variant"></lucide-icon>
+        @if (unreadCount > 0) {
+          <span
+            class="absolute top-1 right-1 w-4 h-4 bg-danger text-white text-[10px] font-black rounded-full flex items-center justify-center"
+          >
+            {{ unreadCount }}
+          </span>
+        }
+      </a>
+
+      <!-- Account Dropdown -->
+      <div class="relative" (mouseenter)="accountMenu = true" (mouseleave)="accountMenu = false">
+        <button class="flex gap-1 items-center hover:text-primary transition-colors cursor-pointer">
+          <lucide-icon [img]="circleUserIcon" class="w-5 h-5"></lucide-icon>
+          <span class="hidden sm:inline">دعاء</span>
+          <lucide-icon [img]="chevronDownIcon" class="w-3.5 h-3.5"></lucide-icon>
+        </button>
+
+        @if (accountMenu) {
+          <div
+            class="absolute top-full left-0 w-44 bg-white border border-outline-variant rounded-2xl shadow-lg overflow-hidden z-50"
+          >
+            <a
+              routerLink="/profile"
+              routerLinkActive="text-primary"
+              (click)="accountMenu = false"
+              class="flex items-center gap-2.5 px-4 py-3 text-xs font-bold hover:bg-surface-container-low transition-colors text-on-surface-variant hover:text-primary"
+            >
+              <lucide-icon [img]="userIcon" class="w-4 h-4"></lucide-icon>
+              الملف الشخصي
+            </a>
+            <a
+              routerLink="/family-plan"
+              (click)="accountMenu = false"
+              routerLinkActive="text-primary"
+              class="flex items-center gap-2.5 px-4 py-3 text-xs font-bold hover:bg-surface-container-low transition-colors text-on-surface-variant hover:text-primary border-t border-outline-variant/30"
+            >
+              <lucide-icon [img]="usersIcon" class="w-4 h-4"></lucide-icon>
+              العيلة
+            </a>
+            <!-- Logout -->
+            <button
+              (click)="showLogoutConfirm = true; accountMenu = false"
+              class="w-full flex items-center gap-2.5 px-4 py-3 text-xs font-bold hover:bg-red-50 transition-colors text-danger border-t border-outline-variant/30 cursor-pointer"
+            >
+              <lucide-icon [img]="logOutIcon" class="w-4 h-4"></lucide-icon>
+              تسجيل الخروج
+            </button>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile Nav -->
+  <nav
+    class="md:hidden flex items-center justify-around border-t border-outline-variant/30 px-2 py-2 text-[11px] font-bold text-on-surface-variant"
+  >
+    <a
+      routerLink="/home"
+      routerLinkActive="text-primary"
+      class="flex flex-col items-center gap-0.5 hover:text-primary px-2 py-1"
+    >
+      <lucide-icon name="activity" [size]="18"></lucide-icon>
+      الرئيسية
+    </a>
+    <a
+      routerLink="/patient"
+      routerLinkActive="text-primary"
+      class="flex flex-col items-center gap-0.5 hover:text-primary px-2 py-1"
+    >
+      <lucide-icon name="heart" [size]="18"></lucide-icon>
+      بوابة المريض
+    </a>
+    <a
+      routerLink="/interaction-checker"
+      routerLinkActive="text-primary"
+      class="flex flex-col items-center gap-0.5 hover:text-primary px-2 py-1"
+    >
+      <lucide-icon [name]="shieldAlertIcon" [size]="18"></lucide-icon>
+      فحص التداخلات
+    </a>
+
+    <a
+      routerLink="/pricing"
+      routerLinkActive="text-primary"
+      class="flex flex-col items-center gap-0.5 hover:text-primary px-2 py-1"
+    >
+      <lucide-icon name="pill" [size]="18"></lucide-icon>
+      الأسعار
+    </a>
+  </nav>
+</header>
+
+<!-- Toast -->
+@if (toastMessage) {
+  <div
+    class="fixed top-20 left-1/2 -translate-x-1/2 z-50 max-w-[90%] sm:max-w-sm bg-neutral-dark border border-neutral text-white font-bold py-3 px-5 rounded-2xl shadow-xl text-right text-xs flex items-center gap-2.5 animate-slide-in-top"
+  >
+    <lucide-icon [img]="userCheckIcon" class="w-5 h-5 text-emerald-400 shrink-0"></lucide-icon>
+    <p>{{ toastMessage }}</p>
+  </div>
+}
+
+<!-- Logout Modal -->
+@if (showLogoutConfirm) {
+  <div
+    class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-neutral-dark/60 backdrop-blur-xs text-right animate-fade-in"
+    dir="rtl"
+  >
+    <div
+      class="w-full max-w-sm bg-white border border-outline-variant rounded-3xl p-6 shadow-2xl space-y-5"
+    >
+      <div
+        class="mx-auto w-12 h-12 bg-red-50 text-danger rounded-full flex items-center justify-center"
+      >
+        <lucide-icon [img]="logOutIcon" class="w-6 h-6 animate-pulse"></lucide-icon>
+      </div>
+      <div class="space-y-2 text-center">
+        <h3 class="text-lg font-black text-on-background">هل أنت متأكد من تسجيل الخروج؟</h3>
+        <p class="text-xs text-outline leading-relaxed">
+          ستفقد جلسة الأمان ومزامنة الأدوية الحالية.
+        </p>
+      </div>
+      <div class="grid grid-cols-2 gap-3 pt-2">
+        <button
+          (click)="logout()"
+          class="w-full bg-danger cursor-pointer hover:bg-red-700 text-white font-bold py-3 rounded-xl text-xs shadow-md transition-all min-h-[44px]"
+        >
+          تأكيد الخروج
+        </button>
+        <button
+          (click)="showLogoutConfirm = false"
+          class="w-full bg-slate-100 cursor-pointer hover:bg-slate-200 text-on-surface-variant font-bold py-3 rounded-xl text-xs transition-all min-h-[44px]"
+        >
+          إلغاء
+        </button>
+      </div>
+    </div>
+  </div>
+}

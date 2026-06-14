@@ -1,0 +1,181 @@
+<section class="container-app space-y-6 pt-16 pb-24" style="max-width: 640px">
+  <div class="text-center mb-4">
+    <h2 class="text-2xl font-extrabold text-primary">مسح الوصفة الطبية 🩺</h2>
+    <p class="text-sm text-outline">ارفع صورة الوصفة ليتم تحليلها بالذكاء الاصطناعي</p>
+  </div>
+
+  <!-- Camera Modal -->
+  @if (showCamera) {
+    <div class="fixed inset-0 bg-black/80 z-50 flex flex-col items-center justify-center gap-4 p-4">
+      <video id="cameraFeed" autoplay playsinline class="w-full max-w-lg rounded-xl"></video>
+      <div class="flex flex-col sm:flex-row gap-3 w-full max-w-lg">
+        <button
+          (click)="capturePhoto()"
+          class="flex-1 bg-primary text-white px-6 py-3 rounded-xl font-bold cursor-pointer"
+        >
+          📸 التقط الصورة
+        </button>
+        <button
+          (click)="closeCamera()"
+          class="flex-1 bg-gray-500 text-white px-6 py-3 rounded-xl font-bold cursor-pointer"
+        >
+          إلغاء
+        </button>
+      </div>
+    </div>
+  }
+
+  <!-- Upload Area -->
+  @if (!scanned && !loading) {
+    <div
+      class="bg-white border-2 border-dashed border-primary/30 rounded-3xl p-6 sm:p-12 text-center hover:border-primary/60 transition-all"
+    >
+      <lucide-icon
+        [img]="uploadIcon"
+        class="w-12 h-12 sm:w-16 sm:h-16 text-primary/30 mx-auto mb-4"
+      ></lucide-icon>
+      <h3 class="text-base sm:text-lg font-bold text-on-background mb-2">
+        اسحب وأفلت صورة الوصفة هنا
+      </h3>
+      <p class="text-sm text-outline mb-4">أو اضغط لاختيار صورة من جهازك</p>
+      <div class="flex flex-col sm:flex-row justify-center gap-3">
+        <button
+          (click)="openCamera()"
+          class="bg-primary hover:bg-primary-dark text-white px-6 py-3 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 cursor-pointer"
+        >
+          <lucide-icon [img]="cameraIcon" class="w-5 h-5"></lucide-icon>
+          تصوير وصفة
+        </button>
+        <button
+          (click)="openFilePicker()"
+          class="border border-outline-variant text-on-surface-variant hover:bg-slate-50 px-6 py-3 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 cursor-pointer"
+        >
+          <lucide-icon [img]="uploadIcon" class="w-5 h-5"></lucide-icon>
+          رفع صورة
+        </button>
+      </div>
+    </div>
+  }
+
+  <!-- Loading State -->
+  @if (loading) {
+    <div
+      class="bg-white rounded-3xl border border-outline-variant p-8 sm:p-12 text-center space-y-4"
+    >
+      <div
+        class="w-14 h-14 sm:w-16 sm:h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto"
+      ></div>
+      <p class="font-bold text-on-background">جاري تحليل الوصفة بالذكاء الاصطناعي...</p>
+      <p class="text-sm text-outline">يتم التعرف على الأدوية والجرعات</p>
+    </div>
+  }
+
+  <!-- Error -->
+  @if (errorText) {
+    <div class="bg-danger-container p-4 rounded-xl flex items-center gap-2 text-right">
+      <lucide-icon [img]="alertTriangleIcon" class="w-5 h-5 text-danger shrink-0"></lucide-icon>
+      <p class="text-sm font-bold text-on-danger-container">{{ errorText }}</p>
+    </div>
+  }
+
+  <!-- Scan Results -->
+  @if (scanned && !loading) {
+    <div class="space-y-4">
+      <!-- Success Banner -->
+      <div
+        class="flex items-center gap-3 bg-emerald-50 text-emerald-800 p-4 rounded-xl border border-emerald-200"
+      >
+        <lucide-icon [img]="checkCircleIcon" class="w-6 h-6 shrink-0"></lucide-icon>
+        <div class="text-right">
+          <p class="font-bold text-sm">تم التعرف على الوصفة بنجاح</p>
+          <p class="text-xs text-emerald-600">تم استخراج {{ scannedMeds.length }} دواء من الوصفة</p>
+        </div>
+      </div>
+
+      <!-- Med Cards -->
+      <div class="flex gap-4 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-custom">
+        @for (med of scannedMeds; track med.name; let i = $index) {
+          <div
+            class="bg-white rounded-2xl border border-outline-variant shadow-sm p-5 space-y-4 text-right min-w-[280px] sm:min-w-[300px] snap-start"
+          >
+            <!-- Med Header -->
+            <div class="flex items-start justify-between gap-2">
+              <div
+                class="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center text-primary font-extrabold text-sm shrink-0"
+              >
+                {{ i + 1 }}
+              </div>
+              <div class="flex-1 text-right">
+                <h3 class="font-extrabold text-on-background text-base">{{ med.name }}</h3>
+                @if (med.chemicalName) {
+                  <p class="text-xs text-outline">{{ med.chemicalName }}</p>
+                }
+              </div>
+            </div>
+
+            <!-- Med Details Grid -->
+            <div class="grid grid-cols-2 gap-3">
+              <div class="bg-surface-container-low rounded-xl p-3">
+                <p class="text-xs text-outline mb-1">الجرعة</p>
+                <p class="font-bold text-on-background text-sm">{{ med.dose }}</p>
+              </div>
+              <div class="bg-surface-container-low rounded-xl p-3">
+                <p class="text-xs text-outline mb-1">التكرار</p>
+                <p class="font-bold text-on-background text-sm">{{ med.frequency }}</p>
+              </div>
+              <div class="bg-surface-container-low rounded-xl p-3">
+                <p class="text-xs text-outline mb-1">المدة</p>
+                <p class="font-bold text-on-background text-sm">{{ med.duration }}</p>
+              </div>
+              @if (med.registryCode) {
+                <div class="bg-surface-container-low rounded-xl p-3">
+                  <p class="text-xs text-outline mb-1">رمز السجل</p>
+                  <p class="font-bold text-on-background text-xs" dir="ltr">
+                    {{ med.registryCode }}
+                  </p>
+                </div>
+              }
+            </div>
+
+            <!-- Warning if exists -->
+            @if (med.warning) {
+              <div class="bg-danger-container p-3 rounded-xl flex items-center gap-2">
+                <lucide-icon
+                  [img]="alertTriangleIcon"
+                  class="w-5 h-5 text-danger shrink-0"
+                ></lucide-icon>
+                <p class="text-sm font-bold text-on-danger-container">{{ med.warning }}</p>
+              </div>
+            }
+          </div>
+        }
+      </div>
+      <!-- Empty State -->
+      @if (scannedMeds.length === 0) {
+        <div
+          class="bg-white rounded-2xl border border-outline-variant p-8 text-center text-outline"
+        >
+          <p class="font-bold">لم يتم التعرف على أدوية في هذه الصورة</p>
+          <p class="text-sm mt-1">تأكد من وضوح الصورة وأنها وصفة طبية</p>
+        </div>
+      }
+
+      <!-- Actions -->
+      <div class="flex flex-col sm:flex-row gap-3 pt-2">
+        <button
+          (click)="reset()"
+          class="flex-1 border border-outline-variant text-on-surface-variant hover:bg-slate-50 py-3 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 cursor-pointer"
+        >
+          <lucide-icon [img]="rotateCcwIcon" class="w-5 h-5"></lucide-icon>
+          مسح وصفة أخرى
+        </button>
+        <button
+          routerLink="/patient"
+          class="flex-1 bg-primary hover:bg-primary-dark text-white py-3 rounded-xl font-bold text-sm transition-all cursor-pointer"
+        >
+          العودة للرئيسية
+        </button>
+      </div>
+    </div>
+  }
+</section>

@@ -25,7 +25,8 @@ internal static class MedicationMappers
             StatusArabic: StatusLabel(pm.Status),
             MealTimingArabic: MealTimingLabel(pm.MealTiming),
             IsVerified: isVerified,
-            VerificationLabelArabic: isVerified ? "موثق" : "غير موثق"
+            VerificationLabelArabic: isVerified ? "موثق" : "غير موثق",
+            DrugCatalogId: pm.Drug?.DrugCatalogId
         );
     }
 

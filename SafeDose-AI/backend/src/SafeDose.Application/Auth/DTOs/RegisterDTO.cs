@@ -9,14 +9,21 @@ namespace SafeDose.Application.Auth.DTOs
 {
     public class RegisterDTO
     {
-        [MaxLength(150)]
-        public string FullName {  get; set; }   
-        [MaxLength(80)]
-        public string UserName { get; set; }
-        [MaxLength(20)]
-        public string PhoneNumber { get; set; }
+
+        private string _fullName;
+        private string _email;
+        private string _userName;
+        private string _phoneNumber;
+
+
+        [MinLength(3),MaxLength(150)]
+        public string FullName { get => _fullName; set => _fullName = value.Trim(); }   
+        [MinLength(3), MaxLength(80)]
+        public string UserName { get => _userName; set => _userName = value.Trim(); }
+        [MinLength(1), MaxLength(20)]
+        public string PhoneNumber { get => _phoneNumber; set => _phoneNumber = value.Trim(); }
         [EmailAddress , MaxLength(150)]
-        public string Email { get; set; }
+        public string Email { get => _email; set => _email = value.Trim(); }
 
         [MaxLength(50)]
         public string Password { get; set; }

@@ -12,84 +12,47 @@ namespace SafeDose.Api.Controllers;
 [Authorize]
 public class InteractionsController : ControllerBase
 {
-    private readonly CheckDrugInteractionUseCase _checkInteraction;
-    private readonly CheckStandaloneInteractionUseCase _checkStandalone;
+    private readonly CheckCatalogInteractionsUseCase _checkCatalog;
     private readonly GetInteractionHistoryUseCase _getHistory;
     private readonly GetInteractionCheckByIdUseCase _getById;
     private readonly AcknowledgeWarningUseCase _acknowledge;
     private readonly DeleteInteractionCheckUseCase _delete;
 
     public InteractionsController(
-        CheckDrugInteractionUseCase checkInteraction,
-        CheckStandaloneInteractionUseCase checkStandalone,
+        CheckCatalogInteractionsUseCase checkCatalog,
         GetInteractionHistoryUseCase getHistory,
         GetInteractionCheckByIdUseCase getById,
         AcknowledgeWarningUseCase acknowledge,
         DeleteInteractionCheckUseCase delete)
     {
-        _checkInteraction = checkInteraction;
-        _checkStandalone = checkStandalone;
+        _checkCatalog = checkCatalog;
         _getHistory = getHistory;
         _getById = getById;
         _acknowledge = acknowledge;
         _delete = delete;
     }
 
+    // The ONE check endpoint. Takes catalog drug IDs (from search OR from "my meds" checkboxes).
+    // Optional patientId pulls in the patient's age, allergies, chronic conditions, and active meds as context.
     [HttpPost("check")]
     public async Task<IActionResult> Check(
-        [FromBody] CheckInteractionsRequestDto request,
+        [FromBody] CheckCatalogInteractionsRequestDto request,
         CancellationToken cancellationToken)
     {
+        var accountId = GetAccountId();
+        if (accountId == null)
+            return Unauthorized(new ErrorResponse(
+                ErrorCodes.Unauthorized, ArabicMessages.Unauthorized));
+
         try
         {
-            var accountId = GetAccountId();
-            if (accountId == null)
-                return Unauthorized(new ErrorResponse(
-                    ErrorCodes.Unauthorized, ArabicMessages.Unauthorized));
-
-            var result = await _checkInteraction.ExecuteAsync(
-                request,
-                cancellationToken,
-                accountId: accountId);
+            var result = await _checkCatalog.ExecuteAsync(request, accountId, cancellationToken);
             return Ok(result);
         }
         catch (UnauthorizedAccessException)
         {
             return StatusCode(403, new ErrorResponse(
                 ErrorCodes.Forbidden, ArabicMessages.Forbidden));
-        }
-        catch (ArgumentException ex) when (ex.Message.Contains("Maximum"))
-        {
-            return BadRequest(new ErrorResponse(
-                ErrorCodes.TooManyDrugs, ArabicMessages.TooManyDrugs, ex.Message));
-        }
-        catch (ArgumentException ex) when (ex.Message.Contains("not found"))
-        {
-            return BadRequest(new ErrorResponse(
-                ErrorCodes.DrugNotFound, ArabicMessages.DrugNotFound, ex.Message));
-        }
-        catch (ArgumentException ex)
-        {
-            return BadRequest(new ErrorResponse(
-                ErrorCodes.ValidationFailed, ArabicMessages.ValidationFailed, ex.Message));
-        }
-    }
-
-    [HttpPost("check-standalone")]
-    public async Task<IActionResult> CheckStandalone(
-        [FromQuery] int drugIdA,
-        [FromQuery] int drugIdB,
-        CancellationToken cancellationToken)
-    {
-        if (drugIdA <= 0 || drugIdB <= 0)
-            return BadRequest(new ErrorResponse(
-                ErrorCodes.ValidationFailed, ArabicMessages.ValidationFailed,
-                "Both drugIdA and drugIdB are required"));
-
-        try
-        {
-            var result = await _checkStandalone.ExecuteAsync(drugIdA, drugIdB, cancellationToken);
-            return Ok(result);
         }
         catch (ArgumentException ex)
         {
@@ -197,6 +160,6 @@ public class InteractionsController : ControllerBase
 
     private string? GetAccountId() =>
         User.FindFirstValue(ClaimTypes.NameIdentifier)
-        ?? User.FindFirstValue("sub")
+        ?? User.FindFirstValue("nameid")
         ?? User.FindFirstValue("uid");
 }

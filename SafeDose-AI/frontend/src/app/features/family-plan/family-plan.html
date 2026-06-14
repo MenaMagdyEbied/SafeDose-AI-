@@ -1,0 +1,232 @@
+<section class="container-app space-y-6 pt-16 pb-24">
+  <!-- Header -->
+  <div class="flex items-center justify-between">
+    <div>
+      <h2 class="text-xl sm:text-2xl font-extrabold text-primary">العيلة 👨‍👩‍👧‍👦</h2>
+      <p class="text-xs sm:text-sm text-outline">إدارة أفراد العيلة ومتابعة أدويتهم</p>
+    </div>
+    <button
+      (click)="openAddModal()"
+      class="px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-primary text-white hover:bg-primary-dark transition-all flex items-center gap-1.5 sm:gap-2 cursor-pointer"
+    >
+      <lucide-icon [img]="plusIcon" class="w-4 h-4"></lucide-icon>
+      <span class="hidden sm:inline">إضافة فرد</span>
+      <span class="sm:hidden">إضافة</span>
+    </button>
+  </div>
+
+  <!-- Empty State -->
+  @if (members.length === 0) {
+    <div
+      class="bg-white rounded-2xl border border-outline-variant p-8 sm:p-12 text-center space-y-3"
+    >
+      <lucide-icon [img]="usersIcon" class="w-12 h-12 text-outline/30 mx-auto"></lucide-icon>
+      <p class="font-bold text-on-background text-sm sm:text-base">لا يوجد أفراد عيلة مضافين بعد</p>
+      <p class="text-xs sm:text-sm text-outline">اضغط "إضافة فرد" لبدء إدارة أدوية عيلتك</p>
+    </div>
+  }
+
+  <!-- Members Grid -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
+    @for (member of members; track member.id) {
+      <div class="bg-white rounded-2xl border border-outline-variant shadow-sm overflow-hidden">
+        <!-- Member Header -->
+        <div class="p-4 sm:p-5 flex items-center gap-3 sm:gap-4">
+          <div
+            class="w-10 h-10 sm:w-12 sm:h-12 bg-primary/10 rounded-full flex items-center justify-center text-lg sm:text-xl font-extrabold text-primary shrink-0"
+          >
+            {{ member.name[0] }}
+          </div>
+          <div class="flex-1 text-right min-w-0">
+            <h3 class="font-extrabold text-on-background text-sm sm:text-base truncate">
+              {{ member.name }}
+            </h3>
+            <p class="text-xs text-outline">
+              {{ member.age ? member.age + ' سنة' : '' }}
+              {{ member.relationship ? '· ' + member.relationship : '' }}
+            </p>
+          </div>
+          <div class="flex gap-1.5 sm:gap-2 shrink-0">
+            <button
+              (click)="editMember(member)"
+              class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl border border-outline-variant text-outline hover:bg-slate-50 flex items-center justify-center transition-all cursor-pointer"
+            >
+              <lucide-icon [img]="editIcon" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></lucide-icon>
+            </button>
+            <button
+              (click)="deleteMember(member.id)"
+              class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl border border-danger/20 text-danger hover:bg-danger-container flex items-center justify-center transition-all cursor-pointer"
+            >
+              <lucide-icon [img]="trashIcon" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></lucide-icon>
+            </button>
+          </div>
+        </div>
+
+        <!-- Conditions -->
+        @if (member.conditions.length > 0) {
+          <div class="px-4 sm:px-5 pb-3 flex flex-wrap gap-2 justify-end">
+            @for (cond of member.conditions; track cond) {
+              <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-primary/10 text-primary">{{
+                cond
+              }}</span>
+            }
+          </div>
+        }
+
+        <!-- Meds -->
+        @if (member.medications.length > 0) {
+          <div class="border-t border-outline-variant/30 px-4 sm:px-5 py-3 sm:py-4 space-y-2">
+            <p class="text-xs font-bold text-outline text-right mb-2">الأدوية الدائمة</p>
+            @for (med of member.medications; track med) {
+              <div
+                class="flex items-center gap-2 sm:gap-3 bg-surface-container-low rounded-xl px-3 sm:px-4 py-2 text-right"
+              >
+                <lucide-icon
+                  [img]="pillIcon"
+                  class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary shrink-0"
+                ></lucide-icon>
+                <span class="text-xs sm:text-sm font-bold text-on-background flex-1 truncate">{{
+                  med
+                }}</span>
+              </div>
+            }
+          </div>
+        }
+
+        <!-- Allergy Warning -->
+        @if (member.allergies && member.allergies !== 'لا يوجد حساسية') {
+          <div
+            class="mx-4 sm:mx-5 mb-4 bg-danger-container p-3 rounded-xl flex items-center gap-2 text-right"
+          >
+            <lucide-icon
+              [img]="alertTriangleIcon"
+              class="w-4 h-4 text-danger shrink-0"
+            ></lucide-icon>
+            <p class="text-xs font-bold text-on-danger-container truncate">
+              حساسية: {{ member.allergies }}
+            </p>
+          </div>
+        }
+      </div>
+    }
+  </div>
+
+  <!-- Modal -->
+  @if (showModal) {
+    <div
+      class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4 sm:p-4"
+      (click)="closeModal()"
+    >
+      <div
+        class="bg-white rounded-3xl shadow-xl w-full sm:max-w-md flex flex-col max-h-[85vh]"
+        (click)="$event.stopPropagation()"
+      >
+        <!-- Modal Header -->
+        <div
+          class="p-5 sm:p-6 border-b border-outline-variant/30 flex items-center justify-between shrink-0"
+        >
+          <h3 class="font-extrabold text-on-background text-sm sm:text-base">
+            {{ editingId ? 'تعديل بيانات الفرد' : 'إضافة فرد جديد' }}
+          </h3>
+          <button
+            (click)="closeModal()"
+            class="w-8 h-8 rounded-full hover:bg-slate-100 flex items-center justify-center cursor-pointer"
+          >
+            <lucide-icon [img]="xIcon" class="w-5 h-5 text-outline"></lucide-icon>
+          </button>
+        </div>
+
+        <!-- Modal Content -->
+        <div class="p-5 sm:p-6 space-y-4 text-right overflow-y-auto flex-1">
+          <div class="space-y-1">
+            <label class="text-xs font-bold text-outline">الاسم الكامل *</label>
+            <input
+              [(ngModel)]="form.fullName"
+              placeholder="مثال: أحمد محمد"
+              class="w-full h-10 px-3 bg-surface-container-low border border-outline-variant rounded-xl text-sm font-bold outline-none focus:border-primary"
+            />
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div class="space-y-1">
+              <label class="text-xs font-bold text-outline">العمر</label>
+              <input
+                [(ngModel)]="form.age"
+                type="number"
+                placeholder="سنة"
+                class="w-full h-10 px-3 bg-surface-container-low border border-outline-variant rounded-xl text-sm font-bold outline-none focus:border-primary"
+              />
+            </div>
+            <div class="space-y-1">
+              <label class="text-xs font-bold text-outline">صلة القرابة</label>
+              <select
+                [(ngModel)]="form.relation"
+                class="w-full h-10 px-3 bg-surface-container-low border border-outline-variant rounded-xl text-sm font-bold outline-none focus:border-primary"
+              >
+                <option value="">اختر</option>
+                @for (r of relations; track r) {
+                  <option [value]="r">{{ r }}</option>
+                }
+              </select>
+            </div>
+          </div>
+
+          <div class="space-y-2">
+            <label class="text-xs font-bold text-outline">الحالات المزمنة</label>
+            <div class="flex flex-wrap gap-2">
+              @for (cond of allConditions; track cond) {
+                <button
+                  (click)="toggleFormCondition(cond)"
+                  [class]="
+                    form.conditions.includes(cond)
+                      ? 'px-3 py-1.5 rounded-full text-xs font-bold bg-primary text-white border border-primary transition-all cursor-pointer'
+                      : 'px-3 py-1.5 rounded-full text-xs font-bold bg-surface-container-low border border-outline-variant text-outline transition-all cursor-pointer'
+                  "
+                >
+                  {{ cond }}
+                </button>
+              }
+            </div>
+          </div>
+
+          <div class="space-y-1">
+            <label class="text-xs font-bold text-outline">الأدوية الدائمة (سطر لكل دواء)</label>
+            <textarea
+              [(ngModel)]="form.medsText"
+              rows="3"
+              placeholder="بانادول&#10;ميتفورمين&#10;..."
+              class="w-full px-3 py-2 bg-surface-container-low border border-outline-variant rounded-xl text-sm font-bold outline-none focus:border-primary resize-none"
+            >
+            </textarea>
+          </div>
+
+          <div class="space-y-1">
+            <label class="text-xs font-bold text-outline">الحساسية الدوائية</label>
+            <input
+              [(ngModel)]="form.allergies"
+              placeholder="اكتب لا يوجد إن لم تكن هناك حساسية"
+              class="w-full h-10 px-3 bg-surface-container-low border border-outline-variant rounded-xl text-sm font-bold outline-none focus:border-primary"
+            />
+          </div>
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="p-5 sm:p-6 border-t border-outline-variant/30 flex gap-3 shrink-0">
+          <button
+            (click)="closeModal()"
+            class="flex-1 h-12 border border-outline-variant text-outline rounded-2xl font-bold text-sm hover:bg-slate-50 transition-all cursor-pointer"
+          >
+            إلغاء
+          </button>
+          <button
+            (click)="saveMember()"
+            [disabled]="!form.fullName.trim()"
+            class="flex-[2] h-12 bg-primary hover:bg-primary-dark disabled:bg-slate-200 disabled:text-outline text-white rounded-2xl font-bold text-sm transition-all cursor-pointer"
+          >
+            {{ editingId ? 'حفظ التعديلات' : 'إضافة الفرد' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</section>

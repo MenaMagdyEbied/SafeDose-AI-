@@ -1,4 +1,4 @@
-<section class="max-w-md mx-auto space-y-6 pt-16 pb-24">
+<section class="container-app space-y-6 pt-16 pb-24" style="max-width: 480px">
   <div class="text-center mb-4">
     <h2 class="text-2xl font-extrabold text-primary">بطاقة الأدوية الرقمية</h2>
     <p class="text-sm text-outline">بطاقة طبية إلكترونية آمنة لمشاركتها مع طبيبك</p>
@@ -6,7 +6,7 @@
 
   <!-- Card -->
   <div
-    class="bg-gradient-to-br from-primary to-primary-dark rounded-3xl p-6 text-white shadow-xl relative overflow-hidden"
+    class="bg-gradient-to-br from-primary to-primary-dark rounded-3xl p-5 sm:p-6 text-white shadow-xl relative overflow-hidden"
   >
     <div class="absolute -top-10 -left-10 w-40 h-40 bg-white/5 rounded-full blur-2xl"></div>
     <div class="absolute -bottom-10 -right-10 w-40 h-40 bg-white/5 rounded-full blur-2xl"></div>
@@ -29,15 +29,15 @@
         <h4 class="font-bold text-secondary text-sm">الأدوية الحالية:</h4>
         <div class="space-y-1">
           <div class="flex items-center gap-2 text-sm text-white/90">
-            <lucide-icon [img]="pillIcon" class="w-4 h-4 text-secondary"></lucide-icon>
+            <lucide-icon [img]="pillIcon" class="w-4 h-4 text-secondary shrink-0"></lucide-icon>
             <span>جلوكوفاج ٥٠٠ ملجم - مرتان يومياً</span>
           </div>
           <div class="flex items-center gap-2 text-sm text-white/90">
-            <lucide-icon [img]="pillIcon" class="w-4 h-4 text-secondary"></lucide-icon>
+            <lucide-icon [img]="pillIcon" class="w-4 h-4 text-secondary shrink-0"></lucide-icon>
             <span>كونكور ٥ ملجم - مرة مساءً</span>
           </div>
           <div class="flex items-center gap-2 text-sm text-white/90">
-            <lucide-icon [img]="pillIcon" class="w-4 h-4 text-secondary"></lucide-icon>
+            <lucide-icon [img]="pillIcon" class="w-4 h-4 text-secondary shrink-0"></lucide-icon>
             <span>وارفارين ٥ ملجم - مرة يومياً</span>
           </div>
         </div>
@@ -48,12 +48,12 @@
         <p class="text-sm text-white/90">{{ user?.allergies || 'أدوية السلفا (Sulfa Drugs)' }}</p>
       </div>
 
-      <div class="flex items-center justify-between pt-2">
+      <div class="flex items-center justify-between pt-2 gap-3">
         <div class="text-right">
           <p class="text-xs text-white/50">الطبيب المعالج</p>
           <p class="text-sm font-bold">{{ user?.doctorName || 'د. مجدي يعقوب' }}</p>
         </div>
-        <div class="w-16 h-16 bg-white rounded-xl flex items-center justify-center">
+        <div class="w-16 h-16 bg-white rounded-xl flex items-center justify-center shrink-0">
           <lucide-icon [img]="qrCodeIcon" class="w-12 h-12 text-primary"></lucide-icon>
         </div>
       </div>
@@ -61,7 +61,7 @@
   </div>
 
   <!-- Actions -->
-  <div class="flex gap-3">
+  <div class="flex flex-col sm:flex-row gap-3">
     <button
       (click)="printCard()"
       class="flex-1 bg-primary hover:bg-primary-dark text-white py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all cursor-pointer"

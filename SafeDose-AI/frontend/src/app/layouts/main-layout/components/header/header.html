@@ -34,17 +34,45 @@
       >
         <lucide-icon name="heart" [size]="20"></lucide-icon> بوابة المريض
       </a>
+
+      <a
+        routerLink="/interaction-checker"
+        routerLinkActive="text-primary"
+        class="flex gap-1 items-center hover:text-primary"
+      >
+        <lucide-icon [name]="shieldAlertIcon" [size]="20"></lucide-icon>
+        فحص التداخلات
+      </a>
+
       <a
         routerLink="/pricing"
         routerLinkActive="text-primary"
         class="flex gap-1 items-center hover:text-primary"
       >
-        <lucide-icon name="pill" [size]="20"></lucide-icon> الأسعار
+        <lucide-icon [name]="pill" [size]="20"></lucide-icon> الأسعار
       </a>
     </nav>
-
+    <!-- 
     <div class="flex items-center gap-1 sm:gap-3">
-      <!-- Dropdown للحساب -->
+      @if (true) {
+        <button
+          (click)="showLogoutConfirm = true"
+          class="flex items-center gap-1.5 cursor-pointer px-3 py-1.5 bg-red-50 text-danger hover:bg-red-100 border border-danger/20 hover:border-danger/30 rounded-xl text-xs font-bold transition-all min-h-[44px]"
+        >
+          <span class="hidden sm:inline">تسجيل خروج دعاء</span>
+          <lucide-icon [img]="logOutIcon" class="w-3.5 h-3.5"></lucide-icon>
+        </button>
+      }
+      <a routerLink="/notifications" class="relative cursor-pointer">
+        <lucide-icon [name]="bellIcon" [size]="20"></lucide-icon>
+        @if (unreadCount > 0) {
+          <span
+            class="absolute -top-1 -right-1 w-4 h-4 bg-danger text-white text-[10px] font-black rounded-full flex items-center justify-center"
+          >
+            {{ unreadCount }}
+          </span>
+        }
+      </a>
       <div class="relative" (mouseenter)="accountMenu = true" (mouseleave)="accountMenu = false">
         <button class="flex gap-1 items-center hover:text-primary transition-colors cursor-pointer">
           <lucide-icon [img]="circleUserIcon" class="w-5 h-5"></lucide-icon>
@@ -77,16 +105,65 @@
           </div>
         }
       </div>
+    </div> -->
 
-      @if (true) {
-        <button
-          (click)="showLogoutConfirm = true"
-          class="flex items-center gap-1.5 cursor-pointer px-3 py-1.5 bg-red-50 text-danger hover:bg-red-100 border border-danger/20 hover:border-danger/30 rounded-xl text-xs font-bold transition-all min-h-[44px]"
-        >
-          <span class="hidden sm:inline">تسجيل خروج دعاء</span>
-          <lucide-icon [img]="logOutIcon" class="w-3.5 h-3.5"></lucide-icon>
+    <div class="flex items-center gap-1 sm:gap-3">
+      <!-- Bell -->
+      <a
+        routerLink="/notifications"
+        class="relative cursor-pointer w-9 h-9 rounded-xl hover:bg-slate-100 flex items-center justify-center transition-all"
+      >
+        <lucide-icon [img]="bellIcon" class="w-5 h-5 text-on-surface-variant"></lucide-icon>
+        @if (unreadCount > 0) {
+          <span
+            class="absolute top-1 right-1 w-4 h-4 bg-danger text-white text-[10px] font-black rounded-full flex items-center justify-center"
+          >
+            {{ unreadCount }}
+          </span>
+        }
+      </a>
+
+      <!-- Account Dropdown -->
+      <div class="relative" (mouseenter)="accountMenu = true" (mouseleave)="accountMenu = false">
+        <button class="flex gap-1 items-center hover:text-primary transition-colors cursor-pointer">
+          <lucide-icon [img]="circleUserIcon" class="w-5 h-5"></lucide-icon>
+          <span class="hidden sm:inline">دعاء</span>
+          <lucide-icon [img]="chevronDownIcon" class="w-3.5 h-3.5"></lucide-icon>
         </button>
-      }
+
+        @if (accountMenu) {
+          <div
+            class="absolute top-full left-0 w-44 bg-white border border-outline-variant rounded-2xl shadow-lg overflow-hidden z-50"
+          >
+            <a
+              routerLink="/profile"
+              routerLinkActive="text-primary"
+              (click)="accountMenu = false"
+              class="flex items-center gap-2.5 px-4 py-3 text-xs font-bold hover:bg-surface-container-low transition-colors text-on-surface-variant hover:text-primary"
+            >
+              <lucide-icon [img]="userIcon" class="w-4 h-4"></lucide-icon>
+              الملف الشخصي
+            </a>
+            <a
+              routerLink="/family-plan"
+              (click)="accountMenu = false"
+              routerLinkActive="text-primary"
+              class="flex items-center gap-2.5 px-4 py-3 text-xs font-bold hover:bg-surface-container-low transition-colors text-on-surface-variant hover:text-primary border-t border-outline-variant/30"
+            >
+              <lucide-icon [img]="usersIcon" class="w-4 h-4"></lucide-icon>
+              العيلة
+            </a>
+            <!-- Logout -->
+            <button
+              (click)="showLogoutConfirm = true; accountMenu = false"
+              class="w-full flex items-center gap-2.5 px-4 py-3 text-xs font-bold hover:bg-red-50 transition-colors text-danger border-t border-outline-variant/30 cursor-pointer"
+            >
+              <lucide-icon [img]="logOutIcon" class="w-4 h-4"></lucide-icon>
+              تسجيل الخروج
+            </button>
+          </div>
+        }
+      </div>
     </div>
   </div>
 
@@ -110,6 +187,15 @@
       <lucide-icon name="heart" [size]="18"></lucide-icon>
       بوابة المريض
     </a>
+    <a
+      routerLink="/interaction-checker"
+      routerLinkActive="text-primary"
+      class="flex flex-col items-center gap-0.5 hover:text-primary px-2 py-1"
+    >
+      <lucide-icon [name]="shieldAlertIcon" [size]="18"></lucide-icon>
+      فحص التداخلات
+    </a>
+
     <a
       routerLink="/pricing"
       routerLinkActive="text-primary"

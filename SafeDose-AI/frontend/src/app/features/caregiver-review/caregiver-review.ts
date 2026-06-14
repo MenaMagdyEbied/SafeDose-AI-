@@ -25,7 +25,8 @@ import { Prescription } from '../../core/services/prescription';
 export class CaregiverReview implements OnInit {
   private readonly router = inject(Router);
   private readonly cdr = inject(ChangeDetectorRef);
-  private readonly prescription = inject(Prescription);
+  private readonly prescriptionService = inject(Prescription);
+
   scanned = false;
   loading = false;
   errorText = '';
@@ -42,113 +43,32 @@ export class CaregiverReview implements OnInit {
   trashIcon = Trash2;
   xIcon = X;
   eyeIcon = Eye;
-  // prescriptions: any[] = [
-  //   {
-  //     id: 1,
-  //     name: 'وصفة د. محمد السيد',
-  //     date: '١٥/٠٥/٢٠٢٥',
-  //     source: 'scan',
-  //     meds: [
-  //       {
-  //         name: 'بانادول اكسترا',
-  //         dose: '٥٠٠ ملغ - قرص واحد',
-  //         frequency: '٣ مرات يومياً',
-  //         duration: 'لمدة ٥ أيام',
-  //         warning: 'تعارض محتمل مع دواء وارفارين. راجع الطبيب.',
-  //         chemicalName: 'Paracetamol + Caffeine',
-  //         registryCode: 'EDA-REG-109283-PAN-01',
-  //       },
-  //       {
-  //         name: 'ميتفورمين',
-  //         dose: '٥٠٠ ملغ',
-  //         frequency: 'مرتين يومياً',
-  //         duration: 'مستمر',
-  //         warning: '',
-  //         chemicalName: 'Metformin Hydrochloride',
-  //         registryCode: 'EDA-REG-204811-MET-02',
-  //       },
-  //       {
-  //         name: 'أملوديبين',
-  //         dose: '٥ ملغ',
-  //         frequency: 'مرة يومياً',
-  //         duration: 'مستمر',
-  //         warning: '',
-  //         chemicalName: 'Amlodipine Besylate',
-  //         registryCode: 'EDA-REG-334521-AML-01',
-  //       },
-  //     ],
-  //   },
-  //   {
-  //     id: 2,
-  //     name: 'وصفة د. سارة أحمد',
-  //     date: '٢٠/٠٤/٢٠٢٥',
-  //     source: 'scan',
-  //     meds: [
-  //       {
-  //         name: 'أموكسيسيلين',
-  //         dose: '٥٠٠ ملغ',
-  //         frequency: '٣ مرات يومياً',
-  //         duration: 'لمدة ٧ أيام',
-  //         warning: '',
-  //         chemicalName: 'Amoxicillin Trihydrate',
-  //         registryCode: 'EDA-REG-112233-AMX-03',
-  //       },
-  //       {
-  //         name: 'بروفين',
-  //         dose: '٤٠٠ ملغ',
-  //         frequency: 'مرتين يومياً',
-  //         duration: 'لمدة ٣ أيام',
-  //         warning: 'تجنب تناوله على معدة فارغة',
-  //         chemicalName: 'Ibuprofen',
-  //         registryCode: 'EDA-REG-445566-IBU-02',
-  //       },
-  //     ],
-  //   },
-  //   {
-  //     id: 3,
-  //     name: 'وصفة يدوية - السكري',
-  //     date: '١٠/٠٣/٢٠٢٥',
-  //     source: 'manual',
-  //     meds: [
-  //       {
-  //         name: 'إنسولين',
-  //         dose: '١٠ وحدات',
-  //         frequency: 'مرة يومياً',
-  //         duration: 'مستمر',
-  //         warning: '',
-  //         chemicalName: '',
-  //         registryCode: '',
-  //       },
-  //       {
-  //         name: 'ميتفورمين',
-  //         dose: '١٠٠٠ ملغ',
-  //         frequency: 'مرتين يومياً',
-  //         duration: 'مستمر',
-  //         warning: '',
-  //         chemicalName: 'Metformin Hydrochloride',
-  //         registryCode: 'EDA-REG-204811-MET-02',
-  //       },
-  //       {
-  //         name: 'أتورفاستاتين',
-  //         dose: '٢٠ ملغ',
-  //         frequency: 'مرة يومياً قبل النوم',
-  //         duration: 'مستمر',
-  //         warning: '',
-  //         chemicalName: 'Atorvastatin Calcium',
-  //         registryCode: 'EDA-REG-667788-ATV-01',
-  //       },
-  //       {
-  //         name: 'أسبرين',
-  //         dose: '٨١ ملغ',
-  //         frequency: 'مرة يومياً',
-  //         duration: 'مستمر',
-  //         warning: 'تعارض محتمل مع وارفارين',
-  //         chemicalName: 'Acetylsalicylic Acid',
-  //         registryCode: 'EDA-REG-998877-ASP-04',
-  //       },
-  //     ],
-  //   },
-  // ];
+
+  // Delete
+  showDeleteConfirm = false;
+  prescriptionToDelete: any = null;
+
+  // Manual Modal
+  showManualModal = false;
+  manualForm: {
+    name: string;
+    meds: { name: string; dose: string; frequency: string; duration: string }[];
+  } = {
+    name: '',
+    meds: [{ name: '', dose: '', frequency: '', duration: '' }],
+  };
+
+  ngOnInit() {
+    if (this.prescriptions.length > 0) {
+      this.scanned = true;
+    }
+  }
+
+  get prescriptions() {
+    return this.prescriptionService.prescriptions;
+  }
+
+  // Camera
   async openCamera(): Promise<void> {
     try {
       this.showCamera = true;
@@ -204,17 +124,28 @@ export class CaregiverReview implements OnInit {
     try {
       const base64 = await this.fileToBase64(file);
       const meds = await this.extractMedsFromImage(base64, file.type);
-      this.scannedMeds = meds;
-      this.scanned = true;
+      this.openReviewModal(meds);
     } catch (err) {
       this.errorText = 'حدث خطأ أثناء تحليل الوصفة. حاول مرة أخرى.';
-      // fallback mock data for demo
-      this.scannedMeds = this.getMockMeds();
-      this.scanned = true;
+      this.openReviewModal(this.getMockMeds());
     } finally {
       this.loading = false;
       this.cdr.detectChanges();
     }
+  }
+
+  // بيفتح المودال مليان بالأدوية اللي استخرجها الـ agent
+  openReviewModal(meds: ScannedMed[]): void {
+    this.manualForm = {
+      name: 'وصفة مسح ضوئي - ' + new Date().toLocaleDateString('ar-EG'),
+      meds: meds.map((m) => ({
+        name: m.name ?? '',
+        dose: m.dose ?? '',
+        frequency: m.frequency ?? '',
+        duration: m.duration ?? '',
+      })),
+    };
+    this.showManualModal = true;
   }
 
   private async extractMedsFromImage(base64: string, mediaType: string): Promise<ScannedMed[]> {
@@ -293,42 +224,6 @@ export class CaregiverReview implements OnInit {
         registryCode: 'EDA-REG-204811-MET-02',
         warning: 'تعارض محتمل مع وارفارين. راجع الطبيب.',
       },
-      {
-        name: 'بانادول اكسترا',
-        dose: '٥٠٠ ملغ - قرص واحد',
-        frequency: '٣ مرات يومياً',
-        duration: 'لمدة ٥ أيام',
-        chemicalName: 'Paracetamol + Caffeine',
-        registryCode: 'EDA-REG-109283-PAN-01',
-        warning: undefined,
-      },
-      {
-        name: 'ميتفورمين',
-        dose: '٥٠٠ ملغ',
-        frequency: 'مرتين يومياً',
-        duration: 'مستمر',
-        chemicalName: 'Metformin Hydrochloride',
-        registryCode: 'EDA-REG-204811-MET-02',
-        warning: 'تعارض محتمل مع وارفارين. راجع الطبيب.',
-      },
-      {
-        name: 'بانادول اكسترا',
-        dose: '٥٠٠ ملغ - قرص واحد',
-        frequency: '٣ مرات يومياً',
-        duration: 'لمدة ٥ أيام',
-        chemicalName: 'Paracetamol + Caffeine',
-        registryCode: 'EDA-REG-109283-PAN-01',
-        warning: undefined,
-      },
-      {
-        name: 'ميتفورمين',
-        dose: '٥٠٠ ملغ',
-        frequency: 'مرتين يومياً',
-        duration: 'مستمر',
-        chemicalName: 'Metformin Hydrochloride',
-        registryCode: 'EDA-REG-204811-MET-02',
-        warning: 'تعارض محتمل مع وارفارين. راجع الطبيب.',
-      },
     ];
   }
 
@@ -337,15 +232,13 @@ export class CaregiverReview implements OnInit {
     this.scannedMeds = [];
     this.errorText = '';
   }
-  showManualModal = false;
-  manualForm = {
-    name: '',
-    meds: [{ name: '', dose: '', frequency: '', duration: '' }],
-  };
 
+  // Manual Modal
   openManualModal() {
+    this.manualForm = { name: '', meds: [{ name: '', dose: '', frequency: '', duration: '' }] };
     this.showManualModal = true;
   }
+
   closeManualModal() {
     this.showManualModal = false;
   }
@@ -358,30 +251,38 @@ export class CaregiverReview implements OnInit {
     this.manualForm.meds.splice(index, 1);
   }
 
-  ngOnInit() {
-    if (this.prescriptions.length > 0) {
-      this.scanned = true;
-    }
-  }
-  get prescriptions() {
-    return this.prescription.prescriptions;
-  }
-
-  viewPrescription(prescription: any) {
-    this.router.navigate(['/prescription-detail', prescription.id]);
-  }
-
   saveManualPrescription() {
     const prescription = {
       id: Date.now(),
       name: this.manualForm.name || 'وصفة يدوية',
       date: new Date().toLocaleDateString('ar-EG'),
       source: 'manual',
-      meds: this.manualForm.meds.filter((m: any) => m.name.trim()),
+      meds: this.manualForm.meds.filter((m) => m.name.trim()),
     };
-    this.prescription.add(prescription);
+    this.prescriptionService.add(prescription);
     this.scanned = true;
     this.showManualModal = false;
     this.manualForm = { name: '', meds: [{ name: '', dose: '', frequency: '', duration: '' }] };
+  }
+
+  viewPrescription(prescription: any) {
+    this.router.navigate(['/prescription-detail', prescription.id]);
+  }
+
+  // Delete
+  confirmDeletePrescription(prescription: any) {
+    this.prescriptionToDelete = prescription;
+    this.showDeleteConfirm = true;
+  }
+
+  deleteConfirmed() {
+    if (this.prescriptionToDelete) {
+      this.prescriptionService.delete(this.prescriptionToDelete.id);
+      this.prescriptionToDelete = null;
+      this.showDeleteConfirm = false;
+      if (this.prescriptions.length === 0) {
+        this.scanned = false;
+      }
+    }
   }
 }

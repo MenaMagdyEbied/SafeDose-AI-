@@ -34,6 +34,16 @@
       >
         <lucide-icon name="heart" [size]="20"></lucide-icon> بوابة المريض
       </a>
+
+      <a
+        routerLink="/interaction-checker"
+        routerLinkActive="text-primary"
+        class="flex gap-1 items-center hover:text-primary"
+      >
+        <lucide-icon [name]="shieldAlertIcon" [size]="20"></lucide-icon>
+        فحص التداخلات
+      </a>
+
       <a
         routerLink="/pricing"
         routerLinkActive="text-primary"
@@ -44,7 +54,6 @@
     </nav>
 
     <div class="flex items-center gap-1 sm:gap-3">
-      <!-- Dropdown للحساب -->
       <div class="relative" (mouseenter)="accountMenu = true" (mouseleave)="accountMenu = false">
         <button class="flex gap-1 items-center hover:text-primary transition-colors cursor-pointer">
           <lucide-icon [img]="circleUserIcon" class="w-5 h-5"></lucide-icon>
@@ -110,6 +119,15 @@
       <lucide-icon name="heart" [size]="18"></lucide-icon>
       بوابة المريض
     </a>
+    <a
+      routerLink="/interaction-checker"
+      routerLinkActive="text-primary"
+      class="flex flex-col items-center gap-0.5 hover:text-primary px-2 py-1"
+    >
+      <lucide-icon [name]="shieldAlertIcon" [size]="18"></lucide-icon>
+      فحص التداخلات
+    </a>
+
     <a
       routerLink="/pricing"
       routerLinkActive="text-primary"

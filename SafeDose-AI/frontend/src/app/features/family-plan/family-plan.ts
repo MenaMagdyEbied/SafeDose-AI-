@@ -1,14 +1,14 @@
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import {
-  Edit,
   LucideAngularModule,
   Pill,
   Plus,
+  SquarePen,
   Trash2,
   TriangleAlert,
   Users,
-  X,
+  X
 } from 'lucide-angular';
 import { FamilyMember } from '../../core/models';
 import { MemberForm } from '../../core/models/member-form';
@@ -22,7 +22,7 @@ import { MemberForm } from '../../core/models/member-form';
 export class FamilyPlan {
   plusIcon = Plus;
   usersIcon = Users;
-  editIcon = Edit;
+  editIcon = SquarePen;
   trashIcon = Trash2;
   xIcon = X;
   pillIcon = Pill;

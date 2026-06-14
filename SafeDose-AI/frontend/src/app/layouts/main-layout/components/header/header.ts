@@ -6,6 +6,7 @@ import {
   Heart,
   LogOut,
   LucideAngularModule,
+  ShieldAlert,
   User,
   UserCheck,
   Users,
@@ -31,6 +32,7 @@ export class Header {
   userIcon = User;
   usersIcon = Users;
   userCircleIcon = CircleUser;
+  shieldAlertIcon = ShieldAlert;
 
   logout(): void {
     this.showLogoutConfirm = false;

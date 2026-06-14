@@ -19,8 +19,8 @@ public class SearchDrugsUseCase
         string query,
         int limit = 10)
     {
-        // Reject very short queries - avoid scanning the whole catalog
-        if (string.IsNullOrWhiteSpace(query) || query.Trim().Length < 2)
+        // Allow single-letter prefix searches for autocomplete (type "b" → drugs starting with B)
+        if (string.IsNullOrWhiteSpace(query))
             return Array.Empty<DrugSearchResultDto>();
 
         // Clamp limit (UI shows max 10)

@@ -18,5 +18,6 @@ public record MedicationResponseDto(
     string StatusArabic,                 // computed label
     string? MealTimingArabic,            // computed label
     bool IsVerified,                     // true = matched to catalog; false = unverified entry, shown with "غير موثق" badge
-    string? VerificationLabelArabic      // "موثق" or "غير موثق" - ready-to-display label
+    string? VerificationLabelArabic,     // "موثق" or "غير موثق" - ready-to-display label
+    int? DrugCatalogId                   // catalog reference; frontend passes this to POST /api/interactions/check-catalog
 );

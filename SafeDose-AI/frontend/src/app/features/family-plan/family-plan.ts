@@ -69,25 +69,6 @@ export class FamilyPlan {
     ];
   }
 
-  openAddModal(): void {
-    this.editingId = null;
-    this.form = this.emptyForm();
-    this.showModal = true;
-  }
-
-  editMember(member: FamilyMember): void {
-    this.editingId = member.id;
-    this.form = {
-      fullName: member.name,
-      age: member.age,
-      relation: member.relationship,
-      conditions: [...member.conditions],
-      medsText: member.medications.join('\n'),
-      allergies: member.allergies,
-    };
-    this.showModal = true;
-  }
-
   saveMember(): void {
     if (!this.form.fullName.trim()) return;
 
@@ -137,11 +118,6 @@ export class FamilyPlan {
     else this.form.conditions.splice(idx, 1);
   }
 
-  closeModal(): void {
-    this.showModal = false;
-    this.editingId = null;
-  }
-
   private saveToStorage(): void {
     localStorage.setItem('familyMembers', JSON.stringify(this.members));
   }
@@ -155,5 +131,23 @@ export class FamilyPlan {
       medsText: '',
       allergies: '',
     };
+  }
+  openAddModal(): void {
+    this.editingId = null;
+    this.form = this.emptyForm();
+    this.showModal = true;
+    document.body.style.overflow = 'hidden'; // ← امنع الـ scroll
+  }
+
+  editMember(member: FamilyMember): void {
+    // ...
+    this.showModal = true;
+    document.body.style.overflow = 'hidden'; // ← امنع الـ scroll
+  }
+
+  closeModal(): void {
+    this.showModal = false;
+    this.editingId = null;
+    document.body.style.overflow = ''; // ← رجّع الـ scroll
   }
 }

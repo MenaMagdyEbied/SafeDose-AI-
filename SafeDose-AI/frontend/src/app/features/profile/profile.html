@@ -1,4 +1,4 @@
-<section class="max-w-6xl mx-auto space-y-6 pt-16 pb-24" dir="rtl">
+<section class="container-app space-y-6 pt-16 pb-24" dir="rtl">
   <!-- Loading -->
   @if (loading) {
     <div class="space-y-4 animate-pulse">
@@ -9,319 +9,325 @@
   }
 
   @if (!loading) {
-    <!-- Header -->
-    <div class="flex items-center justify-between">
-      <div>
-        <h2 class="text-2xl font-extrabold text-primary">الملف الشخصي</h2>
-        <p class="text-xs text-outline">رقم المستخدم: {{ profile.id }}</p>
-      </div>
-      <button
-        (click)="editMode = !editMode"
-        [class]="
-          editMode
-            ? 'px-4 py-2 rounded-xl text-sm font-bold border border-outline-variant text-outline hover:bg-slate-50 transition-all cursor-pointer'
-            : 'px-4 py-2 rounded-xl text-sm font-bold bg-primary text-white hover:bg-primary-dark transition-all cursor-pointer'
-        "
-      >
-        {{ editMode ? 'إلغاء' : 'تعديل' }}
-      </button>
-    </div>
-
-    <!-- Avatar + Name + Plan -->
-    <div class="bg-white rounded-2xl border border-outline-variant shadow-sm p-6">
-      <div class="flex items-center gap-5">
-        <div class="relative shrink-0">
-          <div
-            class="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center text-3xl font-extrabold text-primary"
-          >
-            {{ profile.fullName ? profile.fullName[0] : '؟' }}
-          </div>
-          @if (editMode) {
-            <button
-              class="absolute -bottom-1 -left-1 w-7 h-7 bg-primary text-white rounded-full flex items-center justify-center shadow cursor-pointer"
-            >
-              <lucide-icon [img]="cameraIcon" class="w-3.5 h-3.5"></lucide-icon>
-            </button>
-          }
+    <div class="max-w-2xl mx-auto space-y-6">
+      <!-- Header -->
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-xl sm:text-2xl font-extrabold text-primary">الملف الشخصي</h2>
+          <p class="text-xs text-outline">رقم المستخدم: {{ profile.id }}</p>
         </div>
-        <div class="flex-1 text-right space-y-1">
-          @if (editMode) {
-            <input
-              [(ngModel)]="profile.fullName"
-              class="w-full h-10 px-3 bg-surface-container-low border border-outline-variant rounded-xl text-sm font-bold outline-none focus:border-primary"
-            />
-          } @else {
-            <div class="flex items-center gap-2 justify-between flex-wrap">
-              <h3 class="text-lg font-extrabold text-on-background">{{ profile.fullName }}</h3>
-
-              <span class="text-xs font-extrabold px-2.5 py-1 rounded-full" [class]="planColor">
-                {{ planLabel }}
-              </span>
-            </div>
-          }
-          <div class="flex items-center gap-2 justify-start flex-wrap">
-            <span class="text-xs text-outline">{{ profile.email }}</span>
-          </div>
-          <p class="text-xs text-outline">عضو منذ {{ profile.joinDate }}</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- Basic Info -->
-    <div class="bg-white rounded-2xl border border-outline-variant shadow-sm overflow-hidden">
-      <div class="px-5 py-4 border-b border-outline-variant/30 flex items-center gap-2">
-        <lucide-icon [img]="userIcon" class="w-5 h-5 text-primary"></lucide-icon>
-        <h4 class="font-extrabold text-on-background text-sm">المعلومات الأساسية</h4>
-      </div>
-      <div class="p-5 grid grid-cols-2 gap-4">
-        <div class="space-y-1 text-right">
-          <label class="text-xs font-bold text-outline">رقم الهاتف</label>
-          @if (editMode) {
-            <input
-              [(ngModel)]="profile.phone"
-              dir="ltr"
-              class="w-full h-10 px-3 bg-surface-container-low border border-outline-variant rounded-xl text-sm font-bold outline-none focus:border-primary text-left"
-            />
-          } @else {
-            <p class="text-sm font-bold text-on-background" dir="ltr">{{ profile.phone || '—' }}</p>
-          }
-        </div>
-
-        <div class="space-y-1 text-right">
-          <label class="text-xs font-bold text-outline">البريد الإلكتروني</label>
-          @if (editMode) {
-            <input
-              [(ngModel)]="profile.email"
-              dir="ltr"
-              class="w-full h-10 px-3 bg-surface-container-low border border-outline-variant rounded-xl text-sm font-bold outline-none focus:border-primary text-left"
-            />
-          } @else {
-            <p class="text-sm font-bold text-on-background" dir="ltr">{{ profile.email || '—' }}</p>
-          }
-        </div>
-
-        <div class="space-y-1 text-right">
-          <label class="text-xs font-bold text-outline">العمر</label>
-          @if (editMode) {
-            <input
-              [(ngModel)]="profile.age"
-              type="number"
-              class="w-full h-10 px-3 bg-surface-container-low border border-outline-variant rounded-xl text-sm font-bold outline-none focus:border-primary"
-            />
-          } @else {
-            <p class="text-sm font-bold text-on-background">
-              {{ profile.age ? profile.age + ' سنة' : '—' }}
-            </p>
-          }
-        </div>
-
-        <div class="space-y-1 text-right">
-          <label class="text-xs font-bold text-outline">الجنس</label>
-          @if (editMode) {
-            <select
-              [(ngModel)]="profile.gender"
-              class="w-full h-10 px-3 bg-surface-container-low border border-outline-variant rounded-xl text-sm font-bold outline-none focus:border-primary"
-            >
-              @for (g of genders; track g) {
-                <option [value]="g">{{ g }}</option>
-              }
-            </select>
-          } @else {
-            <p class="text-sm font-bold text-on-background">{{ profile.gender || '—' }}</p>
-          }
-        </div>
-
-        <div class="space-y-1 text-right">
-          <label class="text-xs font-bold text-outline">فصيلة الدم</label>
-          @if (editMode) {
-            <select
-              [(ngModel)]="profile.bloodType"
-              class="w-full h-10 px-3 bg-surface-container-low border border-outline-variant rounded-xl text-sm font-bold outline-none focus:border-primary"
-            >
-              @for (b of bloodTypes; track b) {
-                <option [value]="b">{{ b }}</option>
-              }
-            </select>
-          } @else {
-            <p class="text-sm font-bold text-on-background" dir="ltr">
-              {{ profile.bloodType || '—' }}
-            </p>
-          }
-        </div>
-
-        <div class="space-y-1 text-right">
-          <label class="text-xs font-bold text-outline">الوزن / الطول</label>
-          @if (editMode) {
-            <div class="flex gap-2">
-              <input
-                [(ngModel)]="profile.weight"
-                type="number"
-                placeholder="كجم"
-                class="w-full h-10 px-3 bg-surface-container-low border border-outline-variant rounded-xl text-sm font-bold outline-none focus:border-primary"
-              />
-              <input
-                [(ngModel)]="profile.height"
-                type="number"
-                placeholder="سم"
-                class="w-full h-10 px-3 bg-surface-container-low border border-outline-variant rounded-xl text-sm font-bold outline-none focus:border-primary"
-              />
-            </div>
-          } @else {
-            <p class="text-sm font-bold text-on-background">
-              {{ profile.weight }}كجم / {{ profile.height }}سم
-            </p>
-          }
-        </div>
-      </div>
-    </div>
-
-    <!-- Medications -->
-    <div class="bg-white rounded-2xl border border-outline-variant shadow-sm overflow-hidden">
-      <div class="px-5 py-4 border-b border-outline-variant/30 flex items-center gap-2">
-        <lucide-icon [img]="pillIcon" class="w-5 h-5 text-primary"></lucide-icon>
-        <h4 class="font-extrabold text-on-background text-sm">الأدوية الدائمة</h4>
-        <span class="mr-auto text-xs font-bold bg-primary/10 text-primary px-2 py-0.5 rounded-full"
-          >{{ profile.medications.length }} أدوية</span
+        <button
+          (click)="editMode = !editMode"
+          [class]="
+            editMode
+              ? 'px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold border border-outline-variant text-outline hover:bg-slate-50 transition-all cursor-pointer'
+              : 'px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-primary text-white hover:bg-primary-dark transition-all cursor-pointer'
+          "
         >
+          {{ editMode ? 'إلغاء' : 'تعديل' }}
+        </button>
       </div>
-      <div class="p-5 space-y-3">
-        @for (med of profile.medications; track med.name) {
-          <div
-            class="flex items-center gap-3 bg-surface-container-low rounded-xl px-4 py-3 text-right"
-          >
-            <div class="flex-1">
-              <p class="text-sm font-extrabold text-on-background">{{ med.name }}</p>
-              <p class="text-xs text-outline">{{ med.dose }} · {{ med.frequency }}</p>
-            </div>
-            <div class="text-left">
-              <p class="text-[10px] text-outline">منذ {{ med.startDate }}</p>
-            </div>
-          </div>
-        }
-        @if (profile.medications.length === 0) {
-          <p class="text-sm text-outline text-center py-4">لا توجد أدوية مسجلة</p>
-        }
-      </div>
-    </div>
 
-    <!-- Conditions -->
-    <div class="bg-white rounded-2xl border border-outline-variant shadow-sm overflow-hidden">
-      <div class="px-5 py-4 border-b border-outline-variant/30 flex items-center gap-2">
-        <lucide-icon [img]="heartIcon" class="w-5 h-5 text-primary"></lucide-icon>
-        <h4 class="font-extrabold text-on-background text-sm">الحالات المزمنة</h4>
-      </div>
-      <div class="p-5">
-        <div class="flex flex-wrap gap-2">
-          @for (cond of allConditions; track cond) {
+      <!-- Avatar + Name + Plan -->
+      <div class="bg-white rounded-2xl border border-outline-variant shadow-sm p-4 sm:p-6">
+        <div class="flex items-center gap-3 sm:gap-5">
+          <div class="relative shrink-0">
+            <div
+              class="w-16 h-16 sm:w-20 sm:h-20 bg-primary/10 rounded-full flex items-center justify-center text-2xl sm:text-3xl font-extrabold text-primary"
+            >
+              {{ profile.fullName ? profile.fullName[0] : '؟' }}
+            </div>
             @if (editMode) {
               <button
-                (click)="toggleCondition(cond)"
-                [class]="
-                  profile.conditions.includes(cond)
-                    ? 'px-3 py-1.5 rounded-full text-xs font-bold bg-primary text-white border border-primary transition-all cursor-pointer'
-                    : 'px-3 py-1.5 rounded-full text-xs font-bold bg-surface-container-low border border-outline-variant text-outline transition-all cursor-pointer'
-                "
+                class="absolute -bottom-1 -left-1 w-7 h-7 bg-primary text-white rounded-full flex items-center justify-center shadow cursor-pointer"
               >
-                {{ cond }}
+                <lucide-icon [img]="cameraIcon" class="w-3.5 h-3.5"></lucide-icon>
               </button>
-            } @else if (profile.conditions.includes(cond)) {
-              <span
-                class="px-3 py-1.5 rounded-full text-xs font-bold bg-primary/10 text-primary border border-primary/20"
-                >{{ cond }}</span
-              >
             }
-          }
-          @if (!editMode && profile.conditions.length === 0) {
-            <p class="text-sm text-outline">لا توجد حالات مزمنة مسجلة</p>
-          }
+          </div>
+          <div class="flex-1 text-right space-y-1 min-w-0">
+            @if (editMode) {
+              <input
+                [(ngModel)]="profile.fullName"
+                class="w-full h-10 px-3 bg-surface-container-low border border-outline-variant rounded-xl text-sm font-bold outline-none focus:border-primary"
+              />
+            } @else {
+              <div class="flex items-center gap-2 justify-between flex-wrap">
+                <h3 class="text-base sm:text-lg font-extrabold text-on-background truncate">
+                  {{ profile.fullName }}
+                </h3>
+                <span
+                  class="text-xs font-extrabold px-2.5 py-1 rounded-full shrink-0"
+                  [class]="planColor"
+                  >{{ planLabel }}</span
+                >
+              </div>
+            }
+            <p class="text-xs text-outline truncate">{{ profile.email }}</p>
+            <p class="text-xs text-outline">عضو منذ {{ profile.joinDate }}</p>
+          </div>
         </div>
       </div>
-    </div>
 
-    <!-- Allergies -->
-    <div class="bg-white rounded-2xl border border-outline-variant shadow-sm overflow-hidden">
-      <div class="px-5 py-4 border-b border-outline-variant/30 flex items-center gap-2">
-        <lucide-icon [img]="alertTriangleIcon" class="w-5 h-5 text-danger"></lucide-icon>
-        <h4 class="font-extrabold text-on-background text-sm">الحساسية الدوائية</h4>
+      <!-- Basic Info -->
+      <div class="bg-white rounded-2xl border border-outline-variant shadow-sm overflow-hidden">
+        <div class="px-4 sm:px-5 py-4 border-b border-outline-variant/30 flex items-center gap-2">
+          <lucide-icon [img]="userIcon" class="w-5 h-5 text-primary"></lucide-icon>
+          <h4 class="font-extrabold text-on-background text-sm">المعلومات الأساسية</h4>
+        </div>
+        <div class="p-4 sm:p-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div class="space-y-1 text-right">
+            <label class="text-xs font-bold text-outline">رقم الهاتف</label>
+            @if (editMode) {
+              <input
+                [(ngModel)]="profile.phone"
+                dir="ltr"
+                class="w-full h-10 px-3 bg-surface-container-low border border-outline-variant rounded-xl text-sm font-bold outline-none focus:border-primary text-left"
+              />
+            } @else {
+              <p class="text-sm font-bold text-on-background" dir="ltr">
+                {{ profile.phone || '—' }}
+              </p>
+            }
+          </div>
+
+          <div class="space-y-1 text-right">
+            <label class="text-xs font-bold text-outline">البريد الإلكتروني</label>
+            @if (editMode) {
+              <input
+                [(ngModel)]="profile.email"
+                dir="ltr"
+                class="w-full h-10 px-3 bg-surface-container-low border border-outline-variant rounded-xl text-sm font-bold outline-none focus:border-primary text-left"
+              />
+            } @else {
+              <p class="text-sm font-bold text-on-background truncate" dir="ltr">
+                {{ profile.email || '—' }}
+              </p>
+            }
+          </div>
+
+          <div class="space-y-1 text-right">
+            <label class="text-xs font-bold text-outline">العمر</label>
+            @if (editMode) {
+              <input
+                [(ngModel)]="profile.age"
+                type="number"
+                class="w-full h-10 px-3 bg-surface-container-low border border-outline-variant rounded-xl text-sm font-bold outline-none focus:border-primary"
+              />
+            } @else {
+              <p class="text-sm font-bold text-on-background">
+                {{ profile.age ? profile.age + ' سنة' : '—' }}
+              </p>
+            }
+          </div>
+
+          <div class="space-y-1 text-right">
+            <label class="text-xs font-bold text-outline">الجنس</label>
+            @if (editMode) {
+              <select
+                [(ngModel)]="profile.gender"
+                class="w-full h-10 px-3 bg-surface-container-low border border-outline-variant rounded-xl text-sm font-bold outline-none focus:border-primary"
+              >
+                @for (g of genders; track g) {
+                  <option [value]="g">{{ g }}</option>
+                }
+              </select>
+            } @else {
+              <p class="text-sm font-bold text-on-background">{{ profile.gender || '—' }}</p>
+            }
+          </div>
+
+          <div class="space-y-1 text-right">
+            <label class="text-xs font-bold text-outline">فصيلة الدم</label>
+            @if (editMode) {
+              <select
+                [(ngModel)]="profile.bloodType"
+                class="w-full h-10 px-3 bg-surface-container-low border border-outline-variant rounded-xl text-sm font-bold outline-none focus:border-primary"
+              >
+                @for (b of bloodTypes; track b) {
+                  <option [value]="b">{{ b }}</option>
+                }
+              </select>
+            } @else {
+              <p class="text-sm font-bold text-on-background" dir="ltr">
+                {{ profile.bloodType || '—' }}
+              </p>
+            }
+          </div>
+
+          <div class="space-y-1 text-right">
+            <label class="text-xs font-bold text-outline">الوزن / الطول</label>
+            @if (editMode) {
+              <div class="flex gap-2">
+                <input
+                  [(ngModel)]="profile.weight"
+                  type="number"
+                  placeholder="كجم"
+                  class="w-full h-10 px-3 bg-surface-container-low border border-outline-variant rounded-xl text-sm font-bold outline-none focus:border-primary"
+                />
+                <input
+                  [(ngModel)]="profile.height"
+                  type="number"
+                  placeholder="سم"
+                  class="w-full h-10 px-3 bg-surface-container-low border border-outline-variant rounded-xl text-sm font-bold outline-none focus:border-primary"
+                />
+              </div>
+            } @else {
+              <p class="text-sm font-bold text-on-background">
+                {{ profile.weight }}كجم / {{ profile.height }}سم
+              </p>
+            }
+          </div>
+        </div>
       </div>
-      <div class="p-5">
-        @if (editMode) {
-          <textarea
-            [(ngModel)]="profile.allergies"
-            rows="2"
-            class="w-full px-3 py-2 bg-surface-container-low border border-outline-variant rounded-xl text-sm font-bold outline-none focus:border-primary resize-none text-right"
+
+      <!-- Medications -->
+      <div class="bg-white rounded-2xl border border-outline-variant shadow-sm overflow-hidden">
+        <div class="px-4 sm:px-5 py-4 border-b border-outline-variant/30 flex items-center gap-2">
+          <lucide-icon [img]="pillIcon" class="w-5 h-5 text-primary"></lucide-icon>
+          <h4 class="font-extrabold text-on-background text-sm">الأدوية الدائمة</h4>
+          <span
+            class="mr-auto text-xs font-bold bg-primary/10 text-primary px-2 py-0.5 rounded-full"
+            >{{ profile.medications.length }} أدوية</span
           >
-          </textarea>
-        } @else {
-          <p class="text-sm font-bold text-on-background text-right">
-            {{ profile.allergies || 'لا يوجد حساسية مسجلة' }}
-          </p>
-        }
-      </div>
-    </div>
-
-    <!-- Emergency + Doctor -->
-    <div class="bg-white rounded-2xl border border-outline-variant shadow-sm overflow-hidden">
-      <div class="px-5 py-4 border-b border-outline-variant/30 flex items-center gap-2">
-        <lucide-icon [img]="shieldIcon" class="w-5 h-5 text-tertiary"></lucide-icon>
-        <h4 class="font-extrabold text-on-background text-sm">جهة الاتصال الطارئة والطبيب</h4>
-      </div>
-      <div class="p-5 grid grid-cols-2 gap-4">
-        <div class="space-y-1 text-right">
-          <label class="text-xs font-bold text-outline">اسم جهة الطوارئ</label>
-          @if (editMode) {
-            <input
-              [(ngModel)]="profile.emergencyName"
-              class="w-full h-10 px-3 bg-surface-container-low border border-outline-variant rounded-xl text-sm font-bold outline-none focus:border-primary"
-            />
-          } @else {
-            <p class="text-sm font-bold text-on-background">{{ profile.emergencyName || '—' }}</p>
+        </div>
+        <div class="p-4 sm:p-5 space-y-3">
+          @for (med of profile.medications; track med.name) {
+            <div
+              class="flex items-center gap-3 bg-surface-container-low rounded-xl px-3 sm:px-4 py-3 text-right"
+            >
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-extrabold text-on-background truncate">{{ med.name }}</p>
+                <p class="text-xs text-outline">{{ med.dose }} · {{ med.frequency }}</p>
+              </div>
+              <p class="text-[10px] text-outline shrink-0">منذ {{ med.startDate }}</p>
+            </div>
+          }
+          @if (profile.medications.length === 0) {
+            <p class="text-sm text-outline text-center py-4">لا توجد أدوية مسجلة</p>
           }
         </div>
+      </div>
 
-        <div class="space-y-1 text-right">
-          <label class="text-xs font-bold text-outline">رقم الطوارئ</label>
+      <!-- Conditions -->
+      <div class="bg-white rounded-2xl border border-outline-variant shadow-sm overflow-hidden">
+        <div class="px-4 sm:px-5 py-4 border-b border-outline-variant/30 flex items-center gap-2">
+          <lucide-icon [img]="heartIcon" class="w-5 h-5 text-primary"></lucide-icon>
+          <h4 class="font-extrabold text-on-background text-sm">الحالات المزمنة</h4>
+        </div>
+        <div class="p-4 sm:p-5">
+          <div class="flex flex-wrap gap-2">
+            @for (cond of allConditions; track cond) {
+              @if (editMode) {
+                <button
+                  (click)="toggleCondition(cond)"
+                  [class]="
+                    profile.conditions.includes(cond)
+                      ? 'px-3 py-1.5 rounded-full text-xs font-bold bg-primary text-white border border-primary transition-all cursor-pointer'
+                      : 'px-3 py-1.5 rounded-full text-xs font-bold bg-surface-container-low border border-outline-variant text-outline transition-all cursor-pointer'
+                  "
+                >
+                  {{ cond }}
+                </button>
+              } @else if (profile.conditions.includes(cond)) {
+                <span
+                  class="px-3 py-1.5 rounded-full text-xs font-bold bg-primary/10 text-primary border border-primary/20"
+                  >{{ cond }}</span
+                >
+              }
+            }
+            @if (!editMode && profile.conditions.length === 0) {
+              <p class="text-sm text-outline">لا توجد حالات مزمنة مسجلة</p>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- Allergies -->
+      <div class="bg-white rounded-2xl border border-outline-variant shadow-sm overflow-hidden">
+        <div class="px-4 sm:px-5 py-4 border-b border-outline-variant/30 flex items-center gap-2">
+          <lucide-icon [img]="alertTriangleIcon" class="w-5 h-5 text-danger"></lucide-icon>
+          <h4 class="font-extrabold text-on-background text-sm">الحساسية الدوائية</h4>
+        </div>
+        <div class="p-4 sm:p-5">
           @if (editMode) {
-            <input
-              [(ngModel)]="profile.emergency"
-              dir="ltr"
-              class="w-full h-10 px-3 bg-surface-container-low border border-outline-variant rounded-xl text-sm font-bold outline-none focus:border-primary text-left"
-            />
+            <textarea
+              [(ngModel)]="profile.allergies"
+              rows="2"
+              class="w-full px-3 py-2 bg-surface-container-low border border-outline-variant rounded-xl text-sm font-bold outline-none focus:border-primary resize-none text-right"
+            >
+            </textarea>
           } @else {
-            <p class="text-sm font-bold text-on-background" dir="ltr">
-              {{ profile.emergency || '—' }}
+            <p class="text-sm font-bold text-on-background text-right">
+              {{ profile.allergies || 'لا يوجد حساسية مسجلة' }}
             </p>
           }
         </div>
+      </div>
 
-        <div class="col-span-2 space-y-1 text-right">
-          <label class="text-xs font-bold text-outline">الطبيب المعالج</label>
-          @if (editMode) {
-            <input
-              [(ngModel)]="profile.doctor"
-              class="w-full h-10 px-3 bg-surface-container-low border border-outline-variant rounded-xl text-sm font-bold outline-none focus:border-primary"
-            />
-          } @else {
-            <p class="text-sm font-bold text-on-background">{{ profile.doctor || '—' }}</p>
-          }
+      <!-- Emergency + Doctor -->
+      <div class="bg-white rounded-2xl border border-outline-variant shadow-sm overflow-hidden">
+        <div class="px-4 sm:px-5 py-4 border-b border-outline-variant/30 flex items-center gap-2">
+          <lucide-icon [img]="shieldIcon" class="w-5 h-5 text-tertiary"></lucide-icon>
+          <h4 class="font-extrabold text-on-background text-sm">جهة الاتصال الطارئة والطبيب</h4>
         </div>
+        <div class="p-4 sm:p-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div class="space-y-1 text-right">
+            <label class="text-xs font-bold text-outline">اسم جهة الطوارئ</label>
+            @if (editMode) {
+              <input
+                [(ngModel)]="profile.emergencyName"
+                class="w-full h-10 px-3 bg-surface-container-low border border-outline-variant rounded-xl text-sm font-bold outline-none focus:border-primary"
+              />
+            } @else {
+              <p class="text-sm font-bold text-on-background">{{ profile.emergencyName || '—' }}</p>
+            }
+          </div>
 
-        <div class="col-span-2 space-y-1 text-right">
-          <label class="text-xs font-bold text-outline">آخر كشف طبي</label>
-          <p class="text-sm font-bold text-on-background">{{ profile.lastCheckup || '—' }}</p>
+          <div class="space-y-1 text-right">
+            <label class="text-xs font-bold text-outline">رقم الطوارئ</label>
+            @if (editMode) {
+              <input
+                [(ngModel)]="profile.emergency"
+                dir="ltr"
+                class="w-full h-10 px-3 bg-surface-container-low border border-outline-variant rounded-xl text-sm font-bold outline-none focus:border-primary text-left"
+              />
+            } @else {
+              <p class="text-sm font-bold text-on-background" dir="ltr">
+                {{ profile.emergency || '—' }}
+              </p>
+            }
+          </div>
+
+          <div class="sm:col-span-2 space-y-1 text-right">
+            <label class="text-xs font-bold text-outline">الطبيب المعالج</label>
+            @if (editMode) {
+              <input
+                [(ngModel)]="profile.doctor"
+                class="w-full h-10 px-3 bg-surface-container-low border border-outline-variant rounded-xl text-sm font-bold outline-none focus:border-primary"
+              />
+            } @else {
+              <p class="text-sm font-bold text-on-background">{{ profile.doctor || '—' }}</p>
+            }
+          </div>
+
+          <div class="sm:col-span-2 space-y-1 text-right">
+            <label class="text-xs font-bold text-outline">آخر كشف طبي</label>
+            <p class="text-sm font-bold text-on-background">{{ profile.lastCheckup || '—' }}</p>
+          </div>
         </div>
       </div>
-    </div>
 
-    <!-- Save -->
-    @if (editMode) {
-      <button
-        (click)="save()"
-        class="w-full h-14 bg-primary hover:bg-primary-dark text-white rounded-2xl font-bold text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.98] shadow-md cursor-pointer"
-      >
-        <lucide-icon [img]="saveIcon" class="w-5 h-5"></lucide-icon>
-        حفظ التعديلات
-      </button>
-    }
+      <!-- Save -->
+      @if (editMode) {
+        <button
+          (click)="save()"
+          class="w-full h-14 bg-primary hover:bg-primary-dark text-white rounded-2xl font-bold text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.98] shadow-md cursor-pointer"
+        >
+          <lucide-icon [img]="saveIcon" class="w-5 h-5"></lucide-icon>
+          حفظ التعديلات
+        </button>
+      }
+    </div>
   }
 </section>

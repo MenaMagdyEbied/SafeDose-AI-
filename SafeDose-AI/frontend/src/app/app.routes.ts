@@ -1,5 +1,4 @@
 import { Routes } from '@angular/router';
-import { CaregiverResults } from './features/caregiver-results/caregiver-results';
 import { CaregiverReview } from './features/caregiver-review/caregiver-review';
 import { DigitalCard } from './features/digital-card/digital-card';
 import { Home } from './features/home/home';
@@ -23,12 +22,19 @@ export const routes: Routes = [
       { path: 'patient', component: PatientHome, title: 'بوابة المريض | SafeDose AI' },
       {
         path: 'interaction-checker',
-        component: InteractionChecker,
+        loadComponent: () =>
+          import('./features/interaction-checker/interaction-checker').then(
+            (c) => c.InteractionChecker,
+          ),
         title: 'فحص التفاعلات | SafeDose AI',
       },
       {
         path: 'interaction-results',
-        component: InteractionResults,
+        loadComponent: () =>
+          import('./features/interaction-results/interaction-results').then(
+            (c) => c.InteractionResults,
+          ),
+
         title: 'نتائج الفحص | SafeDose AI',
       },
       { path: 'digital-card', component: DigitalCard, title: 'البطاقة الرقمية | SafeDose AI' },
@@ -37,11 +43,7 @@ export const routes: Routes = [
         component: CaregiverReview,
         title: 'مراجعة الطاقم | SafeDose AI',
       },
-      {
-        path: 'caregiver-results',
-        component: CaregiverResults,
-        title: 'نتائج الطاقم | SafeDose AI',
-      },
+
       { path: 'pricing', component: Pricing, title: 'الأسعار | SafeDose AI' },
       {
         path: 'profile',

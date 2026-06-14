@@ -18,17 +18,18 @@ public class SqlDrugRepository : IDrugRepository
     public async Task<IReadOnlyList<DrugSearchResultDto>> SearchCatalogAsync(string query, int limit = 10)
     {
         var trimmed = query.Trim();
-        if (trimmed.Length < 2) return Array.Empty<DrugSearchResultDto>();
+        if (trimmed.Length == 0) return Array.Empty<DrugSearchResultDto>();
 
         var lower = trimmed.ToLower();
 
+        // Prefix match only on commercial names (EN + AR). Scientific name match
+        // pollutes results because every paracetamol-based drug would surface on "p".
         return await _db.DrugCatalogs
             .AsNoTracking()
             .Where(d =>
-                d.CommercialNameEn.ToLower().Contains(lower) ||
-                (d.CommercialNameAr != null && d.CommercialNameAr.Contains(trimmed)) ||
-                (d.ScientificName != null && d.ScientificName.ToLower().Contains(lower)))
-            .OrderBy(d => d.CommercialNameEn.Length)
+                d.CommercialNameEn.ToLower().StartsWith(lower) ||
+                (d.CommercialNameAr != null && d.CommercialNameAr.StartsWith(trimmed)))
+            .OrderBy(d => d.CommercialNameEn)
             .Take(limit)
             .Select(d => new DrugSearchResultDto(
                 d.DrugCatalogId,

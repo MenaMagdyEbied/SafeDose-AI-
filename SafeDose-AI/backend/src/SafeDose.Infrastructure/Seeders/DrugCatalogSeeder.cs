@@ -21,8 +21,7 @@ public class DrugCatalogSeeder : IDrugCatalogSeeder
     {
         _db = db;
         _logger = logger;
-        _csvPath = configuration["DrugCatalog:CsvPath"]
-            ?? Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "database", "egyptian-drugs.csv");
+        _csvPath = configuration["DrugCatalog:CsvPath"] ?? string.Empty;
     }
 
     public async Task<int> SeedAsync(CancellationToken cancellationToken = default)
@@ -33,15 +32,19 @@ public class DrugCatalogSeeder : IDrugCatalogSeeder
             return 0;
         }
 
-        if (!File.Exists(_csvPath))
+        // CSV path resolution - try config first, then several known locations
+        var resolvedPath = ResolveCsvPath(_csvPath);
+        if (resolvedPath == null)
         {
-            _logger.LogWarning("DrugCatalog CSV not found at {Path}", _csvPath);
+            _logger.LogWarning("DrugCatalog CSV not found. Tried config path and standard locations.");
             return 0;
         }
 
+        _logger.LogInformation("DrugCatalog CSV resolved at {Path}", resolvedPath);
+
         var inserted = 0;
         var skippedNoScientific = 0;
-        using var reader = new StreamReader(_csvPath);
+        using var reader = new StreamReader(resolvedPath);
         await reader.ReadLineAsync(cancellationToken);
 
         var batch = new List<DrugCatalog>(500);
@@ -100,6 +103,30 @@ public class DrugCatalogSeeder : IDrugCatalogSeeder
             "Seeded {Count} drugs into DrugCatalog (skipped {Skipped} rows with no scientific name)",
             inserted, skippedNoScientific);
         return inserted;
+    }
+
+    private static string? ResolveCsvPath(string configPath)
+    {
+        var candidates = new List<string>();
+        if (!string.IsNullOrWhiteSpace(configPath)) candidates.Add(configPath);
+
+        // Walk up from the bin folder looking for backend/database/egyptian-drugs.csv
+        var baseDir = AppContext.BaseDirectory;
+        for (int up = 2; up <= 8; up++)
+        {
+            var parts = new List<string> { baseDir };
+            for (int i = 0; i < up; i++) parts.Add("..");
+            parts.Add("database");
+            parts.Add("egyptian-drugs.csv");
+            candidates.Add(Path.Combine(parts.ToArray()));
+        }
+
+        foreach (var c in candidates)
+        {
+            var full = Path.GetFullPath(c);
+            if (File.Exists(full)) return full;
+        }
+        return null;
     }
 
     private static string? Truncate(string? s, int max)

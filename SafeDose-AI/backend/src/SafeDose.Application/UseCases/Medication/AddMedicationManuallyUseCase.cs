@@ -98,11 +98,7 @@ public class AddMedicationManuallyUseCase
                 : "Medication added manually (unverified)"
         ), cancellationToken);
 
-        // Only trigger interaction check for verified drugs
-        if (drug.IsVerified)
-        {
-            await TriggerInteractionCheckAsync(dto.PatientId, drugId, cancellationToken);
-        }
+        // Interaction check is on-demand from the check page, not automatic on add.
 
         return MedicationMappers.ToDto(med);
     }

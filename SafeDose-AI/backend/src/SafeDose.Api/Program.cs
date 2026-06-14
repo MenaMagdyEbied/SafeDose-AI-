@@ -67,6 +67,8 @@ builder.Services.AddAuthentication(options =>
 {
     options.SaveToken = false;
     options.RequireHttpsMetadata = false;
+    // Don't let the middleware remap "sub" to NameIdentifier - keeps user.Id distinct from userName
+    options.MapInboundClaims = false;
     options.TokenValidationParameters = new TokenValidationParameters
     {
         RoleClaimType = ClaimTypes.Role,
@@ -106,7 +108,8 @@ builder.Services.AddScoped<IAuditLogService, SqlAuditLogService>();
 builder.Services
     .AddHttpClient<ILangflowClient, LangflowClient>(client =>
     {
-        client.Timeout = TimeSpan.FromSeconds(30);
+        // Langflow LLM calls can take a while on cold start - 30s wasn't enough
+        client.Timeout = TimeSpan.FromSeconds(120);
     })
     .AddPolicyHandler(HttpPolicyExtensions
         .HandleTransientHttpError()
@@ -117,6 +120,7 @@ builder.Services
 builder.Services.AddScoped<SearchDrugsUseCase>();
 builder.Services.AddScoped<CheckDrugInteractionUseCase>();
 builder.Services.AddScoped<CheckStandaloneInteractionUseCase>();
+builder.Services.AddScoped<CheckCatalogInteractionsUseCase>();
 builder.Services.AddScoped<GetInteractionHistoryUseCase>();
 builder.Services.AddScoped<GetInteractionCheckByIdUseCase>();
 builder.Services.AddScoped<AcknowledgeWarningUseCase>();
@@ -161,6 +165,7 @@ builder.Services.AddSwaggerGen(option =>
         BearerFormat = "JWT",
         In = ParameterLocation.Header,
         Description = "JWT Authorization header using the Bearer scheme.\r\n\r\nEnter 'Bearer' [space] and then your token.\r\nExample: \"Bearer 12345abcdef\""
+
     });
 
     option.AddSecurityRequirement(new OpenApiSecurityRequirement

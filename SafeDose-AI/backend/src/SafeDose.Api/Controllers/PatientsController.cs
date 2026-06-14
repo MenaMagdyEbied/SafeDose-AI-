@@ -129,9 +129,10 @@ public class PatientsController : ControllerBase
 
     private string? GetAccountId()
     {
-        // Identity sets the user id as NameIdentifier claim 
+        // JWT outbound mapping turns NameIdentifier into "nameid" - check both.
+        // Don't fall back to "sub" because that's the userName, not the user id.
         return User.FindFirstValue(ClaimTypes.NameIdentifier)
-            ?? User.FindFirstValue("sub")
+            ?? User.FindFirstValue("nameid")
             ?? User.FindFirstValue("uid");
     }
 

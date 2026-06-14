@@ -1,12 +1,12 @@
-<section class="p-6 space-y-6">
+<section class="p-4 sm:p-6 space-y-6 pt-16 lg:pt-6" dir="rtl">
   <!-- Header -->
-  <div class="flex items-center justify-between">
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
     <div>
-      <h2 class="text-2xl font-extrabold text-on-background">لوحة التحكم</h2>
-      <p class="text-sm text-outline mt-1">نظرة عامة على أداء النظام والمستخدمين</p>
+      <h2 class="text-xl sm:text-2xl font-extrabold text-on-background">لوحة التحكم</h2>
+      <p class="text-xs sm:text-sm text-outline mt-1">نظرة عامة على أداء النظام والمستخدمين</p>
     </div>
     <div
-      class="flex items-center gap-2 text-xs font-bold text-outline bg-white px-4 py-2 rounded-xl border border-outline-variant"
+      class="flex items-center gap-2 text-xs font-bold text-outline bg-white px-4 py-2 rounded-xl border border-outline-variant w-fit"
     >
       <lucide-icon [img]="calendarIcon" class="w-4 h-4"></lucide-icon>
       آخر تحديث: اليوم 11:47 م
@@ -14,12 +14,21 @@
   </div>
 
   <!-- KPI Cards -->
-  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
     @for (kpi of kpis; track kpi.label) {
-      <div class="bg-white rounded-2xl border border-outline-variant p-5 shadow-sm space-y-3">
+      <div
+        class="bg-white rounded-2xl border border-outline-variant p-4 sm:p-5 shadow-sm space-y-3"
+      >
         <div class="flex items-center justify-between">
-          <div [class]="'w-10 h-10 rounded-xl flex items-center justify-center ' + kpi.bg">
-            <lucide-icon [img]="kpi.icon" [class]="'w-5 h-5 ' + kpi.iconColor"></lucide-icon>
+          <div
+            [class]="
+              'w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center ' + kpi.bg
+            "
+          >
+            <lucide-icon
+              [img]="kpi.icon"
+              [class]="'w-4 h-4 sm:w-5 sm:h-5 ' + kpi.iconColor"
+            ></lucide-icon>
           </div>
           <span
             [class]="
@@ -36,7 +45,7 @@
           </span>
         </div>
         <div>
-          <p class="text-2xl font-black text-on-background">{{ kpi.value }}</p>
+          <p class="text-xl sm:text-2xl font-black text-on-background">{{ kpi.value }}</p>
           <p class="text-xs text-outline mt-0.5">{{ kpi.label }}</p>
         </div>
       </div>
@@ -45,11 +54,12 @@
 
   <!-- Revenue Chart + Gender Split -->
   <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-    <!-- Revenue Chart -->
-    <div class="lg:col-span-2 bg-white rounded-2xl border border-outline-variant p-5 shadow-sm">
+    <div
+      class="lg:col-span-2 bg-white rounded-2xl border border-outline-variant p-4 sm:p-5 shadow-sm"
+    >
       <div class="flex items-center justify-between mb-4">
         <div>
-          <h3 class="font-extrabold text-on-background">الإيرادات</h3>
+          <h3 class="font-extrabold text-on-background text-sm sm:text-base">الإيرادات</h3>
           <p class="text-xs text-outline">آخر ١٢ شهر</p>
         </div>
         <div class="flex bg-slate-100 rounded-full p-1 gap-1">
@@ -58,7 +68,7 @@
             class="cursor-pointer"
             [class]="
               revenuePeriod === 'monthly'
-                ? 'bg-primary text-white px-3 py-1.5 rounded-full text-xs font-bold transition-all '
+                ? 'bg-primary text-white px-3 py-1.5 rounded-full text-xs font-bold transition-all'
                 : 'px-3 py-1.5 rounded-full text-xs font-bold text-outline transition-all'
             "
           >
@@ -69,7 +79,7 @@
             class="cursor-pointer"
             [class]="
               revenuePeriod === 'yearly'
-                ? 'bg-primary text-white px-3 py-1.5 rounded-full text-xs font-bold transition-all '
+                ? 'bg-primary text-white px-3 py-1.5 rounded-full text-xs font-bold transition-all'
                 : 'px-3 py-1.5 rounded-full text-xs font-bold text-outline transition-all'
             "
           >
@@ -78,8 +88,8 @@
         </div>
       </div>
 
-      <div class="flex items-end gap-2 mb-2">
-        <span class="text-3xl font-black text-on-background">
+      <div class="flex items-end gap-2 mb-2 flex-wrap">
+        <span class="text-2xl sm:text-3xl font-black text-on-background">
           {{ revenuePeriod === 'monthly' ? '48,250' : '512,400' }}
         </span>
         <span class="text-sm text-outline mb-1">ج.م</span>
@@ -89,13 +99,12 @@
         </span>
       </div>
 
-      <!-- Bar Chart -->
-      <div class="h-48 flex items-end gap-2 mt-6">
+      <div class="h-40 sm:h-48 flex items-end gap-1 sm:gap-2 mt-6">
         @for (bar of revenueData; track $index) {
           <div class="flex-1 flex flex-col items-center gap-2 group">
-            <div class="w-full flex flex-col items-center justify-end h-40 relative">
+            <div class="w-full flex flex-col items-center justify-end h-32 sm:h-40 relative">
               <div
-                class="absolute -top-6 opacity-0 group-hover:opacity-100 transition-opacity text-[10px] font-bold text-on-background bg-white border border-outline-variant rounded px-1.5 py-0.5 whitespace-nowrap"
+                class="absolute -top-6 opacity-0 group-hover:opacity-100 transition-opacity text-[10px] font-bold text-on-background bg-white border border-outline-variant rounded px-1.5 py-0.5 whitespace-nowrap z-10"
               >
                 {{ bar.value }} ج.م
               </div>
@@ -109,20 +118,19 @@
                 ></div>
               </div>
             </div>
-            <span class="text-[10px] font-bold text-outline">{{ bar.label }}</span>
+            <span class="text-[9px] sm:text-[10px] font-bold text-outline">{{ bar.label }}</span>
           </div>
         }
       </div>
     </div>
 
-    <!-- Gender Split -->
-    <div class="bg-white rounded-2xl border border-outline-variant p-5 shadow-sm flex flex-col">
-      <h3 class="font-extrabold text-on-background mb-1">توزيع المستخدمين</h3>
-      <p class="text-xs text-outline mb-6">حسب النوع</p>
-
-      <!-- Donut -->
+    <div
+      class="bg-white rounded-2xl border border-outline-variant p-4 sm:p-5 shadow-sm flex flex-col"
+    >
+      <h3 class="font-extrabold text-on-background mb-1 text-sm sm:text-base">توزيع المستخدمين</h3>
+      <p class="text-xs text-outline mb-4 sm:mb-6">حسب النوع</p>
       <div class="flex-1 flex items-center justify-center">
-        <div class="relative w-40 h-40">
+        <div class="relative w-32 h-32 sm:w-40 sm:h-40">
           <svg viewBox="0 0 100 100" class="w-full h-full -rotate-90">
             <circle
               cx="50"
@@ -158,13 +166,11 @@
             />
           </svg>
           <div class="absolute inset-0 flex flex-col items-center justify-center">
-            <span class="text-2xl font-black text-on-background">{{ totalUsers }}</span>
+            <span class="text-xl sm:text-2xl font-black text-on-background">{{ totalUsers }}</span>
             <span class="text-[10px] text-outline font-bold">مستخدم</span>
           </div>
         </div>
       </div>
-
-      <!-- Legend -->
       <div class="space-y-2 mt-4">
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-2">
@@ -185,10 +191,11 @@
   </div>
 
   <!-- Users Breakdown + Cards -->
-  <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-    <!-- Free vs Paid -->
-    <div class="bg-white rounded-2xl border border-outline-variant p-5 shadow-sm">
-      <h3 class="font-extrabold text-on-background mb-4">المستخدمين (مجاني / مدفوع)</h3>
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div class="bg-white rounded-2xl border border-outline-variant p-4 sm:p-5 shadow-sm">
+      <h3 class="font-extrabold text-on-background mb-4 text-sm sm:text-base">
+        المستخدمين (مجاني / مدفوع)
+      </h3>
       <div class="space-y-4">
         <div>
           <div class="flex items-center justify-between mb-1.5">
@@ -215,9 +222,8 @@
       </div>
     </div>
 
-    <!-- Admins & Staff -->
-    <div class="bg-white rounded-2xl border border-outline-variant p-5 shadow-sm">
-      <h3 class="font-extrabold text-on-background mb-4">فريق العمل</h3>
+    <div class="bg-white rounded-2xl border border-outline-variant p-4 sm:p-5 shadow-sm">
+      <h3 class="font-extrabold text-on-background mb-4 text-sm sm:text-base">فريق العمل</h3>
       <div class="space-y-3">
         @for (role of staffRoles; track role.label) {
           <div class="flex items-center justify-between p-3 bg-surface-container-low rounded-xl">
@@ -225,7 +231,9 @@
               <div [class]="'w-8 h-8 rounded-lg flex items-center justify-center ' + role.bg">
                 <lucide-icon [img]="role.icon" [class]="'w-4 h-4 ' + role.color"></lucide-icon>
               </div>
-              <span class="text-sm font-bold text-on-surface-variant">{{ role.label }}</span>
+              <span class="text-xs sm:text-sm font-bold text-on-surface-variant">{{
+                role.label
+              }}</span>
             </div>
             <span class="text-lg font-black text-on-background">{{ role.count }}</span>
           </div>
@@ -233,17 +241,21 @@
       </div>
     </div>
 
-    <!-- Cards Issued -->
-    <div class="bg-white rounded-2xl border border-outline-variant p-5 shadow-sm">
-      <h3 class="font-extrabold text-on-background mb-4">كروت العلاج</h3>
+    <div
+      class="bg-white rounded-2xl border border-outline-variant p-4 sm:p-5 shadow-sm sm:col-span-2 lg:col-span-1"
+    >
+      <h3 class="font-extrabold text-on-background mb-4 text-sm sm:text-base">كروت العلاج</h3>
       <div class="flex items-center gap-4 mb-4">
         <div
-          class="w-14 h-14 bg-tertiary-container rounded-2xl flex items-center justify-center shrink-0"
+          class="w-12 h-12 sm:w-14 sm:h-14 bg-tertiary-container rounded-2xl flex items-center justify-center shrink-0"
         >
-          <lucide-icon [img]="creditCardIcon" class="w-7 h-7 text-tertiary"></lucide-icon>
+          <lucide-icon
+            [img]="creditCardIcon"
+            class="w-6 h-6 sm:w-7 sm:h-7 text-tertiary"
+          ></lucide-icon>
         </div>
         <div>
-          <p class="text-2xl font-black text-on-background">{{ cardsIssued }}</p>
+          <p class="text-xl sm:text-2xl font-black text-on-background">{{ cardsIssued }}</p>
           <p class="text-xs text-outline">كرت صادر</p>
         </div>
       </div>
@@ -262,22 +274,28 @@
 
   <!-- Recent Activity -->
   <div class="bg-white rounded-2xl border border-outline-variant shadow-sm overflow-hidden">
-    <div class="p-5 border-b border-outline-variant/30 flex items-center justify-between">
-      <h3 class="font-extrabold text-on-background">آخر النشاطات</h3>
+    <div class="p-4 sm:p-5 border-b border-outline-variant/30 flex items-center justify-between">
+      <h3 class="font-extrabold text-on-background text-sm sm:text-base">آخر النشاطات</h3>
       <span class="text-xs font-bold text-primary cursor-pointer hover:underline">عرض الكل</span>
     </div>
     <div class="divide-y divide-outline-variant/20">
       @for (activity of recentActivity; track $index) {
-        <div class="p-4 flex items-center gap-3">
+        <div class="p-3 sm:p-4 flex items-center gap-3">
           <div
             [class]="
-              'w-9 h-9 rounded-full flex items-center justify-center shrink-0 ' + activity.bg
+              'w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center shrink-0 ' +
+              activity.bg
             "
           >
-            <lucide-icon [img]="activity.icon" [class]="'w-4 h-4 ' + activity.color"></lucide-icon>
+            <lucide-icon
+              [img]="activity.icon"
+              [class]="'w-3.5 h-3.5 sm:w-4 sm:h-4 ' + activity.color"
+            ></lucide-icon>
           </div>
-          <div class="flex-1">
-            <p class="text-sm font-bold text-on-background">{{ activity.title }}</p>
+          <div class="flex-1 min-w-0">
+            <p class="text-xs sm:text-sm font-bold text-on-background truncate">
+              {{ activity.title }}
+            </p>
             <p class="text-xs text-outline">{{ activity.time }}</p>
           </div>
         </div>

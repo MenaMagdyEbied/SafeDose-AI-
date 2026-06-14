@@ -1,121 +1,186 @@
- <div class="fixed bottom-6 right-6 z-50" dir="rtl">
-      <!-- Launcher Button -->
-      <button (click)="isOpen = !isOpen"
-        class="w-14 h-14 bg-primary hover:bg-primary-dark text-white rounded-full shadow-2xl flex items-center justify-center cursor-pointer transition-all relative z-50 border-2 border-white/80 active:scale-95"
-        style="min-width:56px;min-height:56px">
-        @if (isOpen) {
-          <lucide-icon [img]="xIcon" class="w-6 h-6"></lucide-icon>
-        } @else {
-          <lucide-icon [img]="messageSquareIcon" class="w-6 h-6 animate-bounce-slow"></lucide-icon>
-        }
-        @if (!isOpen) {
-          <span class="absolute -top-1 -left-1 flex h-4 w-4">
-            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
-            <span class="relative inline-flex rounded-full h-4 w-4 bg-rose-500 text-[9px] text-white font-black items-center justify-center">١</span>
-          </span>
-        }
-      </button>
+<div class="fixed bottom-6 right-6 z-50" dir="rtl">
+  <!-- Launcher Button -->
+  <button
+    (click)="isOpen = !isOpen"
+    class="w-14 h-14 bg-primary hover:bg-primary-dark text-white rounded-full shadow-2xl flex items-center justify-center cursor-pointer transition-all relative z-50 border-2 border-white/80 active:scale-95"
+    style="min-width: 56px; min-height: 56px"
+  >
+    @if (isOpen) {
+      <lucide-icon [img]="xIcon" class="w-6 h-6"></lucide-icon>
+    } @else {
+      <lucide-icon [img]="messageSquareIcon" class="w-6 h-6 animate-bounce-slow"></lucide-icon>
+    }
+    @if (!isOpen) {
+      <span class="absolute -top-1 -left-1 flex h-4 w-4">
+        <span
+          class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"
+        ></span>
+        <span
+          class="relative inline-flex rounded-full h-4 w-4 bg-rose-500 text-[9px] text-white font-black items-center justify-center"
+          >١</span
+        >
+      </span>
+    }
+  </button>
 
-      <!-- Chat Panel -->
-      @if (isOpen) {
-        <div class="fixed bottom-24 right-6 sm:right-6 w-[calc(100vw-32px)] sm:w-[420px] h-[calc(100vh-120px)] max-h-[640px] bg-white rounded-3xl shadow-3xl border border-outline-variant overflow-hidden flex flex-col z-40 animate-slide-in-top">
-          <!-- Header -->
-          <div class="bg-primary text-white px-5 py-4 flex items-center justify-between shadow-md shrink-0">
-            <div class="flex items-center gap-3">
-              <div class="w-9 h-9 bg-white/10 rounded-xl flex items-center justify-center border border-white/10">
-                <lucide-icon [img]="heartRateIcon" class="w-5 h-5 text-primary-container animate-pulse"></lucide-icon>
-              </div>
-              <div class="text-right">
-                <h3 class="text-md font-bold tracking-tight">مساعد SafeDose الطبي</h3>
-                <div class="flex items-center gap-1">
-                  <span class="inline-block w-2.5 h-2.5 bg-emerald-400 rounded-full animate-ping"></span>
-                  <span class="text-[10px] text-white/70">مدعوم بالذكاء الاصطناعي</span>
-                </div>
-              </div>
-            </div>
-            <button (click)="isOpen = false" class="w-8 h-8 rounded-full hover:bg-white/15 flex items-center justify-center transition-colors min-h-[44px] min-w-[44px]">
-              <lucide-icon [img]="xIcon" class="w-5 h-5 text-white"></lucide-icon>
-            </button>
+  <!-- Chat Panel -->
+  @if (isOpen) {
+    <div
+      class="fixed bottom-24 right-6 sm:right-6 w-[calc(100vw-32px)] sm:w-[420px] h-[calc(100vh-120px)] max-h-[640px] bg-white rounded-3xl shadow-3xl border border-outline-variant overflow-hidden flex flex-col z-40 animate-slide-in-top"
+    >
+      <!-- Header -->
+      <div
+        class="bg-primary text-white px-5 py-4 flex items-center justify-between shadow-md shrink-0"
+      >
+        <div class="flex items-center gap-3">
+          <div
+            class="w-9 h-9 bg-white/10 rounded-xl flex items-center justify-center border border-white/10"
+          >
+            <lucide-icon
+              [img]="heartRateIcon"
+              class="w-5 h-5 text-primary-container animate-pulse"
+            ></lucide-icon>
           </div>
-
-          <!-- Messages -->
-          <div class="flex-1 overflow-y-auto p-4 bg-surface-container-low space-y-4">
-            <!-- Disclaimer -->
-            <div class="bg-surface-container rounded-2xl p-4 text-xs text-on-surface-variant space-y-2 text-right border border-primary/10">
-              <span class="font-black text-primary block">⚠️ تنويه قانوني وطبي:</span>
-              <p class="leading-relaxed">إرشادات هذا المساعد مدعومة بمحرك RAG لهيئة الدواء المصرية. لا يعد بديلاً عن الرأي الطبي النهائي.</p>
+          <div class="text-right">
+            <h3 class="text-md font-bold tracking-tight">مساعد SafeDose الطبي</h3>
+            <div class="flex items-center gap-1">
+              <span
+                class="inline-block w-2.5 h-2.5 bg-emerald-400 rounded-full animate-ping"
+              ></span>
+              <span class="text-[10px] text-white/70">مدعوم بالذكاء الاصطناعي</span>
             </div>
+          </div>
+        </div>
+        <button
+          (click)="isOpen = false"
+          class="w-8 h-8 rounded-full hover:bg-white/15 flex items-center justify-center transition-colors min-h-[44px] min-w-[44px] cursor-pointer"
+        >
+          <lucide-icon [img]="xIcon" class="w-5 h-5 text-white"></lucide-icon>
+        </button>
+      </div>
 
-            @for (msg of messages; track msg.id) {
-              <div [class]="msg.sender === 'user' ? 'flex justify-end items-start gap-2' : 'flex justify-start items-start gap-2'">
-                @if (msg.sender === 'bot') {
-                  <div class="w-8 h-8 rounded-full bg-primary/15 border border-primary/20 flex items-center justify-center shrink-0">
-                    <lucide-icon [img]="heartRateIcon" class="w-4 h-4 text-primary"></lucide-icon>
-                  </div>
-                }
-                <div class="space-y-1.5 max-w-[85%]">
-                  <div [class]="getMsgClass(msg)">
-                    <p class="whitespace-pre-wrap">{{ msg.text }}</p>
-                  </div>
-                  @if (msg.sender === 'bot' && msg.actions && msg.actions.length > 0) {
-                    <div class="flex flex-wrap gap-2 justify-start pt-1">
-                      @for (act of msg.actions; track act.action) {
-                        <button (click)="triggerAction(act.action)"
-                          class="bg-white hover:bg-surface-container-low text-on-background border border-outline-variant font-bold text-xs px-3 py-1.5 rounded-xl transition-all shadow-xs cursor-pointer">
-                          {{ act.label }}
-                        </button>
-                      }
-                    </div>
+      <!-- Messages -->
+      <div class="flex-1 overflow-y-auto p-4 bg-surface-container-low space-y-4">
+        <!-- Disclaimer -->
+        <div
+          class="bg-surface-container rounded-2xl p-4 text-xs text-on-surface-variant space-y-2 text-right border border-primary/10"
+        >
+          <span class="font-black text-primary block">⚠️ تنويه قانوني وطبي:</span>
+          <p class="leading-relaxed">
+            إرشادات هذا المساعد مدعومة بمحرك RAG لهيئة الدواء المصرية. لا يعد بديلاً عن الرأي الطبي
+            النهائي.
+          </p>
+        </div>
+
+        @for (msg of messages; track msg.id) {
+          <div
+            [class]="
+              msg.sender === 'user'
+                ? 'flex justify-end items-start gap-2'
+                : 'flex justify-start items-start gap-2'
+            "
+          >
+            @if (msg.sender === 'bot') {
+              <div
+                class="w-8 h-8 rounded-full bg-primary/15 border border-primary/20 flex items-center justify-center shrink-0"
+              >
+                <lucide-icon [img]="heartRateIcon" class="w-4 h-4 text-primary"></lucide-icon>
+              </div>
+            }
+            <div class="space-y-1.5 max-w-[85%]">
+              <div [class]="getMsgClass(msg)">
+                <p class="whitespace-pre-wrap">{{ msg.text }}</p>
+              </div>
+              @if (msg.sender === 'bot' && msg.actions && msg.actions.length > 0) {
+                <div class="flex flex-wrap gap-2 justify-start pt-1">
+                  @for (act of msg.actions; track act.action) {
+                    <button
+                      (click)="triggerAction(act.action)"
+                      class="bg-white hover:bg-surface-container-low text-on-background border border-outline-variant font-bold text-xs px-3 py-1.5 rounded-xl transition-all shadow-xs cursor-pointer"
+                    >
+                      {{ act.label }}
+                    </button>
                   }
                 </div>
-                @if (msg.sender === 'user') {
-                  <div class="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center shrink-0">
-                    <span class="text-[10px] font-bold text-on-surface-variant">أ</span>
-                  </div>
-                }
-              </div>
-            }
-
-            @if (loading) {
-              <div class="flex justify-start items-center gap-2">
-                <div class="w-8 h-8 rounded-full bg-primary/15 flex items-center justify-center shrink-0">
-                  <lucide-icon [img]="heartRateIcon" class="w-4 h-4 text-primary animate-pulse"></lucide-icon>
-                </div>
-                <div class="bg-white border border-outline-variant/50 p-4 rounded-xl text-xs text-outline flex items-center gap-2">
-                  <div class="flex gap-1">
-                    <span class="w-2.5 h-2.5 bg-primary rounded-full animate-bounce"></span>
-                    <span class="w-2.5 h-2.5 bg-primary rounded-full animate-bounce [animation-delay:0.2s]"></span>
-                    <span class="w-2.5 h-2.5 bg-primary rounded-full animate-bounce [animation-delay:0.4s]"></span>
-                  </div>
-                  <span class="font-bold">جاري البحث...</span>
-                </div>
-              </div>
-            }
-
-            <!-- Quick chips for first message -->
-            @if (messages.length === 1) {
-              <div class="grid grid-cols-2 gap-2 pt-2">
-                @for (chip of quickChips; track chip) {
-                  <button (click)="sendChip(chip)"
-                    class="bg-white hover:bg-primary/5 border border-outline-variant text-right px-3 py-2.5 text-xs font-bold rounded-2xl text-on-surface-variant hover:text-primary hover:border-primary/50 transition-all cursor-pointer shadow-xs min-h-[44px]">
-                    {{ chip }}
-                  </button>
-                }
+              }
+            </div>
+            @if (msg.sender === 'user') {
+              <div
+                class="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center shrink-0"
+              >
+                <span class="text-[10px] font-bold text-on-surface-variant">أ</span>
               </div>
             }
           </div>
+        }
 
-          <!-- Input -->
-          <form (ngSubmit)="sendMessage()" class="p-4 bg-white border-t border-outline-variant/30 flex items-center gap-2 shrink-0">
-            <input type="text" [(ngModel)]="inputText" name="chatInput"
-              [placeholder]="'اسأل عن تعارض أدويتك...'"
-              class="flex-1 h-[44px] px-4 rounded-xl border border-outline-variant outline-none focus:border-primary text-on-background bg-surface-container-low focus:bg-white text-right" />
-            <button type="submit" [disabled]="!inputText.trim()"
-              [class]="inputText.trim() ? 'w-11 h-11 rounded-xl flex items-center justify-center transition-all cursor-pointer bg-primary text-white hover:bg-primary-dark shadow-xs shrink-0' : 'w-11 h-11 rounded-xl flex items-center justify-center transition-all bg-slate-100 text-outline cursor-not-allowed border border-outline-variant shrink-0'"
-              style="width:44px;height:44px">
-              <lucide-icon [img]="sendIcon" class="w-5 h-5 rotate-180"></lucide-icon>
-            </button>
-          </form>
-        </div>
-      }
+        @if (loading) {
+          <div class="flex justify-start items-center gap-2">
+            <div
+              class="w-8 h-8 rounded-full bg-primary/15 flex items-center justify-center shrink-0"
+            >
+              <lucide-icon
+                [img]="heartRateIcon"
+                class="w-4 h-4 text-primary animate-pulse"
+              ></lucide-icon>
+            </div>
+            <div
+              class="bg-white border border-outline-variant/50 p-4 rounded-xl text-xs text-outline flex items-center gap-2"
+            >
+              <div class="flex gap-1">
+                <span class="w-2.5 h-2.5 bg-primary rounded-full animate-bounce"></span>
+                <span
+                  class="w-2.5 h-2.5 bg-primary rounded-full animate-bounce [animation-delay:0.2s]"
+                ></span>
+                <span
+                  class="w-2.5 h-2.5 bg-primary rounded-full animate-bounce [animation-delay:0.4s]"
+                ></span>
+              </div>
+              <span class="font-bold">جاري البحث...</span>
+            </div>
+          </div>
+        }
+
+        <!-- Quick chips for first message -->
+        @if (messages.length === 1) {
+          <div class="grid grid-cols-2 gap-2 pt-2">
+            @for (chip of quickChips; track chip) {
+              <button
+                (click)="sendChip(chip)"
+                class="bg-white hover:bg-primary/5 border border-outline-variant text-right px-3 py-2.5 text-xs font-bold rounded-2xl text-on-surface-variant hover:text-primary hover:border-primary/50 transition-all cursor-pointer shadow-xs min-h-[44px]"
+              >
+                {{ chip }}
+              </button>
+            }
+          </div>
+        }
+      </div>
+
+      <!-- Input -->
+      <form
+        (ngSubmit)="sendMessage()"
+        class="p-4 bg-white border-t border-outline-variant/30 flex items-center gap-2 shrink-0"
+      >
+        <input
+          type="text"
+          [(ngModel)]="inputText"
+          name="chatInput"
+          [placeholder]="'اسأل عن تعارض أدويتك...'"
+          class="flex-1 h-[44px] px-4 rounded-xl border border-outline-variant outline-none focus:border-primary text-on-background bg-surface-container-low focus:bg-white text-right"
+        />
+        <button
+          type="submit"
+          [disabled]="!inputText.trim()"
+          [class]="
+            inputText.trim()
+              ? 'w-11 h-11 rounded-xl flex items-center justify-center transition-all cursor-pointer bg-primary text-white hover:bg-primary-dark shadow-xs shrink-0'
+              : 'w-11 h-11 rounded-xl flex items-center justify-center transition-all bg-slate-100 text-outline cursor-not-allowed border border-outline-variant shrink-0'
+          "
+          style="width: 44px; height: 44px"
+        >
+          <lucide-icon [img]="sendIcon" class="w-5 h-5 rotate-180"></lucide-icon>
+        </button>
+      </form>
     </div>
+  }
+</div>

@@ -1,13 +1,15 @@
-<section class="p-6 mx-auto px-4 space-y-8" dir="rtl">
+<section class="p-4 sm:p-6 space-y-6 sm:space-y-8 pt-16 lg:pt-6" dir="rtl">
   <!-- Header -->
-  <div class="flex items-center justify-between">
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
     <div>
-      <h2 class="text-2xl font-extrabold text-on-background">تعديل خطط الأسعار</h2>
-      <p class="text-sm text-outline mt-1">تحكم في أسعار وميزات الباقات المعروضة للمستخدمين</p>
+      <h2 class="text-xl sm:text-2xl font-extrabold text-on-background">تعديل خطط الأسعار</h2>
+      <p class="text-xs sm:text-sm text-outline mt-1">
+        تحكم في أسعار وميزات الباقات المعروضة للمستخدمين
+      </p>
     </div>
     <button
       (click)="saveAll()"
-      class="flex items-center gap-2 px-5 py-3 bg-primary hover:bg-primary-dark text-white rounded-xl font-bold text-sm transition-all shadow-md cursor-pointer"
+      class="flex items-center gap-2 px-4 sm:px-5 py-2.5 sm:py-3 bg-primary hover:bg-primary-dark text-white rounded-xl font-bold text-sm transition-all shadow-md cursor-pointer w-fit"
     >
       <lucide-icon [img]="saveIcon" class="w-4 h-4"></lucide-icon>
       حفظ التغييرات
@@ -24,25 +26,18 @@
   }
 
   <!-- Plans Grid -->
-  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
     @for (plan of plans; track plan.id) {
       <div class="bg-white rounded-3xl border border-outline-variant shadow-sm overflow-hidden">
-        <!-- Plan Header -->
         <div
           [class]="
             plan.id === 'family'
-              ? 'p-5 bg-secondary-container flex items-center justify-between'
-              : 'p-5 bg-primary-container flex items-center justify-between'
+              ? 'p-4 sm:p-5 bg-secondary-container flex items-center justify-between'
+              : 'p-4 sm:p-5 bg-primary-container flex items-center justify-between'
           "
         >
           <div class="flex items-center gap-3">
-            <div
-              [class]="
-                plan.id === 'family'
-                  ? 'w-10 h-10 bg-white/60 rounded-xl flex items-center justify-center'
-                  : 'w-10 h-10 bg-white/60 rounded-xl flex items-center justify-center'
-              "
-            >
+            <div class="w-10 h-10 bg-white/60 rounded-xl flex items-center justify-center">
               @if (plan.id === 'family') {
                 <lucide-icon
                   [img]="crownIcon"
@@ -53,19 +48,21 @@
               }
             </div>
             <div>
-              <h3 class="font-extrabold text-on-background">{{ plan.nameAr }}</h3>
+              <h3 class="font-extrabold text-on-background text-sm sm:text-base">
+                {{ plan.nameAr }}
+              </h3>
               <p class="text-xs text-outline">{{ plan.nameEn }}</p>
             </div>
           </div>
           @if (plan.id === 'family') {
-            <span class="px-3 py-1 bg-secondary text-white text-xs font-bold rounded-full"
+            <span
+              class="px-2.5 sm:px-3 py-1 bg-secondary text-white text-xs font-bold rounded-full shrink-0"
               >⭐ الأكثر طلباً</span
             >
           }
         </div>
 
-        <!-- Editable Fields -->
-        <div class="p-5 space-y-4">
+        <div class="p-4 sm:p-5 space-y-4">
           <div class="grid grid-cols-2 gap-3">
             <div class="space-y-1">
               <label class="text-xs font-bold text-outline">الاسم بالعربي</label>
@@ -78,8 +75,8 @@
               <label class="text-xs font-bold text-outline">الاسم بالإنجليزي</label>
               <input
                 [(ngModel)]="plan.nameEn"
-                class="w-full h-10 px-3 bg-surface-container-low border border-outline-variant rounded-xl text-sm font-bold outline-none focus:border-primary text-left"
                 dir="ltr"
+                class="w-full h-10 px-3 bg-surface-container-low border border-outline-variant rounded-xl text-sm font-bold outline-none focus:border-primary text-left"
               />
             </div>
           </div>
@@ -106,7 +103,6 @@
             }
           </div>
 
-          <!-- Features -->
           <div class="space-y-2">
             <label class="text-xs font-bold text-outline">الميزات</label>
             <div class="space-y-2">
@@ -138,10 +134,9 @@
     }
   </div>
 
-  <!-- Live Preview Note -->
-  <div class="bg-surface-container-low rounded-2xl p-5 flex items-center gap-3 text-right">
+  <div class="bg-surface-container-low rounded-2xl p-4 sm:p-5 flex items-center gap-3 text-right">
     <lucide-icon [img]="infoIcon" class="w-5 h-5 text-primary shrink-0"></lucide-icon>
-    <p class="text-sm text-on-surface-variant">
+    <p class="text-xs sm:text-sm text-on-surface-variant">
       التغييرات هتنعكس على صفحة الأسعار للمستخدمين فوراً بعد الحفظ.
     </p>
   </div>

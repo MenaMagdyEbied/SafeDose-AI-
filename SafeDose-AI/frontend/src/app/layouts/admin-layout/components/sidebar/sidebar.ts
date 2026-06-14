@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { Heart, LayoutDashboard } from 'lucide-angular';
+import { Heart, LayoutDashboard, Menu, X } from 'lucide-angular';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { LucideAngularModule, Settings } from 'lucide-angular';
 @Component({
@@ -12,4 +12,7 @@ export class Sidebar {
   settingsIcon = Settings;
   layoutDashboardIcon = LayoutDashboard;
   heartIcon = Heart;
+  menuIcon = Menu;
+  xIcon = X;
+  mobileMenu = false;
 }

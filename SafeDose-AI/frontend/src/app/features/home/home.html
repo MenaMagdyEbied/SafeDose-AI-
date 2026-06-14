@@ -161,7 +161,6 @@
 </section>
 
 <!-- Trust & Review -->
-<!-- Trust & Reviews -->
 <section class="py-12 bg-white text-center">
   <div class="container-app space-y-12">
     <!-- Trust Badges -->
@@ -202,10 +201,10 @@
     </div>
 
     <!-- Reviews Grid -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-right">
+    <div class="flex gap-4 overflow-x-auto pb-3 text-right snap-x snap-mandatory reviews-scroll">
       @for (review of reviews; track review.id) {
         <div
-          class="bg-surface-container-low rounded-2xl p-5 border border-outline-variant/30 space-y-3"
+          class="bg-surface-container-low rounded-2xl p-5 border border-outline-variant/30 space-y-3 shrink-0 w-[280px] sm:w-[320px] snap-start"
         >
           <div class="flex items-center justify-between">
             <div class="flex text-secondary text-sm">
@@ -227,7 +226,6 @@
         </div>
       }
     </div>
-
     <!-- Add Review -->
     @if (!showReviewForm) {
       <button

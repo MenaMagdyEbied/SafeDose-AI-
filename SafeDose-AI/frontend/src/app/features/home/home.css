@@ -1,0 +1,11 @@
+.reviews-scroll::-webkit-scrollbar {
+  height: 4px;
+}
+.reviews-scroll::-webkit-scrollbar-track {
+  background: var(--color-surface-container);
+  border-radius: 999px;
+}
+.reviews-scroll::-webkit-scrollbar-thumb {
+  background: var(--color-primary);
+  border-radius: 999px;
+}

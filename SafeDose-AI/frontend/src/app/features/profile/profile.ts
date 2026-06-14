@@ -65,7 +65,54 @@ export class Profile {
     medications: [],
     lastCheckup: '',
   };
+  commonMeds = [
+    'بنادول',
+    'بنادول اكسترا',
+    'بنادول كولد',
+    'بروفين',
+    'أسبرين',
+    'أموكسيسيلين',
+    'أزيثروميسين',
+    'ميتفورمين',
+    'إنسولين',
+    'أتورفاستاتين',
+    'أملوديبين',
+    'ليزينوبريل',
+    'أوميبرازول',
+    'فلوكستين',
+    'باراسيتامول',
+    'ديكلوفيناك',
+    'كلاريتين',
+    'سيتريزين',
+    'فيتامين د',
+    'كالسيوم',
+  ];
 
+  currentSuggestionsMap = new Map<object, string[]>();
+
+  onMedInput(med: any, event: Event) {
+    const val = (event.target as HTMLInputElement).value.trim();
+    if (val.length < 1) {
+      this.currentSuggestionsMap.delete(med);
+      return;
+    }
+    const filtered = this.commonMeds.filter((m) => m.includes(val));
+    this.currentSuggestionsMap.set(med, filtered);
+  }
+
+  activeSuggestions(med: any): string[] {
+    return this.currentSuggestionsMap.get(med) ?? [];
+  }
+
+  selectSuggestion(med: any, name: string) {
+    med.name = name;
+    this.currentSuggestionsMap.delete(med);
+  }
+
+  clearSuggestions() {
+    // تأخير بسيط عشان الـ mousedown يشتغل الأول
+    setTimeout(() => this.currentSuggestionsMap.clear(), 150);
+  }
   // Mock API response
   private mockApiResponse: UserProfile = {
     id: 'USR-00412',

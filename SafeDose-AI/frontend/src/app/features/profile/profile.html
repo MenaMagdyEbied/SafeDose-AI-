@@ -9,7 +9,7 @@
   }
 
   @if (!loading) {
-    <div class="max-w-2xl mx-auto space-y-6">
+    <div class="max-w-full mx-auto space-y-6">
       <!-- Header -->
       <div class="flex items-center justify-between">
         <div>
@@ -205,11 +205,29 @@
                   >
                     <lucide-icon [img]="trashIcon" class="w-3.5 h-3.5"></lucide-icon>
                   </button>
-                  <input
-                    [(ngModel)]="med.name"
-                    placeholder="اسم الدواء"
-                    class="flex-1 h-9 px-3 bg-white border border-outline-variant rounded-xl text-sm font-bold outline-none focus:border-primary"
-                  />
+                  <div class="relative flex-1">
+                    <input
+                      [(ngModel)]="med.name"
+                      (input)="onMedInput(med, $event)"
+                      (blur)="clearSuggestions()"
+                      placeholder="اسم الدواء"
+                      class="w-full h-9 px-3 bg-white border border-outline-variant rounded-xl text-sm font-bold outline-none focus:border-primary"
+                    />
+                    @if (activeSuggestions(med).length > 0) {
+                      <div
+                        class="absolute top-full right-0 left-0 z-50 bg-white border border-outline-variant rounded-xl shadow-lg overflow-hidden mt-1"
+                      >
+                        @for (s of activeSuggestions(med); track s) {
+                          <button
+                            (mousedown)="selectSuggestion(med, s)"
+                            class="w-full px-3 py-2 text-sm font-bold text-right hover:bg-surface-container-low transition-colors"
+                          >
+                            {{ s }}
+                          </button>
+                        }
+                      </div>
+                    }
+                  </div>
                 </div>
                 <div class="flex gap-2">
                   <input

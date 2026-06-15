@@ -1,11 +1,21 @@
 import { Component } from '@angular/core';
-import { Check, Clock, LucideAngularModule, Pill, TriangleAlert, Users, X } from 'lucide-angular';
+import {
+  Check,
+  Clock,
+  LucideAngularModule,
+  Pill,
+  Trash2,
+  TriangleAlert,
+  Users,
+  X,
+} from 'lucide-angular';
 import { MedNotification } from '../../core/models/med-notification';
 import { FamilyNotification } from '../../core/models/family-notification';
+import { ConfirmDialog } from '../../shared/components/confirm-dialog/confirm-dialog';
 
 @Component({
   selector: 'app-notifications',
-  imports: [LucideAngularModule],
+  imports: [LucideAngularModule, ConfirmDialog],
   templateUrl: './notifications.html',
   styleUrl: './notifications.css',
 })
@@ -16,28 +26,13 @@ export class Notifications {
   checkIcon = Check;
   clockIcon = Clock;
   xIcon = X;
-
+  trashIcon = Trash2;
+  showDeleteDialog = false;
+  pendingDeleteNotif: any = null;
+  pendingDeleteType: 'med' | 'family' = 'med';
   activeTab: 'meds' | 'family' = 'meds';
 
   medNotifications: MedNotification[] = [
-    {
-      id: 1,
-      type: 'reminder',
-      status: 'pending',
-      title: 'حان وقت ميتفورمين',
-      body: '٥٠٠ ملغ — بعد الأكل مباشرة',
-      time: 'الآن',
-      read: false,
-    },
-    {
-      id: 2,
-      type: 'warning',
-      status: 'pending',
-      title: 'تحذير: تداخل دوائي محتمل',
-      body: 'أسبرين + وارفارين — راجع طبيبك قبل الأخذ',
-      time: 'منذ ١٠ د',
-      read: false,
-    },
     {
       id: 3,
       type: 'reminder',
@@ -49,6 +44,78 @@ export class Notifications {
     },
     {
       id: 4,
+      type: 'reminder',
+      status: 'skipped',
+      title: 'أسبرين — الليل',
+      body: '٨١ ملغ — قبل النوم',
+      time: 'أمس',
+      read: false,
+    },
+    {
+      id: 2,
+      type: 'reminder',
+      status: 'skipped',
+      title: 'أسبرين — الليل',
+      body: '٨١ ملغ — قبل النوم',
+      time: 'أمس',
+      read: true,
+    },
+    {
+      id: 5,
+      type: 'reminder',
+      status: 'skipped',
+      title: 'أسبرين — الليل',
+      body: '٨١ ملغ — قبل النوم',
+      time: 'أمس',
+      read: false,
+    },
+    {
+      id: 6,
+      type: 'reminder',
+      status: 'skipped',
+      title: 'أسبرين — الليل',
+      body: '٨١ ملغ — قبل النوم',
+      time: 'أمس',
+      read: true,
+    },
+    {
+      id: 7,
+      type: 'reminder',
+      status: 'skipped',
+      title: 'أسبرين — الليل',
+      body: '٨١ ملغ — قبل النوم',
+      time: 'أمس',
+      read: false,
+    },
+    {
+      id: 1,
+      type: 'reminder',
+      status: 'pending',
+      title: 'حان وقت ميتفورمين',
+      body: '٥٠٠ ملغ — بعد الأكل مباشرة',
+      time: 'الآن',
+      read: false,
+    },
+    {
+      id: 8,
+      type: 'reminder',
+      status: 'skipped',
+      title: 'أسبرين — الليل',
+      body: '٨١ ملغ — قبل النوم',
+      time: 'أمس',
+      read: false,
+    },
+    {
+      id: 9,
+      type: 'reminder',
+      status: 'skipped',
+      title: 'أسبرين — الليل',
+      body: '٨١ ملغ — قبل النوم',
+      time: 'أمس',
+      read: true,
+    },
+    {
+      id: 10,
       type: 'reminder',
       status: 'skipped',
       title: 'أسبرين — الليل',
@@ -108,12 +175,51 @@ export class Notifications {
     notif.read = true;
   }
 
-  markRead(notif: FamilyNotification) {
-    notif.read = true;
-  }
-
   markAllRead() {
     this.medNotifications.forEach((n) => (n.read = true));
     this.familyNotifications.forEach((n) => (n.read = true));
+  }
+
+  markMedRead(notif: any): void {
+    notif.read = true;
+  }
+
+  markRead(notif: any): void {
+    notif.read = true;
+  }
+
+  deleteMedNotification(notif: any): void {
+    this.medNotifications = this.medNotifications.filter((n) => n.id !== notif.id);
+  }
+
+  deleteFamilyNotification(notif: any): void {
+    this.familyNotifications = this.familyNotifications.filter((n) => n.id !== notif.id);
+  }
+
+  confirmDelete(notif: any, type: 'med' | 'family', event: Event): void {
+    event.stopPropagation();
+    this.pendingDeleteNotif = notif;
+    this.pendingDeleteType = type;
+    this.showDeleteDialog = true;
+  }
+
+  executeDelete(): void {
+    if (!this.pendingDeleteNotif) return;
+    if (this.pendingDeleteType === 'med') {
+      this.medNotifications = this.medNotifications.filter(
+        (n) => n.id !== this.pendingDeleteNotif.id,
+      );
+    } else {
+      this.familyNotifications = this.familyNotifications.filter(
+        (n) => n.id !== this.pendingDeleteNotif.id,
+      );
+    }
+    this.showDeleteDialog = false;
+    this.pendingDeleteNotif = null;
+  }
+
+  cancelDelete(): void {
+    this.showDeleteDialog = false;
+    this.pendingDeleteNotif = null;
   }
 }

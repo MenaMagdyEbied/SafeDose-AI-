@@ -57,14 +57,22 @@ export const routes: Routes = [
       },
       {
         path: 'payment',
-        loadComponent: () => import('./features/payment/payment').then((m) => m.Payment),
+        loadComponent: () => import('./features/payment/payment').then((c) => c.Payment),
         title: ' الدفع | SafeDose AI',
       },
       {
         path: 'notifications',
         loadComponent: () =>
-          import('./features/notifications/notifications').then((m) => m.Notifications),
+          import('./features/notifications/notifications').then((c) => c.Notifications),
         title: ' الأشعارات | SafeDose AI',
+      },
+      {
+        path: 'prescription-detail/:id',
+        loadComponent: () =>
+          import('./features/prescription-detail/prescription-detail').then(
+            (c) => c.PrescriptionDetail,
+          ),
+        title: ' تفاصيل الروشته | SafeDose AI',
       },
     ],
   },

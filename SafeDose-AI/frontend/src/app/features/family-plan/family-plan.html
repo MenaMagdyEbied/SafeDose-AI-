@@ -54,7 +54,7 @@
               <lucide-icon [img]="editIcon" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></lucide-icon>
             </button>
             <button
-              (click)="deleteMember(member.id)"
+              (click)="confirmDeleteMember(member)"
               class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl border border-danger/20 text-danger hover:bg-danger-container flex items-center justify-center transition-all cursor-pointer"
             >
               <lucide-icon [img]="trashIcon" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></lucide-icon>
@@ -229,4 +229,17 @@
       </div>
     </div>
   }
+
+  <app-confirm-dialog
+    [isOpen]="showConfirmDelete"
+    title="تأكيد حذف فرد العائلة"
+    message="هل تريد بالتأكيد حذف {{
+      pendingDeleteMemberName
+    }} من العائلة؟ هذا الإجراء لا يمكن التراجع عنه."
+    confirmText="حذف"
+    cancelText="إلغاء"
+    variant="danger"
+    (confirmed)="executeDeleteMember()"
+    (cancelled)="cancelDelete()"
+  ></app-confirm-dialog>
 </section>

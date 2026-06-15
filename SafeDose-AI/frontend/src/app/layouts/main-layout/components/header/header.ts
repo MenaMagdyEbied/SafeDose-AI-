@@ -24,10 +24,9 @@ import { AfterViewInit, ElementRef } from '@angular/core';
   templateUrl: './header.html',
   styleUrl: './header.css',
 })
-export class Header implements AfterViewInit {
+export class Header {
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
-  @ViewChild('el') el!: ElementRef;
   showLogoutConfirm = false;
   toastMessage: string | null = null;
   accountMenu = false;
@@ -191,9 +190,5 @@ export class Header implements AfterViewInit {
   }
   markMedRead(notif: any) {
     notif.read = true;
-  }
-  ngAfterViewInit(): void {
-    const height = this.el.nativeElement.offsetHeight;
-    document.documentElement.style.setProperty('--header-height', `${height}px`);
   }
 }

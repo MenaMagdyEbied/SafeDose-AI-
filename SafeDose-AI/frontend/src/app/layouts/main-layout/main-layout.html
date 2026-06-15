@@ -1,6 +1,8 @@
 <div class="min-h-screen flex flex-col">
   <app-header />
-  <main class="flex-1" style="padding-top: var(--header-height)"><router-outlet /></main>
+  <main class="flex-1 pt-[var(--header-height-mobile)] md:pt-[var(--header-height-desktop)]">
+    <router-outlet />
+  </main>
   <app-footer />
   <app-chat-bot />
 </div>

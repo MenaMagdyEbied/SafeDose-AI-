@@ -1,4 +1,4 @@
-<section class="container-app space-y-6 pt-16 pb-24">
+<section class="container-app space-y-6">
   <!-- Header -->
   <div class="flex items-center justify-between">
     <div>
@@ -114,7 +114,7 @@
   <!-- Modal -->
   @if (showModal) {
     <div
-      class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4 sm:p-4"
+      class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4 mb-0 sm:p-4"
       (click)="closeModal()"
     >
       <div
@@ -123,9 +123,9 @@
       >
         <!-- Modal Header -->
         <div
-          class="p-5 sm:p-6 border-b border-outline-variant/30 flex items-center justify-between shrink-0"
+          class="pt-4 pb-2 px-5 border-b border-outline-variant/30 flex items-center justify-between shrink-0"
         >
-          <h3 class="font-extrabold text-on-background text-sm sm:text-base">
+          <h3 class="font-extrabold text-on-background text-lg">
             {{ editingId ? 'تعديل بيانات الفرد' : 'إضافة فرد جديد' }}
           </h3>
           <button

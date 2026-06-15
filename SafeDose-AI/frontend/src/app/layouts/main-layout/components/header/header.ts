@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, inject, ViewChild } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import {
   Bell,
@@ -16,6 +16,7 @@ import {
   TriangleAlert,
   ChevronLeft,
 } from 'lucide-angular';
+import { AfterViewInit, ElementRef } from '@angular/core';
 
 @Component({
   selector: 'app-header',
@@ -23,9 +24,10 @@ import {
   templateUrl: './header.html',
   styleUrl: './header.css',
 })
-export class Header {
+export class Header implements AfterViewInit {
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
+  @ViewChild('el') el!: ElementRef;
   showLogoutConfirm = false;
   toastMessage: string | null = null;
   accountMenu = false;
@@ -189,5 +191,9 @@ export class Header {
   }
   markMedRead(notif: any) {
     notif.read = true;
+  }
+  ngAfterViewInit(): void {
+    const height = this.el.nativeElement.offsetHeight;
+    document.documentElement.style.setProperty('--header-height', `${height}px`);
   }
 }

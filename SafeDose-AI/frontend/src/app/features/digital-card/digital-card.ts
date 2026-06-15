@@ -56,36 +56,8 @@ export class DigitalCard {
   xIcon = X;
 
   showEditModal = false;
-  editMeds: { name: string; dose: string; frequency: string }[] = [];
 
-  medications: { name: string; dose: string; frequency: string }[] = [
-    { name: 'جلوكوفاج', dose: '٥٠٠ ملغ', frequency: 'مرتان يومياً' },
-    { name: 'كونكور', dose: '٥ ملغ', frequency: 'مرة مساءً' },
-    { name: 'وارفارين', dose: '٥ ملغ', frequency: 'مرة يومياً' },
-  ];
+ 
 
-  openEditModal() {
-    this.editMeds = this.medications.map((m) => ({ ...m }));
-    this.showEditModal = true;
-    document.body.style.overflow = 'hidden';
-  }
-
-  closeEditModal() {
-    this.showEditModal = false;
-    document.body.style.overflow = '';
-  }
-
-  addMed() {
-    this.editMeds.push({ name: '', dose: '', frequency: '' });
-  }
-
-  removeMed(index: number) {
-    this.editMeds.splice(index, 1);
-  }
-
-  saveMeds() {
-    this.medications = this.editMeds.filter((m) => m.name.trim());
-    this.closeEditModal();
-    // TODO: PUT /api/user/medications
-  }
+  
 }

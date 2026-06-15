@@ -58,6 +58,53 @@ export class CaregiverReview implements OnInit {
     meds: [{ name: '', dose: '', frequency: '', duration: '' }],
   };
 
+  commonMeds = [
+    'بنادول اكسترا',
+    'بنادول كولد',
+    'بروفين',
+    'أسبرين',
+    'أموكسيسيلين',
+    'أزيثروميسين',
+    'ميتفورمين',
+    'إنسولين',
+    'أتورفاستاتين',
+    'أملوديبين',
+    'ليزينوبريل',
+    'أوميبرازول',
+    'فلوكستين',
+    'باراسيتامول',
+    'ديكلوفيناك',
+    'كلاريتين',
+    'سيتريزين',
+    'فيتامين د',
+    'كالسيوم',
+  ];
+
+  currentSuggestionsMap = new Map<object, string[]>();
+
+  onMedInput(med: any, event: Event) {
+    const val = (event.target as HTMLInputElement).value.trim();
+    if (val.length < 1) {
+      this.currentSuggestionsMap.delete(med);
+      return;
+    }
+    const filtered = this.commonMeds.filter((m) => m.includes(val));
+    this.currentSuggestionsMap.set(med, filtered);
+  }
+
+  activeSuggestions(med: any): string[] {
+    return this.currentSuggestionsMap.get(med) ?? [];
+  }
+
+  selectSuggestion(med: any, name: string) {
+    med.name = name;
+    this.currentSuggestionsMap.delete(med);
+  }
+
+  clearSuggestions() {
+    setTimeout(() => this.currentSuggestionsMap.clear(), 150);
+  }
+
   ngOnInit() {
     if (this.prescriptions.length > 0) {
       this.scanned = true;

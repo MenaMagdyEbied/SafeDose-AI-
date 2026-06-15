@@ -28,15 +28,18 @@
       <div class="bg-white/10 rounded-xl p-3 text-right space-y-2">
         <h4 class="font-bold text-secondary text-sm">الأدوية الحالية:</h4>
         <div class="space-y-1">
-          @for (med of medications; track med.name) {
-            <div class="flex items-center gap-2 text-sm text-white/90">
-              <lucide-icon [img]="pillIcon" class="w-4 h-4 text-secondary shrink-0"></lucide-icon>
-              <span>{{ med.name }} {{ med.dose }} - {{ med.frequency }}</span>
-            </div>
-          }
-          @if (medications.length === 0) {
-            <p class="text-sm text-white/50">لا توجد أدوية مضافة</p>
-          }
+          <div class="flex items-center gap-2 text-sm text-white/90">
+            <lucide-icon [img]="pillIcon" class="w-4 h-4 text-secondary shrink-0"></lucide-icon>
+            <span>جلوكوفاج ٥٠٠ ملجم - مرتان يومياً</span>
+          </div>
+          <div class="flex items-center gap-2 text-sm text-white/90">
+            <lucide-icon [img]="pillIcon" class="w-4 h-4 text-secondary shrink-0"></lucide-icon>
+            <span>كونكور ٥ ملجم - مرة مساءً</span>
+          </div>
+          <div class="flex items-center gap-2 text-sm text-white/90">
+            <lucide-icon [img]="pillIcon" class="w-4 h-4 text-secondary shrink-0"></lucide-icon>
+            <span>وارفارين ٥ ملجم - مرة يومياً</span>
+          </div>
         </div>
       </div>
 
@@ -60,13 +63,6 @@
   <!-- Actions -->
   <div class="flex flex-col sm:flex-row gap-3">
     <button
-      (click)="openEditModal()"
-      class="flex-1 border border-primary text-primary hover:bg-primary/5 py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all cursor-pointer"
-    >
-      <lucide-icon [img]="editIcon" class="w-5 h-5"></lucide-icon>
-      تعديل الأدوية
-    </button>
-    <button
       (click)="printCard()"
       class="flex-1 bg-primary hover:bg-primary-dark text-white py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all cursor-pointer"
     >
@@ -81,88 +77,3 @@
     </button>
   </div>
 </section>
-
-<!-- Edit Modal -->
-@if (showEditModal) {
-  <div
-    class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto"
-    dir="rtl"
-    (click)="closeEditModal()"
-  >
-    <div
-      class="bg-white rounded-3xl shadow-xl w-full sm:max-w-md flex flex-col max-h-[85vh]"
-      (click)="$event.stopPropagation()"
-    >
-      <!-- Header -->
-      <div
-        class="pt-4 pb-2 px-5 border-b border-outline-variant/30 flex items-center justify-between shrink-0"
-      >
-        <h3 class="font-extrabold text-on-background text-lg">تعديل أدوية البطاقة</h3>
-
-        <button
-          (click)="closeEditModal()"
-          class="w-8 h-8 rounded-full hover:bg-slate-100 flex items-center justify-center cursor-pointer"
-        >
-          <lucide-icon [img]="xIcon" class="w-5 h-5 text-outline"></lucide-icon>
-        </button>
-      </div>
-
-      <!-- Content -->
-      <div class="p-5 space-y-3 overflow-y-auto flex-1 text-right">
-        @for (med of editMeds; track $index) {
-          <div class="bg-surface-container-low rounded-xl p-3 space-y-2">
-            <div class="flex items-center gap-2">
-              <button
-                (click)="removeMed($index)"
-                class="w-7 h-7 rounded-lg bg-danger/10 text-danger flex items-center justify-center hover:bg-danger/20 transition-all cursor-pointer shrink-0"
-              >
-                <lucide-icon [img]="trashIcon" class="w-3.5 h-3.5"></lucide-icon>
-              </button>
-              <input
-                [(ngModel)]="med.name"
-                placeholder="اسم الدواء"
-                class="flex-1 h-9 px-3 bg-white border border-outline-variant rounded-xl text-sm font-bold outline-none focus:border-primary"
-              />
-            </div>
-            <div class="grid grid-cols-2 gap-2">
-              <input
-                [(ngModel)]="med.dose"
-                placeholder="الجرعة (مثال: ٥٠٠ ملغ)"
-                class="h-9 px-3 bg-white border border-outline-variant rounded-xl text-xs font-bold outline-none focus:border-primary"
-              />
-              <input
-                [(ngModel)]="med.frequency"
-                placeholder="التكرار (مثال: مرتان يومياً)"
-                class="h-9 px-3 bg-white border border-outline-variant rounded-xl text-xs font-bold outline-none focus:border-primary"
-              />
-            </div>
-          </div>
-        }
-
-        <button
-          (click)="addMed()"
-          class="w-full h-10 rounded-xl border-2 border-dashed border-primary/30 text-primary text-sm font-bold hover:bg-primary/5 transition-all cursor-pointer flex items-center justify-center gap-2"
-        >
-          <lucide-icon [img]="plusIcon" class="w-4 h-4"></lucide-icon>
-          إضافة دواء
-        </button>
-      </div>
-
-      <!-- Footer -->
-      <div class="p-5 border-t border-outline-variant/30 flex gap-3 shrink-0">
-        <button
-          (click)="closeEditModal()"
-          class="flex-1 h-12 border border-outline-variant text-outline rounded-2xl font-bold text-sm hover:bg-slate-50 transition-all cursor-pointer"
-        >
-          إلغاء
-        </button>
-        <button
-          (click)="saveMeds()"
-          class="flex-[2] h-12 bg-primary hover:bg-primary-dark text-white rounded-2xl font-bold text-sm transition-all cursor-pointer"
-        >
-          حفظ التعديلات
-        </button>
-      </div>
-    </div>
-  </div>
-}

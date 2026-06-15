@@ -4,6 +4,7 @@ import {
   Bell,
   ChevronDown,
   CircleUser,
+  CreditCard,
   Heart,
   LogOut,
   LucideAngularModule,
@@ -39,6 +40,7 @@ export class Header {
   userCircleIcon = CircleUser;
   shieldAlertIcon = ShieldAlert;
   pillIcon = Pill;
+  digitalCardIcon = CreditCard;
   bellMenu = false;
   alertIcon = TriangleAlert;
   chevronLeftIcon = ChevronLeft;

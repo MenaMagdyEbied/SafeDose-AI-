@@ -56,10 +56,20 @@
     </nav>
 
     <div class="flex items-center gap-1 sm:gap-3">
+      <!-- Digital Card Shortcut -->
+      <a
+        routerLink="/digital-card"
+        class="relative cursor-pointer w-9 h-9 rounded-xl hover:bg-slate-100 flex items-center justify-center transition-all text-on-surface-variant"
+        aria-label="البطاقة الرقمية"
+      >
+        <lucide-icon [img]="digitalCardIcon" class="w-5 h-5"></lucide-icon>
+      </a>
+
       <!-- Bell Dropdown -->
       <div class="relative" (mouseenter)="bellMenu = true" (mouseleave)="bellMenu = false">
         <button
           class="relative cursor-pointer w-9 h-9 rounded-xl hover:bg-slate-100 flex items-center justify-center transition-all"
+          aria-label="الإشعارات"
         >
           <lucide-icon [img]="bellIcon" class="w-5 h-5 text-on-surface-variant"></lucide-icon>
           @if (unreadCount > 0) {

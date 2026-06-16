@@ -182,3 +182,7 @@ body {
   background: var(--color-outline-variant);
   border-radius: 3px;
 }
+:root {
+  --header-height-mobile: 7.9rem; /* 126.1px */
+  --header-height-desktop: 4rem; /* 64px */
+}

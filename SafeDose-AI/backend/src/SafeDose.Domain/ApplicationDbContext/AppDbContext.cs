@@ -39,9 +39,50 @@ namespace SafeDose.Domain.ApplicationDbContext
                     Id = "2",
                     Name = "User",
                     NormalizedName = "USER"
+                },
+                new IdentityRole
+                {
+                    Id = "3",
+                    Name = "SuperAdmin",
+                    NormalizedName = "SUPERADMIN"
                 }
             );
             #endregion
+
+
+            // seeding superAdmin
+            #region
+            var user = new Account
+            {
+                Id = "1",
+                Name = "superadmin",
+                UserName = "superadmin",
+                NormalizedUserName = "SUPERADMIN",
+                Email = "superadmin@gmail.com",
+                NormalizedEmail = "SUPERADMIN@GMAIL.COM",
+                EmailConfirmed = true,
+                SecurityStamp = Guid.NewGuid().ToString()
+            };
+
+            var passwordHasher = new PasswordHasher<Account>();
+
+            user.PasswordHash =
+                passwordHasher.HashPassword(user, "SuperAdmin@123");
+
+            modelBuilder.Entity<Account>().HasData(user);
+
+
+            modelBuilder.Entity<IdentityUserRole<string>>().HasData(
+                new IdentityUserRole<string>
+                {
+                    UserId = "1",
+                    RoleId = "3"
+                }
+            );
+
+            #endregion
+
+
         }
 
 

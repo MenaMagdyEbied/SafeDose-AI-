@@ -29,12 +29,14 @@ namespace SafeDose.Infrastructure.UserProfile.ServicesImplementation
         public async Task<UserGetProfileDTO> GetUserProfile()
         {
             Account account = await _userGlobalServices.GetUser();
+            List<string> accountRoles = _userManager.GetRolesAsync(account).Result.ToList(); 
             UserGetProfileDTO userGetProfileDTO = new UserGetProfileDTO
             {
                 Name = account.Name,    
-                UserName = account.Name,    
+                UserName = account.UserName,    
                 Email = account.Email,
-                Phone = account.PhoneNumber
+                Phone = account.PhoneNumber,
+                Roles = accountRoles
             };
 
             return userGetProfileDTO;   

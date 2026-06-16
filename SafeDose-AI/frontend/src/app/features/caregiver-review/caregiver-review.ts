@@ -58,6 +58,53 @@ export class CaregiverReview implements OnInit {
     meds: [{ name: '', dose: '', frequency: '', duration: '' }],
   };
 
+  commonMeds = [
+    'بنادول اكسترا',
+    'بنادول كولد',
+    'بروفين',
+    'أسبرين',
+    'أموكسيسيلين',
+    'أزيثروميسين',
+    'ميتفورمين',
+    'إنسولين',
+    'أتورفاستاتين',
+    'أملوديبين',
+    'ليزينوبريل',
+    'أوميبرازول',
+    'فلوكستين',
+    'باراسيتامول',
+    'ديكلوفيناك',
+    'كلاريتين',
+    'سيتريزين',
+    'فيتامين د',
+    'كالسيوم',
+  ];
+
+  currentSuggestionsMap = new Map<object, string[]>();
+
+  onMedInput(med: any, event: Event) {
+    const val = (event.target as HTMLInputElement).value.trim();
+    if (val.length < 1) {
+      this.currentSuggestionsMap.delete(med);
+      return;
+    }
+    const filtered = this.commonMeds.filter((m) => m.includes(val));
+    this.currentSuggestionsMap.set(med, filtered);
+  }
+
+  activeSuggestions(med: any): string[] {
+    return this.currentSuggestionsMap.get(med) ?? [];
+  }
+
+  selectSuggestion(med: any, name: string) {
+    med.name = name;
+    this.currentSuggestionsMap.delete(med);
+  }
+
+  clearSuggestions() {
+    setTimeout(() => this.currentSuggestionsMap.clear(), 150);
+  }
+
   ngOnInit() {
     if (this.prescriptions.length > 0) {
       this.scanned = true;
@@ -68,10 +115,10 @@ export class CaregiverReview implements OnInit {
     return this.prescriptionService.prescriptions;
   }
 
-  // Camera
   async openCamera(): Promise<void> {
     try {
       this.showCamera = true;
+      this.lockBodyScroll(); // ← أضيفي السطر ده
       this.videoStream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: 'environment' },
       });
@@ -81,7 +128,15 @@ export class CaregiverReview implements OnInit {
       }, 100);
     } catch (err) {
       this.showCamera = false;
+      this.unlockBodyScroll(); // ← وده لو فشل الفتح
     }
+  }
+
+  closeCamera(): void {
+    this.videoStream?.getTracks().forEach((t) => t.stop());
+    this.videoStream = null;
+    this.showCamera = false;
+    this.unlockBodyScroll(); // ← أضيفي السطر ده
   }
 
   capturePhoto(): void {
@@ -97,12 +152,6 @@ export class CaregiverReview implements OnInit {
       }
     });
     this.closeCamera();
-  }
-
-  closeCamera(): void {
-    this.videoStream?.getTracks().forEach((t) => t.stop());
-    this.videoStream = null;
-    this.showCamera = false;
   }
 
   openFilePicker(): void {
@@ -133,8 +182,6 @@ export class CaregiverReview implements OnInit {
       this.cdr.detectChanges();
     }
   }
-
-  // بيفتح المودال مليان بالأدوية اللي استخرجها الـ agent
   openReviewModal(meds: ScannedMed[]): void {
     this.manualForm = {
       name: 'وصفة مسح ضوئي - ' + new Date().toLocaleDateString('ar-EG'),
@@ -146,8 +193,8 @@ export class CaregiverReview implements OnInit {
       })),
     };
     this.showManualModal = true;
+    this.lockBodyScroll(); // ← أضيفي السطر ده
   }
-
   private async extractMedsFromImage(base64: string, mediaType: string): Promise<ScannedMed[]> {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -233,14 +280,30 @@ export class CaregiverReview implements OnInit {
     this.errorText = '';
   }
 
+  private originalBodyOverflow: string | null = null;
+
+  private lockBodyScroll(): void {
+    if (this.originalBodyOverflow === null) {
+      this.originalBodyOverflow = document.body.style.overflow;
+    }
+    document.body.style.overflow = 'hidden';
+  }
+
+  private unlockBodyScroll(): void {
+    document.body.style.overflow = this.originalBodyOverflow ?? '';
+    this.originalBodyOverflow = null;
+  }
+
   // Manual Modal
   openManualModal() {
     this.manualForm = { name: '', meds: [{ name: '', dose: '', frequency: '', duration: '' }] };
     this.showManualModal = true;
+    this.lockBodyScroll();
   }
 
   closeManualModal() {
     this.showManualModal = false;
+    this.unlockBodyScroll();
   }
 
   addManualMed() {
@@ -261,7 +324,7 @@ export class CaregiverReview implements OnInit {
     };
     this.prescriptionService.add(prescription);
     this.scanned = true;
-    this.showManualModal = false;
+    this.closeManualModal();
     this.manualForm = { name: '', meds: [{ name: '', dose: '', frequency: '', duration: '' }] };
   }
 
@@ -269,10 +332,10 @@ export class CaregiverReview implements OnInit {
     this.router.navigate(['/prescription-detail', prescription.id]);
   }
 
-  // Delete
   confirmDeletePrescription(prescription: any) {
     this.prescriptionToDelete = prescription;
     this.showDeleteConfirm = true;
+    this.lockBodyScroll();
   }
 
   deleteConfirmed() {
@@ -280,6 +343,7 @@ export class CaregiverReview implements OnInit {
       this.prescriptionService.delete(this.prescriptionToDelete.id);
       this.prescriptionToDelete = null;
       this.showDeleteConfirm = false;
+      this.unlockBodyScroll();
       if (this.prescriptions.length === 0) {
         this.scanned = false;
       }

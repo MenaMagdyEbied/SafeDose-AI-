@@ -35,6 +35,53 @@ namespace SafeDose.Infrastructure.Auth
             _emailSender = emailSender;
         }
 
+
+
+        public async Task<AuthModelDTO> RegisterAdminAsync(RegisterDTO model)
+        {
+            if (await _userManager.FindByEmailAsync(model.Email) is not null)
+                return new AuthModelDTO { Message = "Email is already registerd!" };
+
+            if (await _userManager.FindByNameAsync(model.UserName) is not null)
+                return new AuthModelDTO { Message = "UserName is already registerd!" };
+
+
+            List<Account>? accounts = await _userManager.Users.Where(u => u.PhoneNumber == model.PhoneNumber).ToListAsync();
+            if (accounts.Count() > 0)
+                return new AuthModelDTO { Message = "PhoneNumber is already registerd!" };
+
+            Account account = new Account();
+            account.Name = model.FullName;
+            account.Email = model.Email;
+            account.UserName = model.UserName;
+            account.PhoneNumber = model.PhoneNumber;
+
+            IdentityResult result = await _userManager.CreateAsync(account, model.Password);
+
+            if (!result.Succeeded)
+            {
+                string errors = string.Empty;
+                foreach (var error in result.Errors)
+                {
+                    errors += error.Description + " , ";
+                }
+
+                return new AuthModelDTO { Message = errors };
+            }
+            else
+            {
+                await _userManager.AddToRoleAsync(account, "Admin");
+
+                // generate token
+                var token = await _userManager.GenerateEmailConfirmationTokenAsync(account);
+
+                // confirm email
+                await _userManager.ConfirmEmailAsync(account, token);
+
+                return new AuthModelDTO { Message = "Account created successfuly" };
+            }
+        }
+
         public async Task<AuthModelDTO> RegisterAsync(RegisterDTO model)
         {
             if (await _userManager.FindByEmailAsync(model.Email) is not null)
@@ -126,8 +173,6 @@ namespace SafeDose.Infrastructure.Auth
             var jwtSecurityToken = await CreateJwtToken(user);
 
             authModel.Message = "Token created successfully!";
-            authModel.UserName = user.UserName;
-            authModel.Email = user.Email;
             authModel.IsAuthenticated = true;
             authModel.Token = new JwtSecurityTokenHandler().WriteToken(jwtSecurityToken);
             authModel.ExpiresOn = jwtSecurityToken.ValidTo;
@@ -151,6 +196,7 @@ namespace SafeDose.Infrastructure.Auth
             claims.Add(new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()));
             claims.Add(new Claim(JwtRegisteredClaimNames.Email, user.Email));
             claims.Add(new Claim(ClaimTypes.NameIdentifier, user.Id));
+
 
             // Role claims
             foreach (var role in roles)
@@ -206,7 +252,6 @@ namespace SafeDose.Infrastructure.Auth
 
             return "Password reset successful.";
         }
-
 
 
     }

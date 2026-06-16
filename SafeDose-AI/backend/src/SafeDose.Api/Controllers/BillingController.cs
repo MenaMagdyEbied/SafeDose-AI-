@@ -17,19 +17,22 @@ public class BillingController : ControllerBase
     private readonly InitiateCheckoutUseCase _checkout;
     private readonly ProcessPaymobWebhookUseCase _webhook;
     private readonly CancelSubscriptionUseCase _cancel;
+    private readonly GetPaymentStatusUseCase _paymentStatus;
 
     public BillingController(
         GetPricingTiersUseCase getTiers,
         GetMySubscriptionUseCase getMySub,
         InitiateCheckoutUseCase checkout,
         ProcessPaymobWebhookUseCase webhook,
-        CancelSubscriptionUseCase cancel)
+        CancelSubscriptionUseCase cancel,
+        GetPaymentStatusUseCase paymentStatus)
     {
         _getTiers = getTiers;
         _getMySub = getMySub;
         _checkout = checkout;
         _webhook = webhook;
         _cancel = cancel;
+        _paymentStatus = paymentStatus;
     }
 
     // List of available plans, used by the pricing page
@@ -102,6 +105,29 @@ public class BillingController : ControllerBase
             // Always 200 for processed (success or failure) - prevents Paymob retries
             _ => Ok(new { result = result.ToString() })
         };
+    }
+
+    // Polled by the /payment-success and /payment-failed frontend pages after Paymob bounces back.
+    // Returns Pending while waiting for the webhook to activate the subscription.
+    [HttpGet("payment-status/{merchantOrderId}")]
+    public async Task<IActionResult> PaymentStatus(string merchantOrderId)
+    {
+        var accountId = GetAccountId();
+        if (accountId == null) return Unauth();
+
+        try
+        {
+            var result = await _paymentStatus.ExecuteAsync(accountId, merchantOrderId);
+            if (result == null)
+                return NotFound(new ErrorResponse(
+                    ErrorCodes.NotFound, "لم نعثر على عملية الدفع"));
+            return Ok(result);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return StatusCode(403, new ErrorResponse(
+                ErrorCodes.Forbidden, ArabicMessages.Forbidden));
+        }
     }
 
     // Stop auto-renewal (if it was on). Premium access continues until EndAt.

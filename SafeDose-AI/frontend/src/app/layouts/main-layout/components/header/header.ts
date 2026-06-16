@@ -1,9 +1,10 @@
-import { ChangeDetectorRef, Component, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, inject, ViewChild } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import {
   Bell,
   ChevronDown,
   CircleUser,
+  CreditCard,
   Heart,
   LogOut,
   LucideAngularModule,
@@ -15,6 +16,7 @@ import {
   TriangleAlert,
   ChevronLeft,
 } from 'lucide-angular';
+import { AfterViewInit, ElementRef } from '@angular/core';
 
 @Component({
   selector: 'app-header',
@@ -39,6 +41,7 @@ export class Header {
   userCircleIcon = CircleUser;
   shieldAlertIcon = ShieldAlert;
   pillIcon = Pill;
+  digitalCardIcon = CreditCard;
   bellMenu = false;
   alertIcon = TriangleAlert;
   chevronLeftIcon = ChevronLeft;

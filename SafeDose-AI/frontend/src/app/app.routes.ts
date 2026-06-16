@@ -55,6 +55,25 @@ export const routes: Routes = [
         loadComponent: () => import('./features/family-plan/family-plan').then((c) => c.FamilyPlan),
         title: 'خطة العيلة | SafeDose AI',
       },
+      {
+        path: 'payment',
+        loadComponent: () => import('./features/payment/payment').then((c) => c.Payment),
+        title: ' الدفع | SafeDose AI',
+      },
+      {
+        path: 'notifications',
+        loadComponent: () =>
+          import('./features/notifications/notifications').then((c) => c.Notifications),
+        title: ' الأشعارات | SafeDose AI',
+      },
+      {
+        path: 'prescription-detail/:id',
+        loadComponent: () =>
+          import('./features/prescription-detail/prescription-detail').then(
+            (c) => c.PrescriptionDetail,
+          ),
+        title: ' تفاصيل الروشته | SafeDose AI',
+      },
     ],
   },
   {

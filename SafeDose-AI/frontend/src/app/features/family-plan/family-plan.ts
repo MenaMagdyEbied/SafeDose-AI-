@@ -1,10 +1,10 @@
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import {
-  Edit,
   LucideAngularModule,
   Pill,
   Plus,
+  SquarePen,
   Trash2,
   TriangleAlert,
   Users,
@@ -12,17 +12,18 @@ import {
 } from 'lucide-angular';
 import { FamilyMember } from '../../core/models';
 import { MemberForm } from '../../core/models/member-form';
+import { ConfirmDialog } from '../../shared/components/confirm-dialog/confirm-dialog';
 
 @Component({
   selector: 'app-family-plan',
-  imports: [FormsModule, LucideAngularModule],
+  imports: [FormsModule, LucideAngularModule, ConfirmDialog],
   templateUrl: './family-plan.html',
   styleUrl: './family-plan.css',
 })
 export class FamilyPlan {
   plusIcon = Plus;
   usersIcon = Users;
-  editIcon = Edit;
+  editIcon = SquarePen;
   trashIcon = Trash2;
   xIcon = X;
   pillIcon = Pill;
@@ -30,6 +31,9 @@ export class FamilyPlan {
 
   members: FamilyMember[] = [];
   showModal = false;
+  showConfirmDelete = false;
+  pendingDeleteMemberId: string | null = null;
+  pendingDeleteMemberName = '';
   editingId: string | null = null;
 
   allConditions = ['السكري', 'ارتفاع ضغط الدم', 'الربو', 'أمراض القلب', 'الحساسية', 'أخرى'];
@@ -110,6 +114,24 @@ export class FamilyPlan {
   deleteMember(id: string): void {
     this.members = this.members.filter((m) => m.id !== id);
     this.saveToStorage();
+  }
+
+  confirmDeleteMember(member: FamilyMember): void {
+    this.pendingDeleteMemberId = member.id;
+    this.pendingDeleteMemberName = member.name;
+    this.showConfirmDelete = true;
+  }
+
+  executeDeleteMember(): void {
+    if (!this.pendingDeleteMemberId) return;
+    this.deleteMember(this.pendingDeleteMemberId);
+    this.cancelDelete();
+  }
+
+  cancelDelete(): void {
+    this.showConfirmDelete = false;
+    this.pendingDeleteMemberId = null;
+    this.pendingDeleteMemberName = '';
   }
 
   toggleFormCondition(cond: string): void {

@@ -22,4 +22,12 @@ public interface IPatientMedicationRepository : IPatientMedicationProvider
 
     // Background job helper
     Task<IReadOnlyList<PatientMedication>> GetExpiredActiveMedicationsAsync(DateOnly cutoff);
+
+    // Reminder schedule for a medication. The notification service reads these to fire pushes.
+    // SetTimes wipes and replaces existing rows in PatientMedicationTime for the medication.
+    Task SetTimesAsync(int patientMedicationId, string accountId, IEnumerable<TimeOnly> times);
+    Task<IReadOnlyList<MedicationTimeView>> GetTimesAsync(int patientMedicationId);
 }
+
+// Read-only view of one configured reminder time.
+public record MedicationTimeView(int PatientMedicationTimeId, TimeOnly Time);

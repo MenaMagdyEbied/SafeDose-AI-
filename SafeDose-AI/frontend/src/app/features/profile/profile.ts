@@ -1,17 +1,21 @@
 import { Component } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import {
   Camera,
   Clock,
   Heart,
   LucideAngularModule,
   Pill,
+  Plus,
   Save,
   Shield,
+  SquarePen,
   Stethoscope,
+  Trash2,
   TriangleAlert,
   User,
+  X,
 } from 'lucide-angular';
-import { FormsModule } from '@angular/forms';
 import { UserProfile } from '../../core/models/user-profile';
 
 @Component({
@@ -30,7 +34,10 @@ export class Profile {
   pillIcon = Pill;
   shieldIcon = Shield;
   clockIcon = Clock;
-
+  plusIcon = Plus;
+  editIcon = SquarePen;
+  trashIcon = Trash2;
+  xIcon = X;
   editMode = false;
   loading = true;
 
@@ -58,7 +65,54 @@ export class Profile {
     medications: [],
     lastCheckup: '',
   };
+  commonMeds = [
+    'بنادول',
+    'بنادول اكسترا',
+    'بنادول كولد',
+    'بروفين',
+    'أسبرين',
+    'أموكسيسيلين',
+    'أزيثروميسين',
+    'ميتفورمين',
+    'إنسولين',
+    'أتورفاستاتين',
+    'أملوديبين',
+    'ليزينوبريل',
+    'أوميبرازول',
+    'فلوكستين',
+    'باراسيتامول',
+    'ديكلوفيناك',
+    'كلاريتين',
+    'سيتريزين',
+    'فيتامين د',
+    'كالسيوم',
+  ];
 
+  currentSuggestionsMap = new Map<object, string[]>();
+
+  onMedInput(med: any, event: Event) {
+    const val = (event.target as HTMLInputElement).value.trim();
+    if (val.length < 1) {
+      this.currentSuggestionsMap.delete(med);
+      return;
+    }
+    const filtered = this.commonMeds.filter((m) => m.includes(val));
+    this.currentSuggestionsMap.set(med, filtered);
+  }
+
+  activeSuggestions(med: any): string[] {
+    return this.currentSuggestionsMap.get(med) ?? [];
+  }
+
+  selectSuggestion(med: any, name: string) {
+    med.name = name;
+    this.currentSuggestionsMap.delete(med);
+  }
+
+  clearSuggestions() {
+    // تأخير بسيط عشان الـ mousedown يشتغل الأول
+    setTimeout(() => this.currentSuggestionsMap.clear(), 150);
+  }
   // Mock API response
   private mockApiResponse: UserProfile = {
     id: 'USR-00412',
@@ -124,5 +178,36 @@ export class Profile {
       family: 'bg-tertiary-container text-on-tertiary-container',
     };
     return colors[this.profile.subscriptionPlan] ?? '';
+  } // Properties
+  newConditionInput = '';
+  customConditions: string[] = []; // الحالات المخصصة غير الموجودة في allConditions
+
+  // Medications
+  addMedication() {
+    this.profile.medications.push({
+      name: '',
+      dose: '',
+      frequency: '',
+      startDate: new Date().toLocaleDateString('ar-EG'),
+    });
+  }
+
+  removeMedication(index: number) {
+    this.profile.medications.splice(index, 1);
+  }
+
+  // Conditions
+  addCustomCondition() {
+    const val = this.newConditionInput.trim();
+    if (val && !this.customConditions.includes(val) && !this.profile.conditions.includes(val)) {
+      this.customConditions.push(val);
+      this.profile.conditions.push(val);
+    }
+    this.newConditionInput = '';
+  }
+
+  removeCustomCondition(cond: string) {
+    this.customConditions = this.customConditions.filter((c) => c !== cond);
+    this.profile.conditions = this.profile.conditions.filter((c) => c !== cond);
   }
 }

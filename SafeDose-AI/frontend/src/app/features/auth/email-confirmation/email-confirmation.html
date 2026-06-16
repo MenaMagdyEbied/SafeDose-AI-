@@ -1,0 +1,96 @@
+<section class="flex min-h-screen items-center justify-center bg-background p-6">
+  <div class="w-full max-w-md bg-white rounded-3xl shadow-xl p-8 text-right space-y-6">
+
+    @if (!confirmed) {
+      <!-- Icon -->
+      <div class="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto">
+        <lucide-icon [img]="mailIcon" class="w-8 h-8 text-primary"></lucide-icon>
+      </div>
+
+      <!-- Header -->
+      <div class="text-center space-y-2">
+        <h2 class="text-2xl font-extrabold text-on-background">تأكيد البريد الإلكتروني</h2>
+        <p class="text-sm text-outline">
+          أرسلنا كود تأكيد إلى
+          <span class="font-bold text-primary">{{ email }}</span>
+        </p>
+      </div>
+
+      <!-- Error -->
+      @if (errorText) {
+        <div class="p-3.5 bg-danger-container border-r-4 border-danger text-on-danger-container text-xs font-bold rounded-l-xl flex items-start gap-2.5">
+          <lucide-icon [img]="alertIcon" class="w-5 h-5 shrink-0 mt-0.5"></lucide-icon>
+          <p>{{ errorText }}</p>
+        </div>
+      }
+
+      <!-- Success -->
+      @if (successText) {
+        <div class="p-3.5 bg-emerald-50 border-r-4 border-emerald-500 text-emerald-800 text-xs font-bold rounded-l-xl flex items-start gap-2.5">
+          <lucide-icon [img]="checkIcon" class="w-5 h-5 shrink-0 mt-0.5"></lucide-icon>
+          <p>{{ successText }}</p>
+        </div>
+      }
+
+      <!-- Code Input -->
+      <div class="space-y-2">
+        <label class="text-sm font-bold text-on-background block">كود التأكيد</label>
+        <input
+          [(ngModel)]="code"
+          placeholder="أدخل الكود المكون من 6 أرقام"
+          maxlength="6"
+          dir="ltr"
+          class="w-full h-12 px-4 bg-white border border-outline-variant rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none text-sm font-bold text-center tracking-widest transition-all"
+        />
+      </div>
+
+      <!-- Submit -->
+      <button
+        (click)="confirm()"
+        [disabled]="loading || code.length < 6"
+        class="w-full h-14 bg-primary hover:bg-primary-dark disabled:bg-slate-200 disabled:text-outline text-white rounded-2xl font-bold text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.98] shadow-md cursor-pointer"
+      >
+        @if (loading) {
+          <div class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+        } @else {
+          <lucide-icon [img]="shieldCheckIcon" class="w-5 h-5"></lucide-icon>
+          <span>تأكيد الحساب</span>
+        }
+      </button>
+
+      <!-- Resend -->
+      <div class="text-center">
+        <p class="text-xs text-outline">لم تستلم الكود؟</p>
+        <button
+          (click)="resend()"
+          [disabled]="resendCooldown > 0"
+          class="text-primary font-bold text-xs hover:underline cursor-pointer disabled:text-outline disabled:no-underline"
+        >
+          @if (resendCooldown > 0) {
+            إعادة الإرسال بعد {{ resendCooldown }} ثانية
+          } @else {
+            إعادة إرسال الكود
+          }
+        </button>
+      </div>
+    }
+
+    <!-- Success State -->
+    @if (confirmed) {
+      <div class="text-center space-y-4 py-4">
+        <div class="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto">
+          <lucide-icon [img]="checkIcon" class="w-10 h-10 text-emerald-500"></lucide-icon>
+        </div>
+        <h3 class="text-xl font-extrabold text-on-background">تم تأكيد حسابك! 🎉</h3>
+        <p class="text-sm text-outline">يمكنك الآن تسجيل الدخول والبدء في استخدام SafeDose AI</p>
+        <button
+          routerLink="/login"
+          class="w-full h-12 bg-primary text-white rounded-2xl font-bold text-sm cursor-pointer hover:bg-primary-dark transition-all"
+        >
+          تسجيل الدخول
+        </button>
+      </div>
+    }
+
+  </div>
+</section>

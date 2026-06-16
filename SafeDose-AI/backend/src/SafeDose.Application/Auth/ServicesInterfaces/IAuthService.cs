@@ -9,6 +9,8 @@ namespace SafeDose.Application.Auth.ServicesInterfaces
 {
     public interface IAuthService
     {
+        Task<AuthModelDTO> RegisterAdminAsync(RegisterDTO model);
+
         Task<AuthModelDTO> RegisterAsync(RegisterDTO model);
         Task<string> ConfrimEmail(EmailConfirmationDTO EmailConfirmationModel);
         Task<AuthModelDTO> GetTokenAsync(LoginDTO model);

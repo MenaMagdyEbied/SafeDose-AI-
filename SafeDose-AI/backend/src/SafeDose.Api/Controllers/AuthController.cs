@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using SafeDose.Application.Auth.DTOs;
 using SafeDose.Application.Auth.ServicesInterfaces;
@@ -15,6 +16,22 @@ namespace SafeDose.Api.Controllers
         {
             _authService = authService;
         }
+
+        [Authorize(Roles = "SuperAdmin")]
+        [HttpPost("registerAdmin")]
+        public async Task<IActionResult> RegisterAdmin(RegisterDTO dto)
+        {
+            try
+            {
+                AuthModelDTO result = await _authService.RegisterAdminAsync(dto);
+                return Ok(result.Message);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
 
         [HttpPost("register")]
         public async Task<IActionResult> Register(RegisterDTO dto)

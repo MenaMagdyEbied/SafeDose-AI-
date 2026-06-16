@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
-import { Heart, LayoutDashboard, Menu, X } from 'lucide-angular';
+import { Heart, LayoutDashboard, Menu, Settings, X, Users } from 'lucide-angular';
 import { RouterLink, RouterLinkActive } from '@angular/router';
-import { LucideAngularModule, Settings } from 'lucide-angular';
+import { LucideAngularModule } from 'lucide-angular';
 @Component({
   selector: 'app-sidebar',
   imports: [RouterLink, RouterLinkActive, LucideAngularModule],
@@ -14,5 +14,6 @@ export class Sidebar {
   heartIcon = Heart;
   menuIcon = Menu;
   xIcon = X;
+  usersIcon = Users;
   mobileMenu = false;
 }

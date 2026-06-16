@@ -11,6 +11,8 @@ import { NotFound } from './shared/components/not-found/not-found';
 import { AdminLayout } from './layouts/admin-layout/admin-layout';
 import { Login } from './features/auth/login/login';
 import { Register } from './features/auth/register/register';
+import { Card } from './shared/components/card/card';
+import { PublicCard } from './features/public-card/public-card';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'home', pathMatch: 'full' },
@@ -93,9 +95,36 @@ export const routes: Routes = [
           import('./features/admin/admin-pricing/admin-pricing').then((c) => c.AdminPricing),
         title: 'تعديل الأسعار | SafeDose AI',
       },
+      {
+        path: 'managers',
+        loadComponent: () =>
+          import('./features/admin/admin-manager/admin-manager').then((c) => c.AdminManager),
+        title: 'إدارة المشرفين | SafeDose AI',
+      },
     ],
   },
-
+  {
+    path: 'card/:id',
+    component: PublicCard,
+    title: 'البطاقة الرقمية | SafeDose AI',
+  },
+  {
+    path: 'email-confirmation',
+    loadComponent: () =>
+      import('./features/auth/email-confirmation/email-confirmation').then(
+        (c) => c.EmailConfirmation,
+      ),
+  },
+  {
+    path: 'forgot-password',
+    loadComponent: () =>
+      import('./features/auth/forgot-password/forgot-password').then((c) => c.ForgotPassword),
+  },
+  {
+    path: 'reset-password',
+    loadComponent: () =>
+      import('./features/auth/reset-password/reset-password').then((c) => c.ResetPassword),
+  },
   { path: 'login', component: Login, title: 'تسجيل الدخول | SafeDose AI' },
   { path: 'register', component: Register, title: 'إنشاء حساب | SafeDose AI' },
   { path: '**', component: NotFound, title: 'الصفحة غير موجودة | SafeDose AI' },

@@ -34,6 +34,14 @@ public class UpdateMedicationUseCase
         if (med.Status == 3)
             throw new InvalidOperationException("Cannot update a stopped medication");
 
+        if (!string.IsNullOrWhiteSpace(dto.DrugName) && med.Drug != null)
+        {
+            var trimmed = dto.DrugName.Trim();
+            if (trimmed.Length is < 1 or > 255)
+                throw new ArgumentException("DrugName must be 1-255 characters");
+            med.Drug.DrugName = trimmed;
+        }
+
         if (dto.Dose != null)
             med.Dose = string.IsNullOrWhiteSpace(dto.Dose) ? null : dto.Dose.Trim();
 
@@ -54,6 +62,13 @@ public class UpdateMedicationUseCase
         }
 
         await _meds.UpdateAsync(med);
+
+        // Times replace the whole schedule. Validated against the (possibly updated) frequency.
+        if (dto.Times != null)
+        {
+            AddMedicationManuallyUseCase.ValidateTimesAgainstFrequency(dto.Times, med.Frequency);
+            await _meds.SetTimesAsync(med.PatientMedicationId, accountId, dto.Times);
+        }
 
         await _audit.WriteAsync(new AuditLogEntry(
             AccountId: accountId,

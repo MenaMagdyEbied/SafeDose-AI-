@@ -19,7 +19,7 @@
       </div>
     </div>
 
-    <!-- Nav -->
+    <!-- Desktop Nav -->
     <nav class="hidden md:flex items-center gap-5 text-xs font-bold text-on-surface-variant">
       <a
         routerLink="/home"
@@ -55,255 +55,266 @@
       </a>
     </nav>
 
+    <!-- Right Actions -->
     <div class="flex items-center gap-0.5 sm:gap-2">
-      <!-- Digital Card Shortcut -->
-      <a
-        routerLink="/digital-card"
-        class="relative cursor-pointer w-9 h-9 rounded-xl hover:bg-slate-100 flex items-center justify-center transition-all text-on-surface-variant"
-        aria-label="البطاقة الرقمية"
-      >
-        <lucide-icon [img]="digitalCardIcon" class="w-5 h-5"></lucide-icon>
-      </a>
-
-      <!-- Bell Dropdown -->
-      <div class="relative" (mouseenter)="bellMenu = true" (mouseleave)="bellMenu = false">
-        <button
-          class="relative cursor-pointer w-9 h-9 rounded-xl hover:bg-slate-100 flex items-center justify-center transition-all"
-          aria-label="الإشعارات"
+      <!-- ========== LOGGED IN ========== -->
+      @if (authService.isLoggedIn) {
+        <!-- Digital Card -->
+        <a
+          routerLink="/digital-card"
+          class="relative cursor-pointer w-9 h-9 rounded-xl hover:bg-slate-100 flex items-center justify-center transition-all text-on-surface-variant"
+          aria-label="البطاقة الرقمية"
         >
-          <lucide-icon [img]="bellIcon" class="w-5 h-5 text-on-surface-variant"></lucide-icon>
-          @if (unreadCount > 0) {
-            <span
-              class="absolute top-1 right-1 w-4 h-4 bg-danger text-white text-[10px] font-black rounded-full flex items-center justify-center"
-            >
-              {{ unreadCount }}
-            </span>
-          }
-        </button>
+          <lucide-icon [img]="digitalCardIcon" class="w-5 h-5"></lucide-icon>
+        </a>
 
-        @if (bellMenu) {
-          <div
-            class="fixed sm:absolute top-16 sm:top-full inset-x-2 sm:inset-x-auto sm:left-0 sm:w-80 bg-white border border-outline-variant rounded-2xl shadow-xl overflow-hidden z-50"
+        <!-- Bell Dropdown -->
+        <div class="relative" (mouseenter)="bellMenu = true" (mouseleave)="bellMenu = false">
+          <button
+            class="relative cursor-pointer w-9 h-9 rounded-xl hover:bg-slate-100 flex items-center justify-center transition-all"
+            aria-label="الإشعارات"
           >
-            <!-- Dropdown Header -->
+            <lucide-icon [img]="bellIcon" class="w-5 h-5 text-on-surface-variant"></lucide-icon>
+            @if (unreadCount > 0) {
+              <span
+                class="absolute top-1 right-1 w-4 h-4 bg-danger text-white text-[10px] font-black rounded-full flex items-center justify-center"
+              >
+                {{ unreadCount }}
+              </span>
+            }
+          </button>
+
+          @if (bellMenu) {
             <div
-              class="px-4 py-3 flex items-center justify-between border-b border-outline-variant/30"
+              class="fixed sm:absolute top-16 sm:top-full inset-x-2 sm:inset-x-auto sm:left-0 sm:w-80 bg-white border border-outline-variant rounded-2xl shadow-xl overflow-hidden z-50"
             >
-              <a
-                routerLink="/notifications"
-                (click)="bellMenu = false"
-                class="text-[10px] text-primary font-bold hover:underline cursor-pointer"
-                >عرض الكل</a
+              <div
+                class="px-4 py-3 flex items-center justify-between border-b border-outline-variant/30"
               >
-              <h4 class="font-extrabold text-sm text-on-background">الإشعارات</h4>
-            </div>
+                <a
+                  routerLink="/notifications"
+                  (click)="bellMenu = false"
+                  class="text-[10px] text-primary font-bold hover:underline cursor-pointer"
+                  >عرض الكل</a
+                >
+                <h4 class="font-extrabold text-sm text-on-background">الإشعارات</h4>
+              </div>
+              <div class="flex gap-1 p-2">
+                <button
+                  (click)="bellTab = 'meds'"
+                  [class]="
+                    bellTab === 'meds'
+                      ? 'flex-1 py-1.5 rounded-lg text-[11px] font-extrabold text-white bg-primary cursor-pointer transition-all'
+                      : 'flex-1 py-1.5 rounded-lg text-[11px] font-bold text-outline hover:bg-slate-50 cursor-pointer transition-all'
+                  "
+                >
+                  الأدوية
+                  @if (unreadMeds > 0) {
+                    <span
+                      class="mr-1 bg-danger text-white text-[10px] font-black px-1.5 py-0.5 rounded-full"
+                      >{{ unreadMeds }}</span
+                    >
+                  }
+                </button>
+                <button
+                  (click)="bellTab = 'family'"
+                  [class]="
+                    bellTab === 'family'
+                      ? 'flex-1 py-1.5 rounded-lg text-[11px] font-extrabold text-white bg-primary cursor-pointer transition-all'
+                      : 'flex-1 py-1.5 rounded-lg text-[11px] font-bold text-outline hover:bg-slate-50 cursor-pointer transition-all'
+                  "
+                >
+                  العيلة
+                  @if (unreadFamily > 0) {
+                    <span
+                      class="mr-1 bg-danger text-white text-[10px] font-black px-1.5 py-0.5 rounded-full"
+                      >{{ unreadFamily }}</span
+                    >
+                  }
+                </button>
+              </div>
 
-            <!-- Tabs -->
-            <div class="flex gap-1 p-2">
-              <button
-                (click)="bellTab = 'meds'"
-                [class]="
-                  bellTab === 'meds'
-                    ? 'flex-1 py-1.5 rounded-lg text-[11px] font-extrabold text-white bg-primary cursor-pointer transition-all'
-                    : 'flex-1 py-1.5 rounded-lg text-[11px] font-bold text-outline hover:bg-slate-50 cursor-pointer transition-all'
-                "
-              >
-                الأدوية
-                @if (unreadMeds > 0) {
-                  <span
-                    class="mr-1 bg-danger text-white text-[10px] font-black px-1.5 py-0.5 rounded-full"
-                    >{{ unreadMeds }}</span
-                  >
-                }
-              </button>
-              <button
-                (click)="bellTab = 'family'"
-                [class]="
-                  bellTab === 'family'
-                    ? 'flex-1 py-1.5 rounded-lg text-[11px] font-extrabold text-white bg-primary cursor-pointer transition-all'
-                    : 'flex-1 py-1.5 rounded-lg text-[11px] font-bold text-outline hover:bg-slate-50 cursor-pointer transition-all'
-                "
-              >
-                العيلة
-                @if (unreadFamily > 0) {
-                  <span
-                    class="mr-1 bg-danger text-white text-[10px] font-black px-1.5 py-0.5 rounded-full"
-                    >{{ unreadFamily }}</span
-                  >
-                }
-              </button>
-            </div>
-
-            <!-- List -->
-            <div class="max-h-80 overflow-y-auto">
-              @if (bellTab === 'meds') {
-                @for (notif of medNotifications.slice(0, 3); track notif.id) {
-                  <div
-                    (click)="notif.status !== 'pending' ? markMedRead(notif) : null"
-                    [class]="
-                      notif.read
-                        ? 'flex items-start gap-3 px-4 py-3 hover:bg-slate-50 transition-colors border-b border-outline-variant/20 last:border-0'
-                        : 'flex items-start gap-3 px-4 py-3 hover:bg-slate-50 transition-colors border-b border-outline-variant/20 last:border-0 bg-primary/5'
-                    "
-                  >
+              <div class="max-h-80 overflow-y-auto">
+                @if (bellTab === 'meds') {
+                  @for (notif of medNotifications.slice(0, 3); track notif.id) {
                     <div
+                      (click)="notif.status !== 'pending' ? markMedRead(notif) : null"
                       [class]="
-                        notif.type === 'warning'
-                          ? 'w-8 h-8 rounded-lg bg-danger-container flex items-center justify-center shrink-0 mt-0.5'
-                          : 'w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 mt-0.5'
+                        notif.read
+                          ? 'flex items-start gap-3 px-4 py-3 hover:bg-slate-50 transition-colors border-b border-outline-variant/20 last:border-0'
+                          : 'flex items-start gap-3 px-4 py-3 hover:bg-slate-50 transition-colors border-b border-outline-variant/20 last:border-0 bg-primary/5'
                       "
                     >
-                      <lucide-icon
-                        [img]="notif.type === 'warning' ? alertIcon : pillIcon"
+                      <div
                         [class]="
-                          notif.type === 'warning' ? 'w-4 h-4 text-danger' : 'w-4 h-4 text-primary'
+                          notif.type === 'warning'
+                            ? 'w-8 h-8 rounded-lg bg-danger-container flex items-center justify-center shrink-0 mt-0.5'
+                            : 'w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 mt-0.5'
                         "
-                      ></lucide-icon>
-                    </div>
-                    <div class="flex-1 text-right min-w-0">
-                      <p class="text-xs font-extrabold text-on-background">{{ notif.title }}</p>
-                      <p class="text-[11px] text-outline mt-0.5">{{ notif.body }}</p>
-                      <p class="text-[10px] text-outline/60 mt-1">{{ notif.time }}</p>
-                      @if (notif.type === 'reminder' && notif.status === 'pending') {
-                        <div class="flex gap-1.5 mt-2">
-                          <button
-                            (click)="takeDose(notif)"
-                            class="flex-1 h-7 bg-primary text-white rounded-lg text-[11px] font-bold hover:bg-primary-dark transition-all cursor-pointer"
-                          >
-                            أخدت الجرعة
-                          </button>
-                          <button
-                            (click)="snooze(notif)"
-                            class="flex-1 h-7 border border-outline-variant text-outline rounded-lg text-[11px] font-bold hover:bg-slate-100 transition-all cursor-pointer"
-                          >
-                            غفوة
-                          </button>
-                        </div>
-                      }
-                      @if (notif.status === 'taken') {
-                        <span
-                          class="inline-block mt-1 text-[10px] font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-full"
-                          >✓ تم أخذ الجرعة</span
-                        >
-                      }
-                      @if (notif.status === 'skipped') {
-                        <span
-                          class="inline-block mt-1 text-[10px] font-bold text-outline bg-surface-container px-2 py-0.5 rounded-full"
-                          >تم التخطي</span
-                        >
-                      }
-                    </div>
-                    @if (!notif.read) {
-                      <span class="w-2 h-2 rounded-full bg-primary shrink-0 mt-2"></span>
-                    }
-                  </div>
-                }
-
-                @if (medNotifications.length > 3) {
-                  <a
-                    routerLink="/notifications"
-                    (click)="bellMenu = false"
-                    class="flex items-center justify-center gap-1.5 px-4 py-3 text-xs font-bold text-primary hover:bg-primary/5 cursor-pointer transition-colors"
-                  >
-                    عرض {{ medNotifications.length - 3 }} إشعار{{
-                      medNotifications.length - 3 > 1 ? 'ات' : ''
-                    }}
-                    أخرى
-                    <lucide-icon [img]="chevronLeftIcon" class="w-3.5 h-3.5"></lucide-icon>
-                  </a>
-                }
-              }
-
-              @if (bellTab === 'family') {
-                @for (notif of familyNotifications.slice(0, 3); track notif.id) {
-                  <div
-                    [class]="
-                      notif.read
-                        ? 'flex items-start gap-3 px-4 py-3 hover:bg-slate-50 transition-colors border-b border-outline-variant/20 last:border-0 cursor-pointer'
-                        : 'flex items-start gap-3 px-4 py-3 hover:bg-slate-50 transition-colors border-b border-outline-variant/20 last:border-0 bg-primary/5 cursor-pointer'
-                    "
-                    (click)="markFamilyRead(notif)"
-                  >
-                    <div
-                      class="w-8 h-8 rounded-lg bg-tertiary/10 flex items-center justify-center shrink-0 mt-0.5 text-xs font-extrabold text-tertiary"
-                    >
-                      {{ notif.memberName[0] }}
-                    </div>
-                    <div class="flex-1 text-right min-w-0">
-                      <p class="text-xs font-extrabold text-on-background">{{ notif.title }}</p>
-                      <p class="text-[11px] text-outline mt-0.5">{{ notif.body }}</p>
-                      <div class="flex items-center justify-end gap-2 mt-1">
-                        <span
-                          class="text-[10px] font-bold bg-tertiary/10 text-tertiary px-2 py-0.5 rounded-full"
-                          >{{ notif.memberName }}</span
-                        >
-                        <span class="text-[10px] text-outline/60">{{ notif.time }}</span>
+                      >
+                        <lucide-icon
+                          [img]="notif.type === 'warning' ? alertIcon : pillIcon"
+                          [class]="
+                            notif.type === 'warning'
+                              ? 'w-4 h-4 text-danger'
+                              : 'w-4 h-4 text-primary'
+                          "
+                        ></lucide-icon>
                       </div>
+                      <div class="flex-1 text-right min-w-0">
+                        <p class="text-xs font-extrabold text-on-background">{{ notif.title }}</p>
+                        <p class="text-[11px] text-outline mt-0.5">{{ notif.body }}</p>
+                        <p class="text-[10px] text-outline/60 mt-1">{{ notif.time }}</p>
+                        @if (notif.type === 'reminder' && notif.status === 'pending') {
+                          <div class="flex gap-1.5 mt-2">
+                            <button
+                              (click)="takeDose(notif)"
+                              class="flex-1 h-7 bg-primary text-white rounded-lg text-[11px] font-bold hover:bg-primary-dark transition-all cursor-pointer"
+                            >
+                              أخدت الجرعة
+                            </button>
+                            <button
+                              (click)="snooze(notif)"
+                              class="flex-1 h-7 border border-outline-variant text-outline rounded-lg text-[11px] font-bold hover:bg-slate-100 transition-all cursor-pointer"
+                            >
+                              غفوة
+                            </button>
+                          </div>
+                        }
+                        @if (notif.status === 'taken') {
+                          <span
+                            class="inline-block mt-1 text-[10px] font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-full"
+                            >✓ تم أخذ الجرعة</span
+                          >
+                        }
+                      </div>
+                      @if (!notif.read) {
+                        <span class="w-2 h-2 rounded-full bg-primary shrink-0 mt-2"></span>
+                      }
                     </div>
-                    @if (!notif.read) {
-                      <span class="w-2 h-2 rounded-full bg-primary shrink-0 mt-2"></span>
-                    }
-                  </div>
+                  }
+                  @if (medNotifications.length > 3) {
+                    <a
+                      routerLink="/notifications"
+                      (click)="bellMenu = false"
+                      class="flex items-center justify-center gap-1.5 px-4 py-3 text-xs font-bold text-primary hover:bg-primary/5 cursor-pointer transition-colors"
+                    >
+                      عرض {{ medNotifications.length - 3 }} إشعار أخرى
+                      <lucide-icon [img]="chevronLeftIcon" class="w-3.5 h-3.5"></lucide-icon>
+                    </a>
+                  }
                 }
-              }
-            </div>
+                @if (bellTab === 'family') {
+                  @for (notif of familyNotifications.slice(0, 3); track notif.id) {
+                    <div
+                      [class]="
+                        notif.read
+                          ? 'flex items-start gap-3 px-4 py-3 hover:bg-slate-50 transition-colors border-b border-outline-variant/20 last:border-0 cursor-pointer'
+                          : 'flex items-start gap-3 px-4 py-3 hover:bg-slate-50 transition-colors border-b border-outline-variant/20 last:border-0 bg-primary/5 cursor-pointer'
+                      "
+                      (click)="markFamilyRead(notif)"
+                    >
+                      <div
+                        class="w-8 h-8 rounded-lg bg-tertiary/10 flex items-center justify-center shrink-0 mt-0.5 text-xs font-extrabold text-tertiary"
+                      >
+                        {{ notif.memberName[0] }}
+                      </div>
+                      <div class="flex-1 text-right min-w-0">
+                        <p class="text-xs font-extrabold text-on-background">{{ notif.title }}</p>
+                        <p class="text-[11px] text-outline mt-0.5">{{ notif.body }}</p>
+                        <div class="flex items-center justify-end gap-2 mt-1">
+                          <span
+                            class="text-[10px] font-bold bg-tertiary/10 text-tertiary px-2 py-0.5 rounded-full"
+                            >{{ notif.memberName }}</span
+                          >
+                          <span class="text-[10px] text-outline/60">{{ notif.time }}</span>
+                        </div>
+                      </div>
+                      @if (!notif.read) {
+                        <span class="w-2 h-2 rounded-full bg-primary shrink-0 mt-2"></span>
+                      }
+                    </div>
+                  }
+                }
+              </div>
 
-            <!-- Footer -->
+              <div
+                routerLink="/notifications"
+                class="px-4 py-2 border-t border-outline-variant/30 text-center cursor-pointer"
+              >
+                <a
+                  (click)="bellMenu = false"
+                  class="text-xs font-bold text-primary hover:text-primary-dark cursor-pointer transition-colors"
+                  >عرض كل الإشعارات</a
+                >
+              </div>
+            </div>
+          }
+        </div>
+
+        <!-- Account Dropdown -->
+        <div class="relative" (mouseenter)="accountMenu = true" (mouseleave)="accountMenu = false">
+          <button
+            class="flex gap-1 items-center hover:text-primary transition-colors cursor-pointer text-on-surface-variant text-xs font-bold"
+          >
+            <lucide-icon [img]="circleUserIcon" class="w-5 h-5"></lucide-icon>
+            <span class="hidden sm:inline">{{
+              (authService.user$ | async)?.userName || 'حسابي'
+            }}</span>
+            <lucide-icon [img]="chevronDownIcon" class="w-3.5 h-3.5"></lucide-icon>
+          </button>
+
+          @if (accountMenu) {
             <div
-              routerLink="/notifications"
-              class="px-4 py-2 border-t border-outline-variant/30 text-center cursor-pointer"
+              class="absolute top-full left-0 w-44 bg-white border border-outline-variant rounded-2xl shadow-lg overflow-hidden z-50"
             >
               <a
-                (click)="bellMenu = false"
-                class="text-xs font-bold text-primary hover:text-primary-dark cursor-pointer transition-colors"
+                routerLink="/profile"
+                routerLinkActive="text-primary"
+                (click)="accountMenu = false"
+                class="flex items-center gap-2.5 px-4 py-3 text-xs font-bold hover:bg-surface-container-low transition-colors text-on-surface-variant hover:text-primary"
               >
-                عرض كل الإشعارات
+                <lucide-icon [img]="userIcon" class="w-4 h-4"></lucide-icon>
+                الملف الشخصي
               </a>
+              <a
+                routerLink="/family-plan"
+                (click)="accountMenu = false"
+                routerLinkActive="text-primary"
+                class="flex items-center gap-2.5 px-4 py-3 text-xs font-bold hover:bg-surface-container-low transition-colors text-on-surface-variant hover:text-primary border-t border-outline-variant/30"
+              >
+                <lucide-icon [img]="usersIcon" class="w-4 h-4"></lucide-icon>
+                العيلة
+              </a>
+              <button
+                (click)="showLogoutConfirm = true; accountMenu = false"
+                class="w-full flex items-center gap-2.5 px-4 py-3 text-xs font-bold hover:bg-red-50 transition-colors text-danger border-t border-outline-variant/30 cursor-pointer"
+              >
+                <lucide-icon [img]="logOutIcon" class="w-4 h-4"></lucide-icon>
+                تسجيل الخروج
+              </button>
             </div>
-          </div>
-        }
-      </div>
+          }
+        </div>
+      }
 
-      <!-- Account Dropdown -->
-      <div class="relative" (mouseenter)="accountMenu = true" (mouseleave)="accountMenu = false">
-        <button class="flex gap-1 items-center hover:text-primary transition-colors cursor-pointer">
-          <lucide-icon [img]="circleUserIcon" class="w-5 h-5"></lucide-icon>
-          <span class="hidden sm:inline">دعاء</span>
-          <lucide-icon [img]="chevronDownIcon" class="w-3.5 h-3.5"></lucide-icon>
-        </button>
-
-        @if (accountMenu) {
-          <div
-            class="absolute top-full left-0 w-44 bg-white border border-outline-variant rounded-2xl shadow-lg overflow-hidden z-50"
-          >
-            <a
-              routerLink="/profile"
-              routerLinkActive="text-primary"
-              (click)="accountMenu = false"
-              class="flex items-center gap-2.5 px-4 py-3 text-xs font-bold hover:bg-surface-container-low transition-colors text-on-surface-variant hover:text-primary"
-            >
-              <lucide-icon [img]="userIcon" class="w-4 h-4"></lucide-icon>
-              الملف الشخصي
-            </a>
-            <a
-              routerLink="/family-plan"
-              (click)="accountMenu = false"
-              routerLinkActive="text-primary"
-              class="flex items-center gap-2.5 px-4 py-3 text-xs font-bold hover:bg-surface-container-low transition-colors text-on-surface-variant hover:text-primary border-t border-outline-variant/30"
-            >
-              <lucide-icon [img]="usersIcon" class="w-4 h-4"></lucide-icon>
-              العيلة
-            </a>
-            <button
-              (click)="showLogoutConfirm = true; accountMenu = false"
-              class="w-full flex items-center gap-2.5 px-4 py-3 text-xs font-bold hover:bg-red-50 transition-colors text-danger border-t border-outline-variant/30 cursor-pointer"
-            >
-              <lucide-icon [img]="logOutIcon" class="w-4 h-4"></lucide-icon>
-              تسجيل الخروج
-            </button>
-          </div>
-        }
-      </div>
+      <!-- ========== NOT LOGGED IN ========== -->
+      @if (!authService.isLoggedIn) {
+        <a
+          routerLink="/login"
+          class="flex items-center gap-1.5 px-4 h-9 rounded-xl border border-outline-variant text-xs font-bold text-on-surface-variant hover:border-primary hover:text-primary transition-all"
+        >
+          <lucide-icon [img]="logInIcon" class="w-4 h-4"></lucide-icon>
+          <span class="hidden sm:inline">تسجيل الدخول</span>
+        </a>
+        <a
+          routerLink="/register"
+          class="flex items-center gap-1.5 px-4 h-9 rounded-xl bg-primary text-white text-xs font-bold hover:bg-primary-dark transition-all shadow-sm"
+        >
+          <lucide-icon [img]="userPlusIcon" class="w-4 h-4"></lucide-icon>
+          <span class="hidden sm:inline">إنشاء حساب</span>
+        </a>
+      }
     </div>
   </div>
 
@@ -346,17 +357,7 @@
   </nav>
 </header>
 
-<!-- Toast -->
-@if (toastMessage) {
-  <div
-    class="fixed top-20 left-1/2 -translate-x-1/2 z-50 max-w-[90%] sm:max-w-sm bg-neutral-dark border border-neutral text-white font-bold py-3 px-5 rounded-2xl shadow-xl text-right text-xs flex items-center gap-2.5 animate-slide-in-top"
-  >
-    <lucide-icon [img]="userCheckIcon" class="w-5 h-5 text-emerald-400 shrink-0"></lucide-icon>
-    <p>{{ toastMessage }}</p>
-  </div>
-}
-
-<!-- Logout Modal -->
+<!-- Logout Confirm Modal -->
 @if (showLogoutConfirm) {
   <div
     class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-neutral-dark/60 backdrop-blur-xs text-right animate-fade-in"
@@ -379,13 +380,13 @@
       <div class="grid grid-cols-2 gap-3 pt-2">
         <button
           (click)="logout()"
-          class="w-full bg-danger cursor-pointer hover:bg-red-700 text-white font-bold py-3 rounded-xl text-xs shadow-md transition-all min-h-[44px]"
+          class="w-full bg-danger cursor-pointer hover:bg-red-700 text-white font-bold py-3 rounded-xl text-xs shadow-md transition-all min-h-11"
         >
           تأكيد الخروج
         </button>
         <button
           (click)="showLogoutConfirm = false"
-          class="w-full bg-slate-100 cursor-pointer hover:bg-slate-200 text-on-surface-variant font-bold py-3 rounded-xl text-xs transition-all min-h-[44px]"
+          class="w-full bg-slate-100 cursor-pointer hover:bg-slate-200 text-on-surface-variant font-bold py-3 rounded-xl text-xs transition-all min-h-11"
         >
           إلغاء
         </button>

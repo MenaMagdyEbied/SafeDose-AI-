@@ -1,0 +1,20 @@
+@keyframes progress {
+  0% {
+    transform: translateX(100%);
+  }
+  40% {
+    transform: translateX(30%);
+  }
+  70% {
+    transform: translateX(10%);
+  }
+  90% {
+    transform: translateX(3%);
+  }
+  100% {
+    transform: translateX(0%);
+  }
+}
+.progress-bar-animate {
+  animation: progress 2.5s ease-out forwards;
+}

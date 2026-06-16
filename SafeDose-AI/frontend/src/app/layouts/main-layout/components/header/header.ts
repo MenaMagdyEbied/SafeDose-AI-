@@ -1,54 +1,60 @@
-import { ChangeDetectorRef, Component, inject, ViewChild } from '@angular/core';
+import { ChangeDetectorRef, Component, inject } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import {
   Bell,
   ChevronDown,
+  ChevronLeft,
   CircleUser,
   CreditCard,
   Heart,
+  LogIn,
   LogOut,
   LucideAngularModule,
   Pill,
   ShieldAlert,
+  TriangleAlert,
   User,
   UserCheck,
+  UserPlus,
   Users,
-  TriangleAlert,
-  ChevronLeft,
 } from 'lucide-angular';
-import { AfterViewInit, ElementRef } from '@angular/core';
+import { Auth } from '../../../../core/auth/services/auth';
+import { AsyncPipe } from '@angular/common';
 
 @Component({
   selector: 'app-header',
-  imports: [LucideAngularModule, RouterLink, RouterLinkActive],
+  imports: [LucideAngularModule, RouterLink, RouterLinkActive, AsyncPipe],
   templateUrl: './header.html',
   styleUrl: './header.css',
 })
 export class Header {
-  private router = inject(Router);
-  private cdr = inject(ChangeDetectorRef);
+  private readonly router = inject(Router);
+  private readonly cdr = inject(ChangeDetectorRef);
+  readonly authService = inject(Auth);
+
   showLogoutConfirm = false;
-  toastMessage: string | null = null;
   accountMenu = false;
+  bellMenu = false;
+  bellTab: 'meds' | 'family' = 'meds';
+
+  // Icons
   heartIcon = Heart;
   logOutIcon = LogOut;
+  logInIcon = LogIn;
+  userPlusIcon = UserPlus;
   chevronDownIcon = ChevronDown;
+  chevronLeftIcon = ChevronLeft;
   userCheckIcon = UserCheck;
   bellIcon = Bell;
   circleUserIcon = CircleUser;
   userIcon = User;
   usersIcon = Users;
-  userCircleIcon = CircleUser;
   shieldAlertIcon = ShieldAlert;
   pillIcon = Pill;
   digitalCardIcon = CreditCard;
-  bellMenu = false;
   alertIcon = TriangleAlert;
-  chevronLeftIcon = ChevronLeft;
 
-  bellTab: 'meds' | 'family' = 'meds';
-
-  // Mock data - هتيجي من الـ service
+  // Mock notifications — هتيجي من service لاحقاً
   medNotifications = [
     {
       id: 1,
@@ -59,7 +65,6 @@ export class Header {
       time: 'الآن',
       read: false,
     },
-
     {
       id: 3,
       type: 'reminder',
@@ -88,107 +93,36 @@ export class Header {
       time: 'منذ ٢ س',
       read: false,
     },
-    {
-      id: 3,
-      memberName: 'سالي فؤاد',
-      title: 'أخذت جرعة أملوديبين ✓',
-      body: 'تم تسجيل الجرعة',
-      time: 'منذ ٢ س',
-      read: false,
-    },
-    {
-      id: 4,
-      memberName: 'سالي فؤاد',
-      title: 'أخذت جرعة أملوديبين ✓',
-      body: 'تم تسجيل الجرعة',
-      time: 'منذ ٢ س',
-      read: false,
-    },
-    {
-      id: 5,
-      memberName: 'سالي فؤاد',
-      title: 'أخذت جرعة أملوديبين ✓',
-      body: 'تم تسجيل الجرعة',
-      time: 'منذ ٢ س',
-      read: false,
-    },
-    {
-      id: 6,
-      memberName: 'سالي فؤاد',
-      title: 'أخذت جرعة أملوديبين ✓',
-      body: 'تم تسجيل الجرعة',
-      time: 'منذ ٢ س',
-      read: false,
-    },
-    {
-      id: 7,
-      memberName: 'سالي فؤاد',
-      title: 'أخذت جرعة أملوديبين ✓',
-      body: 'تم تسجيل الجرعة',
-      time: 'منذ ٢ س',
-      read: false,
-    },
-    {
-      id: 8,
-      memberName: 'سالي فؤاد',
-      title: 'أخذت جرعة أملوديبين ✓',
-      body: 'تم تسجيل الجرعة',
-      time: 'منذ ٢ س',
-      read: false,
-    },
-    {
-      id: 9,
-      memberName: 'سالي فؤاد',
-      title: 'أخذت جرعة أملوديبين ✓',
-      body: 'تم تسجيل الجرعة',
-      time: 'منذ ٢ س',
-      read: false,
-    },
   ] as any[];
 
   get unreadMeds(): number {
     return this.medNotifications.filter((n: any) => !n.read).length;
   }
-
   get unreadFamily(): number {
     return this.familyNotifications.filter((n: any) => !n.read).length;
   }
-
   get unreadCount(): number {
     return this.unreadMeds + this.unreadFamily;
   }
 
-  takeDose(notif: any) {
+  takeDose(notif: any): void {
     notif.status = 'taken';
     notif.read = true;
   }
-
-  snooze(notif: any) {
+  snooze(notif: any): void {
     notif.status = 'snoozed';
     notif.read = true;
   }
-
-  markFamilyRead(notif: any) {
+  markMedRead(notif: any): void {
+    notif.read = true;
+  }
+  markFamilyRead(notif: any): void {
     notif.read = true;
   }
 
   logout(): void {
     this.showLogoutConfirm = false;
-    this.toastMessage = 'تم تسجيل الخروج بنجاح 🔒';
-
-    setTimeout(() => {
-      this.toastMessage = null;
-      this.cdr.detectChanges();
-      console.log('تم مسح الرسالة!');
-    }, 3000);
-
+    this.authService.logout();
     this.router.navigate(['/home']);
-  }
-
-  toggleDropdown() {
-    this.accountMenu = !this.accountMenu;
-  }
-  markMedRead(notif: any) {
-    notif.read = true;
   }
 }

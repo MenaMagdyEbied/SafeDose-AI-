@@ -1,11 +1,18 @@
-import { Component, computed, signal } from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { Component, computed, inject, signal } from '@angular/core';
+import {
+  FormArray,
+  FormBuilder,
+  FormGroup,
+  FormsModule,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
+import { Router, RouterLink } from '@angular/router';
 import {
   ArrowLeft,
   ArrowRight,
   Bell,
-  CheckCircle,
+  CircleCheck,
   Eye,
   EyeOff,
   FileText,
@@ -14,47 +21,37 @@ import {
   Share2,
   ShieldCheck,
   Stethoscope,
+  TriangleAlert,
 } from 'lucide-angular';
-
-export interface Permission {
-  id: string;
-  title: string;
-  description: string;
-  required: boolean;
-  icon: any;
-  color: string;
-}
+import { Auth } from '../../../core/auth/services/auth';
+import { Permission } from '../../../core/models/permission';
+import { passwordsMatchValidator } from '../../../shared/validators/passwords-match-validator';
 
 @Component({
   selector: 'app-register',
-  imports: [FormsModule, LucideAngularModule,RouterLink],
+  imports: [LucideAngularModule, RouterLink, ReactiveFormsModule],
+
   templateUrl: './register.html',
   styleUrl: './register.css',
 })
 export class Register {
-  
+  private readonly fb = inject(FormBuilder);
+  private readonly authService = inject(Auth);
+  private readonly router = inject(Router);
+
   currentStep = 1;
   showPassword = false;
   showConfirm = false;
+  loading = false;
+  errorText = '';
 
   arrowLeftIcon = ArrowLeft;
   arrowRightIcon = ArrowRight;
   eyeIcon = Eye;
   eyeOffIcon = EyeOff;
   shieldCheckIcon = ShieldCheck;
-  checkCircleIcon = CheckCircle;
-
-  form = {
-    fullName: '',
-    phone: '',
-    email: '',
-    age: null as number | null,
-    conditions: [] as string[],
-    emergency: '',
-    permissions: [] as string[],
-    password: '',
-    confirmPassword: '',
-  };
+  checkCircleIcon = CircleCheck;
+  alertTriangleIcon = TriangleAlert;
 
   conditions = ['السكري', 'ارتفاع ضغط الدم', 'الربو', 'أمراض القلب', 'الحساسية', 'أخرى'];
 
@@ -103,33 +100,106 @@ export class Register {
 
   features = ['تنبيهات الأدوية', 'مشاركة الطبيب', 'تنسيق عائلي', 'دعم HIPAA'];
 
-  get requiredPermissionsAccepted(): boolean {
-    return this.permissions
-      .filter((p) => p.required)
-      .every((p) => this.form.permissions.includes(p.id));
+  // ============ Form Groups (واحدة لكل step) ============
+  step1Form: FormGroup = this.fb.group({
+    fullName: ['', [Validators.required, Validators.minLength(3)]],
+    phone: ['', [Validators.required, Validators.pattern(/^\+?[0-9]{10,14}$/)]],
+    email: ['', [Validators.required, Validators.email]],
+  });
+
+  step2Form: FormGroup = this.fb.group({
+    age: [null, [Validators.required, Validators.min(1), Validators.max(120)]],
+    conditions: this.fb.array([]),
+    emergency: ['', [Validators.pattern(/^\+?[0-9]{10,14}$/)]],
+  });
+
+  step3Form: FormGroup = this.fb.group({
+    permissions: this.fb.array([]),
+  });
+
+  step4Form: FormGroup = this.fb.group(
+    {
+      password: [
+        '',
+        [
+          Validators.required,
+          Validators.minLength(8),
+          Validators.pattern(/^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$/),
+        ],
+      ],
+      confirmPassword: ['', [Validators.required]],
+    },
+    { validators: passwordsMatchValidator },
+  );
+
+  // ============ Getters للوصول السريع من الـ template ============
+  get fullName() {
+    return this.step1Form.get('fullName');
+  }
+  get phone() {
+    return this.step1Form.get('phone');
+  }
+  get email() {
+    return this.step1Form.get('email');
+  }
+  get age() {
+    return this.step2Form.get('age');
+  }
+  get emergency() {
+    return this.step2Form.get('emergency');
+  }
+  get password() {
+    return this.step4Form.get('password');
+  }
+  get confirmPassword() {
+    return this.step4Form.get('confirmPassword');
   }
 
-  get canSubmit(): boolean {
-    return (
-      !!this.form.password &&
-      this.form.password === this.form.confirmPassword &&
-      this.form.password.length >= 8
-    );
+  get selectedConditions(): string[] {
+    return (this.step2Form.get('conditions') as FormArray).value;
   }
 
+  get selectedPermissions(): string[] {
+    return (this.step3Form.get('permissions') as FormArray).value;
+  }
+
+  // ============ Conditions & Permissions toggles ============
   toggleCondition(cond: string): void {
-    const idx = this.form.conditions.indexOf(cond);
-    if (idx === -1) this.form.conditions.push(cond);
-    else this.form.conditions.splice(idx, 1);
+    const arr = this.step2Form.get('conditions') as FormArray;
+    const idx = arr.value.indexOf(cond);
+    if (idx === -1) arr.push(this.fb.control(cond));
+    else arr.removeAt(idx);
   }
 
   togglePermission(id: string): void {
-    const idx = this.form.permissions.indexOf(id);
-    if (idx === -1) this.form.permissions.push(id);
-    else this.form.permissions.splice(idx, 1);
+    const arr = this.step3Form.get('permissions') as FormArray;
+    const idx = arr.value.indexOf(id);
+    if (idx === -1) arr.push(this.fb.control(id));
+    else arr.removeAt(idx);
   }
 
+  get requiredPermissionsAccepted(): boolean {
+    return this.permissions
+      .filter((p) => p.required)
+      .every((p) => this.selectedPermissions.includes(p.id));
+  }
+
+  get canSubmit(): boolean {
+    return this.step4Form.valid;
+  }
+
+  // ============ Navigation ============
   nextStep(): void {
+    const currentForm = this.getCurrentForm();
+    if (currentForm) {
+      currentForm.markAllAsTouched();
+      if (currentForm.invalid) return;
+    }
+
+    if (this.currentStep === 3 && !this.requiredPermissionsAccepted) {
+      return;
+    }
+
     if (this.currentStep < 4) this.currentStep++;
   }
 
@@ -137,9 +207,53 @@ export class Register {
     if (this.currentStep > 1) this.currentStep--;
   }
 
+  private getCurrentForm(): FormGroup | null {
+    switch (this.currentStep) {
+      case 1:
+        return this.step1Form;
+      case 2:
+        return this.step2Form;
+      case 3:
+        return this.step3Form;
+      case 4:
+        return this.step4Form;
+      default:
+        return null;
+    }
+  }
+
+  // ============ Submit ============
   submit(): void {
+    this.step4Form.markAllAsTouched();
     if (!this.canSubmit) return;
-    console.log('Form submitted:', this.form);
-    // TODO: call auth service
+
+    this.loading = true;
+    this.errorText = '';
+
+    const payload = {
+      fullName: this.step1Form.value.fullName,
+      phoneNumber: this.step1Form.value.phone,
+      email: this.step1Form.value.email,
+      age: this.step2Form.value.age,
+      conditions: this.selectedConditions,
+      emergencyContact: this.step2Form.value.emergency,
+      permissions: this.selectedPermissions,
+      password: this.step4Form.value.password,
+      confirmPassword: this.step4Form.value.confirmPassword,
+    };
+
+    this.authService.register(payload).subscribe({
+      next: () => {
+        this.loading = false;
+        // التوجيه لصفحة تأكيد الإيميل مع تمرير الإيميل في query params
+        this.router.navigate(['/email-confirmation'], {
+          queryParams: { email: this.step1Form.value.email },
+        });
+      },
+      error: (err) => {
+        this.loading = false;
+        this.errorText = err?.error?.message || 'حدث خطأ أثناء إنشاء الحساب. حاول مرة أخرى.';
+      },
+    });
   }
 }

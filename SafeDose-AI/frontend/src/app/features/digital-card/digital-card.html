@@ -5,59 +5,9 @@
   </div>
 
   <!-- Card -->
-  <div
-    class="bg-gradient-to-br from-primary to-primary-dark rounded-3xl p-5 sm:p-6 text-white shadow-xl relative overflow-hidden"
-  >
-    <div class="absolute -top-10 -left-10 w-40 h-40 bg-white/5 rounded-full blur-2xl"></div>
-    <div class="absolute -bottom-10 -right-10 w-40 h-40 bg-white/5 rounded-full blur-2xl"></div>
 
-    <div class="relative z-10 space-y-5">
-      <div class="flex items-center justify-between">
-        <div class="flex items-center gap-2">
-          <lucide-icon [img]="heartIcon" class="w-6 h-6 text-secondary"></lucide-icon>
-          <span class="font-black text-lg">SafeDose AI</span>
-        </div>
-        <lucide-icon [img]="shieldIcon" class="w-8 h-8 text-white/30"></lucide-icon>
-      </div>
-
-      <div class="text-right space-y-1">
-        <h3 class="text-xl font-bold">{{ user?.name || 'أحمد المنسي' }}</h3>
-        <p class="text-white/70 text-sm">العمر: {{ user?.age || 62 }} سنة</p>
-      </div>
-
-      <div class="bg-white/10 rounded-xl p-3 text-right space-y-2">
-        <h4 class="font-bold text-secondary text-sm">الأدوية الحالية:</h4>
-        <div class="space-y-1">
-          <div class="flex items-center gap-2 text-sm text-white/90">
-            <lucide-icon [img]="pillIcon" class="w-4 h-4 text-secondary shrink-0"></lucide-icon>
-            <span>جلوكوفاج ٥٠٠ ملجم - مرتان يومياً</span>
-          </div>
-          <div class="flex items-center gap-2 text-sm text-white/90">
-            <lucide-icon [img]="pillIcon" class="w-4 h-4 text-secondary shrink-0"></lucide-icon>
-            <span>كونكور ٥ ملجم - مرة مساءً</span>
-          </div>
-          <div class="flex items-center gap-2 text-sm text-white/90">
-            <lucide-icon [img]="pillIcon" class="w-4 h-4 text-secondary shrink-0"></lucide-icon>
-            <span>وارفارين ٥ ملجم - مرة يومياً</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="bg-white/10 rounded-xl p-3 text-right space-y-1">
-        <h4 class="font-bold text-danger-container text-sm">⚠️ الحساسية:</h4>
-        <p class="text-sm text-white/90">{{ user?.allergies || 'أدوية السلفا (Sulfa Drugs)' }}</p>
-      </div>
-
-      <div class="flex items-center justify-between pt-2 gap-3">
-        <div class="text-right">
-          <p class="text-xs text-white/50">الطبيب المعالج</p>
-          <p class="text-sm font-bold">{{ user?.doctorName || 'د. مجدي يعقوب' }}</p>
-        </div>
-        <div class="w-16 h-16 bg-white rounded-xl flex items-center justify-center shrink-0">
-          <lucide-icon [img]="qrCodeIcon" class="w-12 h-12 text-primary"></lucide-icon>
-        </div>
-      </div>
-    </div>
+  <div>
+    <app-card [cardData]="cardData" />
   </div>
 
   <!-- Actions -->
@@ -74,6 +24,12 @@
       class="flex-1 border border-outline-variant text-on-surface-variant hover:bg-slate-50 py-3 rounded-xl font-bold text-sm transition-all cursor-pointer"
     >
       العودة للرئيسية
+    </button>
+    <button
+      (click)="generateQR()"
+      class="flex-1 bg-primary hover:bg-primary-dark text-white py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all cursor-pointer"
+    >
+      إنشاء QR Code
     </button>
   </div>
 </section>

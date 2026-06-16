@@ -11,6 +11,8 @@ import { NotFound } from './shared/components/not-found/not-found';
 import { AdminLayout } from './layouts/admin-layout/admin-layout';
 import { Login } from './features/auth/login/login';
 import { Register } from './features/auth/register/register';
+import { Card } from './shared/components/card/card';
+import { PublicCard } from './features/public-card/public-card';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'home', pathMatch: 'full' },
@@ -95,7 +97,11 @@ export const routes: Routes = [
       },
     ],
   },
-
+  {
+    path: 'card/:id',
+    component: PublicCard,
+    title: 'البطاقة الرقمية | SafeDose AI',
+  },
   { path: 'login', component: Login, title: 'تسجيل الدخول | SafeDose AI' },
   { path: 'register', component: Register, title: 'إنشاء حساب | SafeDose AI' },
   { path: '**', component: NotFound, title: 'الصفحة غير موجودة | SafeDose AI' },

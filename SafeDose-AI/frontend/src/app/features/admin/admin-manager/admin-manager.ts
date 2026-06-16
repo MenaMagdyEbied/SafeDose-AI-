@@ -39,7 +39,7 @@ export class AdminManager {
       id: '3',
       name: 'محمود حسن',
       email: 'mahmoud@safedose.ai',
-      role: 'moderator',
+      role: 'admin',
       status: 'inactive',
       createdAt: '2024-03-10',
     },
@@ -60,8 +60,25 @@ export class AdminManager {
   roles = [
     { value: 'super-admin', label: 'سوبر أدمن' },
     { value: 'admin', label: 'أدمن' },
-    { value: 'moderator', label: 'مشرف' },
   ];
+
+  get hasSuperAdmin() {
+    return this.admins.some((admin) => admin.role === 'super-admin');
+  }
+
+  get availableRoles() {
+    return this.hasSuperAdmin
+      ? this.roles.filter((role) => role.value !== 'super-admin')
+      : this.roles;
+  }
+
+  canEdit(admin: Admin) {
+    return admin.role !== 'super-admin';
+  }
+
+  canDelete(admin: Admin) {
+    return admin.role !== 'super-admin';
+  }
 
   openAdd() {
     this.isEditing = false;
@@ -70,6 +87,9 @@ export class AdminManager {
   }
 
   openEdit(admin: Admin) {
+    if (admin.role === 'super-admin') {
+      return;
+    }
     this.isEditing = true;
     this.selectedAdmin = admin;
     this.form = { name: admin.name, email: admin.email, role: admin.role, status: admin.status };
@@ -77,12 +97,19 @@ export class AdminManager {
   }
 
   save() {
+    const newRole =
+      this.form.role === 'super-admin' && this.hasSuperAdmin ? 'admin' : this.form.role;
+
     if (this.isEditing && this.selectedAdmin) {
+      if (this.selectedAdmin.role === 'super-admin') {
+        return;
+      }
       const index = this.admins.findIndex((a) => a.id === this.selectedAdmin!.id);
-      this.admins[index] = { ...this.selectedAdmin, ...this.form };
+      this.admins[index] = { ...this.selectedAdmin, ...this.form, role: newRole };
     } else {
       this.admins.push({
         ...this.form,
+        role: newRole,
         id: Date.now().toString(),
         createdAt: new Date().toISOString().split('T')[0],
       });
@@ -91,6 +118,9 @@ export class AdminManager {
   }
 
   confirmDelete(admin: Admin) {
+    if (admin.role === 'super-admin') {
+      return;
+    }
     this.selectedAdmin = admin;
     this.showDeleteDialog = true;
   }

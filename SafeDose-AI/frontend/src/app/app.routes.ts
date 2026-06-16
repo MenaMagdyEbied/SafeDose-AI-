@@ -95,6 +95,12 @@ export const routes: Routes = [
           import('./features/admin/admin-pricing/admin-pricing').then((c) => c.AdminPricing),
         title: 'تعديل الأسعار | SafeDose AI',
       },
+      {
+        path: 'managers',
+        loadComponent: () =>
+          import('./features/admin/admin-manager/admin-manager').then((c) => c.AdminManager),
+        title: 'إدارة المشرفين | SafeDose AI',
+      },
     ],
   },
   {

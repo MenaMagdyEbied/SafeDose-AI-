@@ -26,7 +26,11 @@ internal static class MedicationMappers
             MealTimingArabic: MealTimingLabel(pm.MealTiming),
             IsVerified: isVerified,
             VerificationLabelArabic: isVerified ? "موثق" : "غير موثق",
-            DrugCatalogId: pm.Drug?.DrugCatalogId
+            DrugCatalogId: pm.Drug?.DrugCatalogId,
+            Times: pm.PatientMedicationTimes?
+                .OrderBy(t => t.Time)
+                .Select(t => t.Time)
+                .ToArray() ?? Array.Empty<TimeOnly>()
         );
     }
 

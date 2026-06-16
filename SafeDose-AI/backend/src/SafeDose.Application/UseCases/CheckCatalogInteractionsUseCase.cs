@@ -1,5 +1,7 @@
+using System.Text.Json;
 using SafeDose.Application.DTOs;
 using SafeDose.Application.Interfaces;
+using SafeDose.Domain.Entities;
 using SafeDose.Domain.Enums;
 
 namespace SafeDose.Application.UseCases;
@@ -7,24 +9,28 @@ namespace SafeDose.Application.UseCases;
 // On-demand interaction check that takes catalog drug IDs (not saved Drug rows).
 // Used by the "افحص التداخلات الدوائية الآن" page.
 // If a PatientId is passed, the patient's verified active meds + allergies
-// are folded into the context sent to Langflow.
+// are folded into the context sent to Langflow, AND the result is persisted
+// to InteractionChecks so the patient can review it later under "history".
 public class CheckCatalogInteractionsUseCase
 {
     private readonly IDrugRepository _drugs;
     private readonly IPatientRepository _patients;
     private readonly IPatientMedicationProvider _patientMeds;
     private readonly ILangflowClient _langflow;
+    private readonly IInteractionRepository _interactions;
 
     public CheckCatalogInteractionsUseCase(
         IDrugRepository drugs,
         IPatientRepository patients,
         IPatientMedicationProvider patientMeds,
-        ILangflowClient langflow)
+        ILangflowClient langflow,
+        IInteractionRepository interactions)
     {
         _drugs = drugs;
         _patients = patients;
         _patientMeds = patientMeds;
         _langflow = langflow;
+        _interactions = interactions;
     }
 
     public async Task<CheckInteractionsResponseDto> ExecuteAsync(
@@ -87,10 +93,11 @@ public class CheckCatalogInteractionsUseCase
             new LangflowInteractionRequest(catalogEntries.ToArray(), patientContext),
             cancellationToken);
 
-        // Langflow failure - return precautionary "caution" verdict.
+        // Langflow failure - return precautionary "caution" verdict and persist it
+        // so the patient can still see "we tried this combo, service was down" in history.
         if (result == null)
         {
-            return new CheckInteractionsResponseDto(
+            var fallback = new CheckInteractionsResponseDto(
                 InteractionCheckId: 0,
                 Level: InteractionLevel.Caution,
                 LabelArabic: "احذر",
@@ -104,9 +111,12 @@ public class CheckCatalogInteractionsUseCase
                 SafetyDisclaimerArabic: "استشر طبيبك أو الصيدلي",
                 CheckedAt: DateTime.UtcNow
             );
+            var savedFallbackId = await PersistCheckAsync(
+                request, catalogEntries, fallback, accountId, modelVersion: null, cancellationToken);
+            return fallback with { InteractionCheckId = savedFallbackId };
         }
 
-        return new CheckInteractionsResponseDto(
+        var response = new CheckInteractionsResponseDto(
             InteractionCheckId: 0,
             Level: result.Level,
             LabelArabic: result.LabelArabic,
@@ -124,6 +134,52 @@ public class CheckCatalogInteractionsUseCase
             SafetyDisclaimerArabic: "استشر طبيبك أو الصيدلي",
             CheckedAt: DateTime.UtcNow
         );
+
+        var savedId = await PersistCheckAsync(
+            request, catalogEntries, response, accountId, modelVersion: result.ModelVersion, cancellationToken);
+        return response with { InteractionCheckId = savedId };
+    }
+
+    // Writes the result to InteractionChecks if the patient supplied a PatientId.
+    // Anonymous checks (no patientId) are not saved - they have no history view.
+    private async Task<int> PersistCheckAsync(
+        CheckCatalogInteractionsRequestDto request,
+        List<LangflowDrugInput> drugs,
+        CheckInteractionsResponseDto response,
+        string? accountId,
+        string? modelVersion,
+        CancellationToken cancellationToken)
+    {
+        if (!request.PatientId.HasValue) return 0;
+
+        var record = new InteractionCheck
+        {
+            PatientId = request.PatientId.Value,
+            TriggerType = 1,
+            DrugCount = (byte)drugs.Count,
+            CheckedDrugsJson = JsonSerializer.Serialize(drugs.Select(d => new
+            {
+                d.DrugId,
+                d.DrugName,
+                d.ScientificName,
+                d.DrugClass
+            })),
+            SeverityLevel = response.Level,
+            LabelArabic = response.LabelArabic,
+            TitleArabic = response.TitleArabic,
+            ExplanationArabic = response.ExplanationArabic,
+            RecommendedActionArabic = response.RecommendedActionArabic,
+            ConflictingPairsJson = response.ConflictingPairs.Length > 0
+                ? JsonSerializer.Serialize(response.ConflictingPairs) : null,
+            SourcesJson = response.Sources.Length > 0
+                ? JsonSerializer.Serialize(response.Sources) : null,
+            SafetyDisclaimerArabic = response.SafetyDisclaimerArabic,
+            ModelVersion = modelVersion,
+            CheckedAt = response.CheckedAt,
+            AccountId = accountId,
+        };
+        await _interactions.AddAsync(record);
+        return record.InteractionCheckId;
     }
 
     private static int CalcAge(DateOnly? dob)

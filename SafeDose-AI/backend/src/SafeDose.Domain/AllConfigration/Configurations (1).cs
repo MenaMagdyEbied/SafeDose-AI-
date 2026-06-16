@@ -117,6 +117,7 @@ public class PricingTierConfiguration : IEntityTypeConfiguration<PricingTier>
         b.Property(x => x.TierName).HasMaxLength(80);
         b.Property(x => x.MonthlyPrice).HasColumnType("decimal(10,2)");
         b.Property(x => x.Currency).HasMaxLength(3);
+        b.Property(x => x.BillingCycleDays).HasDefaultValue(0);
         b.Property(x => x.CreatedAt).HasDefaultValueSql("GETDATE()");
 
         b.HasIndex(x => x.TierCode).IsUnique();

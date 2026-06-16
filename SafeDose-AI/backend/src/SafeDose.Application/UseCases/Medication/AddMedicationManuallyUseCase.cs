@@ -88,6 +88,14 @@ public class AddMedicationManuallyUseCase
         var newId = await _meds.CreateAsync(med);
         med.Drug = drug;
 
+        // Save the reminder times the patient set on this medication.
+        // Notification service polls PatientMedicationTime to know when to push.
+        if (dto.Times is { Length: > 0 })
+        {
+            ValidateTimesAgainstFrequency(dto.Times, dto.Frequency);
+            await _meds.SetTimesAsync(newId, accountId, dto.Times);
+        }
+
         await _audit.WriteAsync(new AuditLogEntry(
             AccountId: accountId,
             EntityName: nameof(PatientMedication),
@@ -101,6 +109,20 @@ public class AddMedicationManuallyUseCase
         // Interaction check is on-demand from the check page, not automatic on add.
 
         return MedicationMappers.ToDto(med);
+    }
+
+    internal static void ValidateTimesAgainstFrequency(TimeOnly[] times, int? frequency)
+    {
+        if (times.Length > 12)
+            throw new ArgumentException("At most 12 reminder times per medication");
+
+        // Allow clearing (empty array) regardless of frequency.
+        if (times.Length == 0) return;
+
+        // If patient said "3 times a day" but only provided 2 times - reject.
+        if (frequency.HasValue && times.Length != frequency.Value)
+            throw new ArgumentException(
+                $"Number of times ({times.Length}) must match frequency ({frequency.Value})");
     }
 
     internal static void ValidateMealTiming(byte? timing)

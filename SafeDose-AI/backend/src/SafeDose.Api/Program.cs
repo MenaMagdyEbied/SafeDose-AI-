@@ -9,7 +9,9 @@ using Polly.Extensions.Http;
 using SafeDose.Application.Auth.ServicesInterfaces;
 using SafeDose.Application.Interfaces;
 using SafeDose.Application.UseCases;
+using SafeDose.Application.UseCases.Billing;
 using SafeDose.Application.UseCases.Medication;
+using SafeDose.Infrastructure.ExternalServices;
 using SafeDose.Application.UserProfile.RepositoryInterface;
 using SafeDose.Application.UserProfile.ServicesInterface;
 using SafeDose.Domain.ApplicationDbContext;
@@ -117,6 +119,32 @@ builder.Services
         .WaitAndRetryAsync(3, attempt =>
             TimeSpan.FromMilliseconds(200 * Math.Pow(3, attempt - 1))));
 
+
+// Billing - repositories
+builder.Services.AddScoped<IPricingTierRepository, SqlPricingTierRepository>();
+builder.Services.AddScoped<ISubscriptionRepository, SqlSubscriptionRepository>();
+builder.Services.AddScoped<IPaymentRepository, SqlPaymentRepository>();
+
+// Billing - use cases
+builder.Services.AddScoped<GetPricingTiersUseCase>();
+builder.Services.AddScoped<GetMySubscriptionUseCase>();
+builder.Services.AddScoped<InitiateCheckoutUseCase>();
+builder.Services.AddScoped<ProcessPaymobWebhookUseCase>();
+builder.Services.AddScoped<CancelSubscriptionUseCase>();
+
+// Paymob HTTP client + options
+builder.Services.Configure<PaymobOptions>(builder.Configuration.GetSection("Paymob"));
+builder.Services
+    .AddHttpClient<IPaymobClient, PaymobClient>(client =>
+    {
+        client.Timeout = TimeSpan.FromSeconds(20);
+    });
+
+// PricingTier seeder runs on startup
+builder.Services.AddScoped<PricingTierSeeder>();
+builder.Services.AddScoped<IPricingTierSeeder>(sp => sp.GetRequiredService<PricingTierSeeder>());
+builder.Services.AddHostedService<PricingTierSeederHostedService>();
+
 builder.Services
     .AddHttpClient<ILangflowPrescriptionClient, LangflowPrescriptionClient>(client =>
     {
@@ -126,6 +154,7 @@ builder.Services
         .HandleTransientHttpError()
         .WaitAndRetryAsync(3, attempt =>
             TimeSpan.FromMilliseconds(200 * Math.Pow(3, attempt - 1))));
+
 
 // Drug Interaction use cases
 builder.Services.AddScoped<SearchDrugsUseCase>();

@@ -32,6 +32,19 @@ namespace SafeDose.Api.Controllers
 
 
 
+        [HttpPost("emailConfirmation")]
+        public async Task<IActionResult> EmailConfirmation(EmailConfirmationDTO dto)
+        {
+            try
+            {
+                string result = await _authService.ConfrimEmail(dto);
+                return Ok(result);
+            }
+            catch (Exception ex) { 
+                return BadRequest(ex.Message);      
+            }
+        }
+
 
         [HttpPost("login")]
         public async Task<IActionResult> Login(LoginDTO dto)
@@ -43,6 +56,40 @@ namespace SafeDose.Api.Controllers
                 if (!result.IsAuthenticated)
                     return BadRequest(result.Message);
 
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+
+
+
+
+        [HttpPost("forgotPassword")]
+        public async Task<IActionResult> ForgotPassword(ForgotPasswordDto dto)
+        {
+            try
+            {
+                string result = await _authService.ForgotPass(dto);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+
+
+        [HttpPost("resetPassword")]
+        public async Task<IActionResult> ResetPassword(ResetPasswordDto dto)
+        {
+            try
+            {
+                string result = await _authService.ResetPass(dto);
                 return Ok(result);
             }
             catch (Exception ex)

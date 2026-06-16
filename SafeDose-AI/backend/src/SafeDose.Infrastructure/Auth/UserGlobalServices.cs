@@ -21,13 +21,13 @@ namespace SafeDose.Infrastructure.Auth
             _userManager = userManager;
         }
 
-        public async Task<Account> GerUser()
+        public async Task<Account> GetUser()
         {
             var user = _httpContextAccessor.HttpContext?.User;
             if (user == null) throw new Exception("Not found this User");
-            string? userName = _userManager.GetUserId(user);
-            if (userName == null) throw new Exception("Not found this User");
-            Account? userLogin = await _userManager.FindByNameAsync(userName);
+            string? userId = _userManager.GetUserId(user);
+            if (userId == null) throw new Exception("Not found this User");
+            Account? userLogin = await _userManager.FindByIdAsync(userId);
             if (userLogin == null) throw new Exception("Not found this User");
 
             return userLogin;

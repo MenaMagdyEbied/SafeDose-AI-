@@ -1,4 +1,4 @@
-namespace SafeDose.Shared.Constants;
+﻿namespace SafeDose.Shared.Constants;
 
 public static class AppConstants
 {

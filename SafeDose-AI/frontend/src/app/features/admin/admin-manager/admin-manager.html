@@ -17,7 +17,7 @@
   <!-- Table -->
   <div class="bg-white rounded-2xl border border-outline-variant shadow-sm overflow-hidden">
     <div class="overflow-x-auto">
-      <table class="w-full min-w-[680px] text-right">
+      <table class="w-full min-w-170 text-right">
         <thead>
           <tr class="border-b border-outline-variant bg-surface-container-low">
             <th class="px-5 py-3.5 text-xs font-extrabold text-outline">المشرف</th>
@@ -213,7 +213,7 @@
           <button
             (click)="save()"
             [disabled]="!form.name || !form.email"
-            class="flex-[2] h-11 rounded-xl bg-primary hover:bg-primary-dark disabled:bg-slate-200 disabled:text-outline text-white font-bold text-sm flex items-center justify-center gap-2 transition-all cursor-pointer"
+            class="flex-2 h-11 rounded-xl bg-primary hover:bg-primary-dark disabled:bg-slate-200 disabled:text-outline text-white font-bold text-sm flex items-center justify-center gap-2 transition-all cursor-pointer"
           >
             <lucide-icon [img]="checkIcon" class="w-4 h-4"></lucide-icon>
             {{ isEditing ? 'حفظ التعديلات' : 'إضافة المشرف' }}

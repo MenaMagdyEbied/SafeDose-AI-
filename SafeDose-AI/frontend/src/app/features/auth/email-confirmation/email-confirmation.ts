@@ -1,13 +1,8 @@
 import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, RouterLink } from '@angular/router';
-import {
-  Check,
-  LucideAngularModule,
-  Mail,
-  ShieldCheck,
-  TriangleAlert
-} from 'lucide-angular';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { Check, LucideAngularModule, Mail, ShieldCheck, TriangleAlert } from 'lucide-angular';
+import { Auth } from '../../../core/auth/services/auth';
 
 @Component({
   selector: 'app-email-confirmation',
@@ -17,74 +12,57 @@ import {
 })
 export class EmailConfirmation implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+  private readonly authService = inject(Auth);
 
-  mailIcon = Mail;
-  alertIcon = TriangleAlert;
-  checkIcon = Check;
   shieldCheckIcon = ShieldCheck;
+  alertTriangleIcon = TriangleAlert;
 
   email = '';
-  code = '';
+  digits: string[] = ['', '', '', ''];
   loading = false;
-  confirmed = false;
   errorText = '';
-  successText = '';
-  resendCooldown = 0;
-  private cooldownInterval: any;
 
-  ngOnInit() {
-    this.route.queryParams.subscribe((params) => {
-      this.email = params['email'] ?? '';
-    });
+  ngOnInit(): void {
+    this.email = this.route.snapshot.queryParams['email'] || '';
   }
 
-  async confirm() {
-    if (this.code.length < 6) return;
+  onDigitInput(index: number, event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const value = input.value.replace(/\D/g, '').slice(0, 1);
+    this.digits[index] = value;
+    if (value && index < this.digits.length - 1) {
+      const next = document.querySelectorAll('input')[index + 1] as HTMLInputElement;
+      next?.focus();
+    }
+  }
+
+  onDigitKeydown(index: number, event: KeyboardEvent): void {
+    if (event.key === 'Backspace' && !this.digits[index] && index > 0) {
+      const prev = document.querySelectorAll('input')[index - 1] as HTMLInputElement;
+      prev?.focus();
+    }
+  }
+
+  confirm(): void {
+    const code = this.digits.join('');
+    if (code.length < 4) return;
+
     this.loading = true;
     this.errorText = '';
 
-    try {
-      const res = await fetch('https://localhost:54218/api/Auth/emailConfirmation', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: this.email, code: this.code }),
-      });
-
-      if (res.ok) {
-        this.confirmed = true;
-      } else {
-        const data = await res.json();
-        this.errorText = data.message ?? 'كود التأكيد غير صحيح. حاول مرة أخرى.';
-      }
-    } catch {
-      this.errorText = 'حدث خطأ في الاتصال. تحقق من الإنترنت وحاول مرة أخرى.';
-    } finally {
-      this.loading = false;
-    }
+    this.authService.confirmEmail({ email: this.email, code }).subscribe({
+      next: () => {
+        this.loading = false;
+        this.router.navigate(['/login']);
+      },
+      error: (err) => {
+        this.loading = false;
+        this.errorText = err?.error?.message || 'كود التأكيد غير صحيح. حاول مرة أخرى.';
+      },
+    });
   }
-
-  async resend() {
-    this.successText = '';
-    this.errorText = '';
-
-    try {
-      // TODO: endpoint إعادة الإرسال لو موجود
-      this.successText = 'تم إرسال كود جديد إلى بريدك الإلكتروني';
-      this.startCooldown();
-    } catch {
-      this.errorText = 'فشل إعادة الإرسال. حاول مرة أخرى.';
-    }
-  }
-
-  startCooldown() {
-    this.resendCooldown = 60;
-    this.cooldownInterval = setInterval(() => {
-      this.resendCooldown--;
-      if (this.resendCooldown <= 0) clearInterval(this.cooldownInterval);
-    }, 1000);
-  }
-
-  ngOnDestroy() {
-    clearInterval(this.cooldownInterval);
+  ngOnDestroy(): void {
+    throw new Error('Method not implemented.');
   }
 }

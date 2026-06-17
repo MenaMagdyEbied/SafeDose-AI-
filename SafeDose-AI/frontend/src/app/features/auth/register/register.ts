@@ -262,23 +262,15 @@ export class Register {
     this.authService.register(payload).subscribe({
       next: () => {
         this.loading = false;
-        // this.router.navigate(['/email-confirmation'], {
-        //   queryParams: { email: this.step1Form.value.email },
-        // });
+        this.router.navigate(['/email-confirmation'], {
+          queryParams: { email: this.step1Form.value.email },
+        });
       },
-      complete: () => {
-        this.loading = false;
-        // this.router.navigate(['/email-confirmation'], {
-        //   queryParams: { email: this.step1Form.value.email },
-        // });
-      },
+    
       error: (err) => {
         this.loading = false;
         this.errorText = err?.error?.message || 'حدث خطأ أثناء إنشاء الحساب. حاول مرة أخرى.';
       },
-    });
-    this.router.navigate(['/email-confirmation'], {
-      queryParams: { email: this.step1Form.value.email },
     });
   }
 }

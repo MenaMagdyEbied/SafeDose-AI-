@@ -1,8 +1,16 @@
 import { Component } from '@angular/core';
-import {  inject } from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { inject } from '@angular/core';
+import {
+  FormBuilder,
+  FormGroup,
+  FormsModule,
+  NgForm,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
+import { Router, RouterLink } from '@angular/router';
 import { TriangleAlert, Key, LucideAngularModule, Mail } from 'lucide-angular';
+import { Auth } from '../../../core/auth/services/auth';
 
 @Component({
   selector: 'app-forgot-password',
@@ -11,6 +19,9 @@ import { TriangleAlert, Key, LucideAngularModule, Mail } from 'lucide-angular';
   styleUrl: './forgot-password.css',
 })
 export class ForgotPassword {
+  private readonly authService = inject(Auth);
+  private readonly router = inject(Router);
+
   keyIcon = Key;
   mailIcon = Mail;
   alertIcon = TriangleAlert;
@@ -19,29 +30,33 @@ export class ForgotPassword {
   loading = false;
   sent = false;
   errorText = '';
+  touched = false;
 
-  async send() {
-    if (!this.email.trim()) return;
+  get isEmailInvalid(): boolean {
+    const value = this.email.trim();
+    if (!value) return true;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return !emailRegex.test(value);
+  }
+
+  send(form: NgForm): void {
+    this.touched = true;
+    if (this.isEmailInvalid) return;
+
     this.loading = true;
     this.errorText = '';
 
-    try {
-      const res = await fetch('https://localhost:54218/api/Auth/forgotPassword', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: this.email }),
-      });
-
-      if (res.ok) {
+    this.authService.forgotPassword({ email: this.email.trim() }).subscribe({
+      next: () => {
+        this.loading = false;
         this.sent = true;
-      } else {
-        const data = await res.json();
-        this.errorText = data.message ?? 'البريد الإلكتروني غير مسجل.';
-      }
-    } catch {
-      this.errorText = 'حدث خطأ في الاتصال. تحقق من الإنترنت وحاول مرة أخرى.';
-    } finally {
-      this.loading = false;
-    }
+      },
+      error: (err) => {
+        this.loading = false;
+        this.errorText =
+          (typeof err?.error === 'string' ? err.error : err?.error?.message) ||
+          'البريد الإلكتروني غير مسجل.';
+      },
+    });
   }
 }

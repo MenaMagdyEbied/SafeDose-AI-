@@ -3,7 +3,6 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import {
   Activity,
-  AlertTriangle,
   BookOpen,
   ChevronRight,
   LucideAngularModule,
@@ -12,7 +11,7 @@ import {
   Search,
   Sparkles,
   TriangleAlert,
-  X,
+  X
 } from 'lucide-angular';
 import { Interaction } from '../../core/services/interaction';
 

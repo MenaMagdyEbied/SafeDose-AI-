@@ -19,7 +19,8 @@ export class EmailConfirmation implements OnInit, OnDestroy {
   alertTriangleIcon = TriangleAlert;
 
   email = '';
-  digits: string[] = ['', '', '', ''];
+  digits: string[] = ['', '', '', '', '', ''];
+  codeTouched = false;
   loading = false;
   errorText = '';
 
@@ -27,13 +28,22 @@ export class EmailConfirmation implements OnInit, OnDestroy {
     this.email = this.route.snapshot.queryParams['email'] || '';
   }
 
+  get isCodeComplete(): boolean {
+    return this.digits.every((d) => d !== '');
+  }
+
   onDigitInput(index: number, event: Event): void {
     const input = event.target as HTMLInputElement;
     const value = input.value.replace(/\D/g, '').slice(0, 1);
     this.digits[index] = value;
+
     if (value && index < this.digits.length - 1) {
       const next = document.querySelectorAll('input')[index + 1] as HTMLInputElement;
       next?.focus();
+    }
+
+    if (this.isCodeComplete) {
+      this.confirm();
     }
   }
 
@@ -44,10 +54,15 @@ export class EmailConfirmation implements OnInit, OnDestroy {
     }
   }
 
-  confirm(): void {
-    const code = this.digits.join('');
-    if (code.length < 4) return;
+  onDigitBlur(): void {
+    this.codeTouched = true;
+  }
 
+  confirm(): void {
+    this.codeTouched = true;
+    if (!this.isCodeComplete) return;
+
+    const code = this.digits.join('');
     this.loading = true;
     this.errorText = '';
 
@@ -58,7 +73,10 @@ export class EmailConfirmation implements OnInit, OnDestroy {
       },
       error: (err) => {
         this.loading = false;
-        this.errorText = err?.error?.message || 'كود التأكيد غير صحيح. حاول مرة أخرى.';
+        this.errorText =
+          (typeof err?.error === 'string' ? err.error : err?.error?.message) ||
+          'كود التأكيد غير صحيح. حاول مرة أخرى.';
+        this.digits = ['', '', '', '', '', ''];
       },
     });
   }

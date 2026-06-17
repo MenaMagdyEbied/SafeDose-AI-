@@ -24,11 +24,11 @@ namespace SafeDose.Api.Controllers
             try
             {
                 AuthModelDTO result = await _authService.RegisterAdminAsync(dto);
-                return Ok(result.Message);
+                return Ok(new { message = result.Message });
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(new { message = ex.Message });
             }
         }
 
@@ -39,11 +39,11 @@ namespace SafeDose.Api.Controllers
             try 
             {
                 AuthModelDTO result = await _authService.RegisterAsync(dto);
-                return Ok(result.Message);  
+                return Ok(new { message = result.Message });  
             }
             catch(Exception ex)
             {
-                return BadRequest(ex.Message);  
+                return BadRequest(new { message = ex.Message });  
             }
         }
 
@@ -58,7 +58,7 @@ namespace SafeDose.Api.Controllers
                 return Ok(result);
             }
             catch (Exception ex) { 
-                return BadRequest(ex.Message);      
+                return BadRequest(new { message = ex.Message });      
             }
         }
 
@@ -71,13 +71,13 @@ namespace SafeDose.Api.Controllers
                 AuthModelDTO result = await _authService.GetTokenAsync(dto);
 
                 if (!result.IsAuthenticated)
-                    return BadRequest(result.Message);
+                    return BadRequest(new { message = result.Message });
 
                 return Ok(result);
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(new { message = ex.Message });
             }
         }
 
@@ -95,7 +95,7 @@ namespace SafeDose.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(new { message = ex.Message });
             }
         }
 
@@ -111,7 +111,7 @@ namespace SafeDose.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(new { message = ex.Message });
             }
         }
     }

@@ -160,7 +160,7 @@ namespace SafeDose.Infrastructure.Auth
             var user = await _userManager.FindByNameAsync(model.UserName);
             if (user is null || !await _userManager.CheckPasswordAsync(user, model.Password))
             {
-                authModel.Message = "userName or password is wrong!";
+                authModel.Message = "username or password is wrong!";
                 return authModel;
             }
 
@@ -235,7 +235,7 @@ namespace SafeDose.Infrastructure.Auth
             await _emailSender.SendEmailAsync(user.Email, "Reset Password",
                 $"<p>Code : {encodedToken}</p>");
 
-            return "Password reset email sent.";
+            return "email sent check your email";
         }
 
         public async Task<string> ResetPass(ResetPasswordDto ResetPasswordModel)
@@ -250,7 +250,7 @@ namespace SafeDose.Infrastructure.Auth
             if (!result.Succeeded)
                 throw new Exception(result.Errors.ToString());
 
-            return "Password reset successful.";
+            return "Password reset successfully.";
         }
 
 

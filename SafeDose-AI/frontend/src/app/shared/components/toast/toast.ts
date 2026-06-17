@@ -1,6 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { LucideAngularModule, CircleCheck, CircleX, X } from 'lucide-angular';
-import { ToastService } from '../../../core/auth/services/toast-service';
+import { ToastService } from '../../../core/services/toast-service';
 
 @Component({
   selector: 'app-toast',

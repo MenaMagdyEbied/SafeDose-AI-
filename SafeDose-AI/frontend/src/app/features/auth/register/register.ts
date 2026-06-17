@@ -114,14 +114,13 @@ export class Register {
 
   features = ['تنبيهات الأدوية', 'مشاركة الطبيب', 'تنسيق عائلي', 'دعم HIPAA'];
 
-  // ============ Form Groups (واحدة لكل step) ============
   step1Form: FormGroup = this.fb.group({
     fullName: ['', [Validators.required, Validators.minLength(3)]],
     userName: [
       '',
       [Validators.required, Validators.minLength(3), this.englishOnlyValidator.bind(this)],
     ],
-    phone: ['', [Validators.required, Validators.pattern(/^\+?[0-9]{10,14}$/)]],
+    phone: ['', [Validators.required, Validators.pattern(/^01[0125][0-9]{8}$/)]],
     email: ['', [Validators.required, Validators.email]],
   });
   step2Form: FormGroup = this.fb.group({
@@ -141,7 +140,7 @@ export class Register {
         [
           Validators.required,
           Validators.minLength(8),
-          Validators.pattern(/^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$/),
+          Validators.pattern(/^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$_%^&*-]).{8,}$/),
         ],
       ],
       confirmPassword: ['', [Validators.required]],
@@ -149,7 +148,6 @@ export class Register {
     { validators: passwordsMatchValidator },
   );
 
-  // ============ Getters للوصول السريع من الـ template ============
   get fullName() {
     return this.step1Form.get('fullName');
   }
@@ -184,7 +182,6 @@ export class Register {
     return (this.step3Form.get('permissions') as FormArray).value;
   }
 
-  // ============ Conditions & Permissions toggles ============
   toggleCondition(cond: string): void {
     const arr = this.step2Form.get('conditions') as FormArray;
     const idx = arr.value.indexOf(cond);
@@ -209,7 +206,6 @@ export class Register {
     return this.step4Form.valid;
   }
 
-  // ============ Navigation ============
   nextStep(): void {
     const currentForm = this.getCurrentForm();
     if (currentForm) {
@@ -243,7 +239,6 @@ export class Register {
     }
   }
 
-  // ============ Submit ============
   submit(): void {
     this.step4Form.markAllAsTouched();
     if (!this.canSubmit) return;
@@ -267,15 +262,23 @@ export class Register {
     this.authService.register(payload).subscribe({
       next: () => {
         this.loading = false;
-        // التوجيه لصفحة تأكيد الإيميل مع تمرير الإيميل في query params
-        this.router.navigate(['/email-confirmation'], {
-          queryParams: { email: this.step1Form.value.email },
-        });
+        // this.router.navigate(['/email-confirmation'], {
+        //   queryParams: { email: this.step1Form.value.email },
+        // });
+      },
+      complete: () => {
+        this.loading = false;
+        // this.router.navigate(['/email-confirmation'], {
+        //   queryParams: { email: this.step1Form.value.email },
+        // });
       },
       error: (err) => {
         this.loading = false;
         this.errorText = err?.error?.message || 'حدث خطأ أثناء إنشاء الحساب. حاول مرة أخرى.';
       },
+    });
+    this.router.navigate(['/email-confirmation'], {
+      queryParams: { email: this.step1Form.value.email },
     });
   }
 }

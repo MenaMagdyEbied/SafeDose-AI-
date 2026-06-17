@@ -1,5 +1,5 @@
 import { Component, inject } from '@angular/core';
-import { LoaderService } from '../../../core/auth/services/loader-service';
+import { LoaderService } from '../../../core/services/loader-service';
 
 @Component({
   selector: 'app-progress-bar',

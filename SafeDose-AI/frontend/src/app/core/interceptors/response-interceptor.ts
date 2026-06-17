@@ -1,6 +1,6 @@
 import { HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
-import { ToastService } from '../auth/services/toast-service';
+import { ToastService } from '../services/toast-service';
 import { Auth } from '../auth/services/auth';
 import { Router } from '@angular/router';
 import { catchError, tap, throwError } from 'rxjs';

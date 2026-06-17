@@ -104,7 +104,7 @@
                   @if (phone?.errors?.['required']) {
                     رقم الهاتف مطلوب
                   } @else if (phone?.errors?.['pattern']) {
-                    رقم الهاتف غير صحيح (يجيب أن يكون 11 رقم يبدا ب 010 او 011 او 015 او012  )
+                    رقم الهاتف غير صحيح (يجيب أن يكون 11 رقم يبدا ب 010 او 011 او 015 او012 )
                   }
                 </p>
               }
@@ -333,7 +333,7 @@
                   class="absolute left-3 top-1/2 -translate-y-1/2 text-outline hover:text-on-background transition-colors p-1 cursor-pointer"
                 >
                   <lucide-icon
-                    [img]="showPassword ? eyeOffIcon : eyeIcon"
+                    [img]="showConfirm ? eyeIcon : eyeOffIcon"
                     class="w-5 h-5"
                   ></lucide-icon>
                 </button>
@@ -371,7 +371,7 @@
                   class="absolute left-3 top-1/2 -translate-y-1/2 text-outline hover:text-on-background transition-colors p-1 cursor-pointer"
                 >
                   <lucide-icon
-                    [img]="showConfirm ? eyeOffIcon : eyeIcon"
+                    [img]="showConfirm ? eyeIcon : eyeOffIcon"
                     class="w-5 h-5"
                   ></lucide-icon>
                 </button>

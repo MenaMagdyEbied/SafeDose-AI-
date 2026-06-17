@@ -55,7 +55,7 @@ namespace SafeDose.Api.Controllers
             try
             {
                 string result = await _authService.ConfrimEmail(dto);
-                return Ok(result);
+                return Ok(new { message = result });
             }
             catch (Exception ex) { 
                 return BadRequest(new { message = ex.Message });      
@@ -91,7 +91,7 @@ namespace SafeDose.Api.Controllers
             try
             {
                 string result = await _authService.ForgotPass(dto);
-                return Ok(result);
+                return Ok(new { message = result });
             }
             catch (Exception ex)
             {
@@ -107,7 +107,7 @@ namespace SafeDose.Api.Controllers
             try
             {
                 string result = await _authService.ResetPass(dto);
-                return Ok(result);
+                return Ok(new { message = result });
             }
             catch (Exception ex)
             {

@@ -14,20 +14,14 @@ export const responseInterceptor: HttpInterceptorFn = (req, next) => {
 
   return next(req).pipe(
     tap((event: any) => {
-      // event هنا هو الـ body مباشرة (success, message, data) لأن مفيش observe: 'response'
-      if (event?.message && event?.success && !isSilent) {
-        toast.show('success', event.message);
+      if (event?.body?.message && !isSilent) {
+        toast.show('success', event.body.message);
       }
     }),
     catchError((err) => {
       const status = err.status;
 
-      // شكل الإيرور برجاء التأكد من الباك إند هل بيرجع نفس شكل الـ success response
-      // ({ success: false, message, data }) في حالة الأخطاء كمان ولا شكل مختلف
-      const message: string =
-        err?.error?.message ||
-        err?.error?.errors?.[Object.keys(err?.error?.errors ?? {})[0]]?.[0] ||
-        'حدث خطأ غير متوقع، حاول مرة أخرى.';
+      const message: string = err?.error?.message || 'حدث خطأ غير متوقع، حاول مرة أخرى.';
 
       if (status === 401) {
         auth.logout();

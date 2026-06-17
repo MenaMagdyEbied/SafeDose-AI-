@@ -44,7 +44,7 @@ export class Register {
   currentStep = 1;
   showPassword = false;
   showConfirm = false;
-  loading = false;
+  loading = signal(false);
   errorText = '';
 
   arrowLeftIcon = ArrowLeft;
@@ -243,7 +243,7 @@ export class Register {
     this.step4Form.markAllAsTouched();
     if (!this.canSubmit) return;
 
-    this.loading = true;
+    this.loading.set(true);
     this.errorText = '';
 
     const payload = {
@@ -261,14 +261,13 @@ export class Register {
 
     this.authService.register(payload).subscribe({
       next: () => {
-        this.loading = false;
+        this.loading.set(false);
         this.router.navigate(['/email-confirmation'], {
           queryParams: { email: this.step1Form.value.email },
         });
       },
-    
       error: (err) => {
-        this.loading = false;
+        this.loading.set(false);
         this.errorText = err?.error?.message || 'حدث خطأ أثناء إنشاء الحساب. حاول مرة أخرى.';
       },
     });

@@ -1,7 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ActivatedRoute, RouterLink } from '@angular/router';
-import { AlertTriangle, Check, Eye, EyeOff, Lock, LucideAngularModule } from 'lucide-angular';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { AlertTriangle, Check, Eye, EyeOff, Lock, LucideAngularModule, TriangleAlert } from 'lucide-angular';
 import { Auth } from '../../../core/auth/services/auth';
 import { passwordsMatchValidator } from '../../../shared/validators/passwords-match-validator';
 
@@ -15,9 +15,10 @@ export class ResetPassword implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly route = inject(ActivatedRoute);
   private readonly authService = inject(Auth);
+  private readonly router = inject(Router);
 
   lockIcon = Lock;
-  alertIcon = AlertTriangle;
+  alertIcon = TriangleAlert;
   checkIcon = Check;
   eyeIcon = Eye;
   eyeOffIcon = EyeOff;
@@ -84,6 +85,9 @@ export class ResetPassword implements OnInit {
         next: () => {
           this.loading = false;
           this.resetDone = true;
+          this.router.navigate(['/login'], {
+            queryParams: { email: this.email },
+          });
         },
         error: (err) => {
           this.loading = false;

@@ -1,7 +1,7 @@
-import { Component, OnDestroy, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { Check, LucideAngularModule, Mail, ShieldCheck, TriangleAlert } from 'lucide-angular';
+import { LucideAngularModule, ShieldCheck, TriangleAlert } from 'lucide-angular';
 import { Auth } from '../../../core/auth/services/auth';
 
 @Component({
@@ -10,7 +10,7 @@ import { Auth } from '../../../core/auth/services/auth';
   templateUrl: './email-confirmation.html',
   styleUrl: './email-confirmation.css',
 })
-export class EmailConfirmation implements OnInit, OnDestroy {
+export class EmailConfirmation implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly authService = inject(Auth);
@@ -21,7 +21,7 @@ export class EmailConfirmation implements OnInit, OnDestroy {
   email = '';
   digits: string[] = ['', '', '', '', '', ''];
   codeTouched = false;
-  loading = false;
+  loading = signal(false);
   errorText = '';
 
   ngOnInit(): void {
@@ -63,24 +63,21 @@ export class EmailConfirmation implements OnInit, OnDestroy {
     if (!this.isCodeComplete) return;
 
     const code = this.digits.join('');
-    this.loading = true;
+    this.loading.set(true);
     this.errorText = '';
 
     this.authService.confirmEmail({ email: this.email, code }).subscribe({
       next: () => {
-        this.loading = false;
+        this.loading.set(false);
         this.router.navigate(['/login']);
       },
       error: (err) => {
-        this.loading = false;
+        this.loading.set(false);
         this.errorText =
           (typeof err?.error === 'string' ? err.error : err?.error?.message) ||
           'كود التأكيد غير صحيح. حاول مرة أخرى.';
         this.digits = ['', '', '', '', '', ''];
       },
     });
-  }
-  ngOnDestroy(): void {
-    throw new Error('Method not implemented.');
   }
 }

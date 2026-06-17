@@ -29,9 +29,7 @@ import { UserProfile } from '../../../../core/auth/services/user-profile';
 })
 export class Header {
   private readonly router = inject(Router);
-  private readonly cdr = inject(ChangeDetectorRef);
   protected readonly authService = inject(Auth);
-  private readonly userProfileService = inject(UserProfile);
 
   showLogoutConfirm = false;
   accountMenu = false;
@@ -128,32 +126,8 @@ export class Header {
   }
 
   ngOnInit(): void {
-    if (this.authService.isLoggedIn) {
-      this.loadProfile();
-    }
-
     this.authService.user$.subscribe((user) => {
-      if (user) {
-        this.userName = user.userName;
-        // يمكن تحديثه من الـ API كمان لو محتاجة
-      } else {
-        this.userName = '';
-      }
-    });
-  }
-
-  private loadProfile(): void {
-    this.userProfileService.getUserProfile().subscribe({
-      next: (profile: any) => {
-        this.userName =
-          profile?.userName || profile?.fullName || this.authService.user?.userName || '';
-        if (profile?.userName) {
-          this.authService.updateProfile({ userName: profile.userName });
-        }
-      },
-      error: () => {
-        this.userName = this.authService.user?.userName || '';
-      },
+      this.userName = user?.name || user?.userName || '';
     });
   }
 }

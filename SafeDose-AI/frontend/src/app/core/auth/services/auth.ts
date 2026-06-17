@@ -1,13 +1,13 @@
 import { inject, Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, tap } from 'rxjs';
+import { BehaviorSubject, catchError, Observable, of, switchMap, tap } from 'rxjs';
 import { Patient } from '../../models';
 import { environment } from '../../../../environments/environment';
 import { RegisterResponse } from '../../models/register-response';
-import { LoginResponse } from '../../models/login-response';
+import { LoginResponse, MessageResponse } from '../../models/login-response';
 import { CookieService } from 'ngx-cookie-service';
 import { SessionUser, UserRole } from '../../models/session-user';
-import { ApiResponse } from '../../models/api-response';
+import { UserProfileData } from '../../models/user-profile';
 const TOKEN_KEY = 'safedose_jwt';
 const USER_KEY = 'safedose_user';
 const COOKIE_DAYS = 30;
@@ -24,7 +24,6 @@ export class Auth {
   public user$ = this.userSubject.asObservable();
   showLoginModal = signal(false);
 
-  // ============ Getters ============
   get user(): SessionUser | null {
     return this.userSubject.value;
   }
@@ -53,7 +52,6 @@ export class Auth {
     return this.role === 'SuperAdmin';
   }
 
-  // ============ JWT Decoder ============
   private decodeToken(token: string): Record<string, any> | null {
     try {
       const payload = token.split('.')[1];
@@ -76,7 +74,11 @@ export class Auth {
     return role as UserRole;
   }
 
-  // ============ Cookie helpers ============
+  private extractEmail(token: string): string {
+    const claims = this.decodeToken(token);
+    return claims?.['email'] || '';
+  }
+
   private getExpireDate(days: number): Date {
     const d = new Date();
     d.setDate(d.getDate() + days);
@@ -93,11 +95,8 @@ export class Auth {
     }
   }
 
-  private setSession(userName: string, email: string, token: string): void {
-    const role = this.extractRole(token);
-    const user: SessionUser = { userName, email, role };
+  private setSession(user: SessionUser, token: string): void {
     const expire = this.getExpireDate(COOKIE_DAYS);
-
     this.cookieService.set(TOKEN_KEY, token, expire, '/', '', true, 'Strict');
     this.cookieService.set(USER_KEY, JSON.stringify(user), expire, '/', '', true, 'Strict');
     this.userSubject.next(user);
@@ -109,45 +108,65 @@ export class Auth {
     this.userSubject.next(null);
   }
 
-  // ============ API Calls ============
-  login(payload: { userName: string; password: string }): Observable<LoginResponse> {
+
+  login(payload: { userName: string; password: string }): Observable<SessionUser> {
     return this.http.post<LoginResponse>(`${this.apiUrl}/Auth/login`, payload).pipe(
-      tap((res) => {
-        if (res.isAuthenticated) {
-          this.setSession(res.userName, res.email, res.token);
+      switchMap((res) => {
+        if (!res.isAuthenticated) {
+          throw new Error('Authentication failed');
         }
+
+        const role = this.extractRole(res.token);
+        const fallbackEmail = res.email || this.extractEmail(res.token);
+
+        const fallbackUser: SessionUser = {
+          userName: res.userName || payload.userName,
+          email: fallbackEmail,
+          role,
+        };
+        this.setSession(fallbackUser, res.token);
+
+        // دلوقتي نجيب بيانات الـ profile الكاملة ونحدث الجلسة بيها
+        return this.http.get<UserProfileData>(`${this.apiUrl}/UserProfile/userProfile`).pipe(
+          tap((profile) => {
+            const fullUser: SessionUser = {
+              userName: profile.userName,
+              email: profile.email,
+              name: profile.name,
+              phone: profile.phone,
+              role,
+              roles: profile.roles as UserRole[],
+            };
+            this.setSession(fullUser, res.token);
+          }),
+          switchMap(() => of(this.userSubject.value as SessionUser)),
+          catchError(() => {
+            // لو فشل جلب الـ profile، نفضل بالـ fallback اللي خزناه فوق
+            return of(fallbackUser);
+          }),
+        );
       }),
     );
   }
 
-  register(
-    payload: Record<string, unknown>,
-  ): Observable<ApiResponse<{ userId: string; email: string }>> {
-    return this.http.post<ApiResponse<{ userId: string; email: string }>>(
-      `${this.apiUrl}/Auth/register`,
-      payload,
-    );
+  register(payload: Record<string, unknown>): Observable<MessageResponse> {
+    return this.http.post<MessageResponse>(`${this.apiUrl}/Auth/register`, payload);
   }
 
-  registerAdmin(
-    payload: Record<string, unknown>,
-  ): Observable<ApiResponse<{ userId: string; email: string }>> {
-    return this.http.post<ApiResponse<{ userId: string; email: string }>>(
-      `${this.apiUrl}/Auth/registerAdmin`,
-      payload,
-    );
+  registerAdmin(payload: Record<string, unknown>): Observable<MessageResponse> {
+    return this.http.post<MessageResponse>(`${this.apiUrl}/Auth/registerAdmin`, payload);
   }
 
-  confirmEmail(payload: Record<string, unknown>): Observable<ApiResponse<unknown>> {
-    return this.http.post<ApiResponse<unknown>>(`${this.apiUrl}/Auth/emailConfirmation`, payload);
+  confirmEmail(payload: Record<string, unknown>): Observable<MessageResponse> {
+    return this.http.post<MessageResponse>(`${this.apiUrl}/Auth/emailConfirmation`, payload);
   }
 
-  forgotPassword(payload: Record<string, unknown>): Observable<ApiResponse<unknown>> {
-    return this.http.post<ApiResponse<unknown>>(`${this.apiUrl}/Auth/forgotPassword`, payload);
+  forgotPassword(payload: Record<string, unknown>): Observable<MessageResponse> {
+    return this.http.post<MessageResponse>(`${this.apiUrl}/Auth/forgotPassword`, payload);
   }
 
-  resetPassword(payload: Record<string, unknown>): Observable<ApiResponse<unknown>> {
-    return this.http.post<ApiResponse<unknown>>(`${this.apiUrl}/Auth/resetPassword`, payload);
+  resetPassword(payload: Record<string, unknown>): Observable<MessageResponse> {
+    return this.http.post<MessageResponse>(`${this.apiUrl}/Auth/resetPassword`, payload);
   }
 
   updateProfile(updates: Partial<SessionUser>): void {

@@ -50,6 +50,9 @@ export class ForgotPassword {
       next: () => {
         this.loading = false;
         this.sent = true;
+        this.router.navigate(['/reset-password'], {
+          queryParams: { email: this.email },
+        });
       },
       error: (err) => {
         this.loading = false;

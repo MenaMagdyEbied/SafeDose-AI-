@@ -28,7 +28,7 @@ namespace SafeDose.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(new { message = ex.Message });
             }
 
         }
@@ -40,11 +40,11 @@ namespace SafeDose.Api.Controllers
             try
             {
                 string  result = await _userProfileServices.UpdateName(dto);
-                return Ok(result);
+                return Ok(new { message = result });
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(new { message = ex.Message });
             }
         }
 
@@ -55,11 +55,11 @@ namespace SafeDose.Api.Controllers
             try
             {
                 string result = await _userProfileServices.UpdateEmail(dto);
-                return Ok(result);
+                return Ok(new { message = result });
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(new { message = ex.Message });
             }
         }
 
@@ -70,11 +70,11 @@ namespace SafeDose.Api.Controllers
             try
             {
                 string result = await _userProfileServices.UpdatePhone(dto);
-                return Ok(result);
+                return Ok(new { message = result });
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(new { message = ex.Message });
             }
         }
 

@@ -1,10 +1,12 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import {
+  AbstractControl,
   FormArray,
   FormBuilder,
   FormGroup,
   FormsModule,
   ReactiveFormsModule,
+  ValidationErrors,
   Validators,
 } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -55,6 +57,18 @@ export class Register {
 
   conditions = ['السكري', 'ارتفاع ضغط الدم', 'الربو', 'أمراض القلب', 'الحساسية', 'أخرى'];
 
+  private readonly arabicScriptPattern = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/;
+
+  private englishOnlyValidator(control: AbstractControl): ValidationErrors | null {
+    const value = control.value;
+
+    if (!value || !this.arabicScriptPattern.test(value)) {
+      return null;
+    }
+
+    return { englishOnly: true };
+  }
+
   permissions: Permission[] = [
     {
       id: 'medical_data',
@@ -103,10 +117,13 @@ export class Register {
   // ============ Form Groups (واحدة لكل step) ============
   step1Form: FormGroup = this.fb.group({
     fullName: ['', [Validators.required, Validators.minLength(3)]],
+    userName: [
+      '',
+      [Validators.required, Validators.minLength(3), this.englishOnlyValidator.bind(this)],
+    ],
     phone: ['', [Validators.required, Validators.pattern(/^\+?[0-9]{10,14}$/)]],
     email: ['', [Validators.required, Validators.email]],
   });
-
   step2Form: FormGroup = this.fb.group({
     age: [null, [Validators.required, Validators.min(1), Validators.max(120)]],
     conditions: this.fb.array([]),
@@ -139,6 +156,10 @@ export class Register {
   get phone() {
     return this.step1Form.get('phone');
   }
+  get userName() {
+    return this.step1Form.get('userName');
+  }
+
   get email() {
     return this.step1Form.get('email');
   }
@@ -233,6 +254,7 @@ export class Register {
     const payload = {
       fullName: this.step1Form.value.fullName,
       phoneNumber: this.step1Form.value.phone,
+      userName: this.step1Form.value.userName,
       email: this.step1Form.value.email,
       age: this.step2Form.value.age,
       conditions: this.selectedConditions,

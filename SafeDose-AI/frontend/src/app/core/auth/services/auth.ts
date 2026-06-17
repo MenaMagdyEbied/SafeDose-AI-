@@ -6,10 +6,11 @@ import { environment } from '../../../../environments/environment';
 import { RegisterResponse } from '../../models/register-response';
 import { LoginResponse } from '../../models/login-response';
 import { CookieService } from 'ngx-cookie-service';
-import { SessionUser } from '../../models/session-user';
+import { SessionUser, UserRole } from '../../models/session-user';
 const TOKEN_KEY = 'safedose_jwt';
 const USER_KEY = 'safedose_user';
 const COOKIE_DAYS = 30;
+
 @Injectable({
   providedIn: 'root',
 })
@@ -22,6 +23,7 @@ export class Auth {
   public user$ = this.userSubject.asObservable();
   showLoginModal = signal(false);
 
+  // ============ Getters ============
   get user(): SessionUser | null {
     return this.userSubject.value;
   }
@@ -34,9 +36,51 @@ export class Auth {
     return !!this.token;
   }
 
+  get role(): UserRole | null {
+    return this.userSubject.value?.role ?? null;
+  }
+
+  get isUser(): boolean {
+    return this.role === 'User';
+  }
+
   get isAdmin(): boolean {
-    // عدّليها بالـ role الفعلي من الـ token لو محتاجة
-    return false;
+    return this.role === 'Admin' || this.role === 'SuperAdmin';
+  }
+
+  get isSuperAdmin(): boolean {
+    return this.role === 'SuperAdmin';
+  }
+
+  // ============ JWT Decoder ============
+  private decodeToken(token: string): Record<string, any> | null {
+    try {
+      const payload = token.split('.')[1];
+      const decoded = atob(payload.replace(/-/g, '+').replace(/_/g, '/'));
+      return JSON.parse(decoded);
+    } catch {
+      return null;
+    }
+  }
+
+  private extractRole(token: string): UserRole {
+    const claims = this.decodeToken(token);
+    if (!claims) return 'User';
+
+    // الـ role claim في الـ JWT بييجي بالاسم ده
+    const role =
+      claims['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] ||
+      claims['role'] ||
+      'User';
+
+    return role as UserRole;
+  }
+
+  // ============ Cookie helpers ============
+  private getExpireDate(days: number): Date {
+    const d = new Date();
+    d.setDate(d.getDate() + days);
+    return d;
   }
 
   private readUserFromCookie(): SessionUser | null {
@@ -49,25 +93,14 @@ export class Auth {
     }
   }
 
-  private getExpireDate(days: number): Date {
-    const d = new Date();
-    d.setDate(d.getDate() + days);
-    return d;
-  }
-
   private setSession(userName: string, email: string, token: string): void {
+    const role = this.extractRole(token);
+    const user: SessionUser = { userName, email, role };
     const expire = this.getExpireDate(COOKIE_DAYS);
+
     this.cookieService.set(TOKEN_KEY, token, expire, '/', '', true, 'Strict');
-    this.cookieService.set(
-      USER_KEY,
-      JSON.stringify({ userName, email }),
-      expire,
-      '/',
-      '',
-      true,
-      'Strict',
-    );
-    this.userSubject.next({ userName, email });
+    this.cookieService.set(USER_KEY, JSON.stringify(user), expire, '/', '', true, 'Strict');
+    this.userSubject.next(user);
   }
 
   logout(): void {
@@ -76,8 +109,8 @@ export class Auth {
     this.userSubject.next(null);
   }
 
-  // ============ API calls ============
-  login(payload: { email: string; password: string }): Observable<LoginResponse> {
+  // ============ API Calls ============
+  login(payload: { userName: string; password: string }): Observable<LoginResponse> {
     return this.http.post<LoginResponse>(`${this.apiUrl}/Auth/login`, payload).pipe(
       tap((res) => {
         if (res.isAuthenticated) {
@@ -89,6 +122,10 @@ export class Auth {
 
   register(payload: Record<string, unknown>): Observable<unknown> {
     return this.http.post(`${this.apiUrl}/Auth/register`, payload);
+  }
+
+  registerAdmin(payload: Record<string, unknown>): Observable<unknown> {
+    return this.http.post(`${this.apiUrl}/Auth/registerAdmin`, payload);
   }
 
   confirmEmail(payload: Record<string, unknown>): Observable<unknown> {

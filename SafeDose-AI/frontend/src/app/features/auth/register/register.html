@@ -61,7 +61,31 @@
                 </p>
               }
             </div>
-
+            <div class="space-y-1">
+              <label class="text-sm font-bold text-on-background block">اسم المستخدم</label>
+              <input
+                type="text"
+                formControlName="userName"
+                placeholder="مثال: ahmed_ali"
+                dir="ltr"
+                [class]="
+                  userName?.invalid && userName?.touched
+                    ? 'w-full h-12 px-4 bg-white border border-danger rounded-xl focus:ring-2 focus:ring-danger/10 outline-none text-sm font-medium transition-all text-left'
+                    : 'w-full h-12 px-4 bg-white border border-outline-variant rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none text-sm font-medium transition-all text-left'
+                "
+              />
+              @if (userName?.invalid && userName?.touched) {
+                <p class="text-xs text-danger font-bold mt-1">
+                  @if (userName?.errors?.['required']) {
+                    اسم المستخدم مطلوب
+                  } @else if (userName?.errors?.['minlength']) {
+                    على الأقل 3 أحرف
+                  } @else if (userName?.errors?.['englishOnly']) {
+                    يجب إدخال اسم المستخدم باللغة الإنجليزية فقط
+                  }
+                </p>
+              }
+            </div>
             <div class="space-y-1">
               <label class="text-sm font-bold text-on-background block">رقم الهاتف</label>
               <input
@@ -80,7 +104,7 @@
                   @if (phone?.errors?.['required']) {
                     رقم الهاتف مطلوب
                   } @else if (phone?.errors?.['pattern']) {
-                    رقم الهاتف غير صحيح
+                    رقم الهاتف غير صحيح (يجيب أن يكون 11 رقم يبدا ب 010 او 011 او 015 او012  )
                   }
                 </p>
               }

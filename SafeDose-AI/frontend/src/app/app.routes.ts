@@ -16,6 +16,7 @@ import { PublicCard } from './features/public-card/public-card';
 import { authGuard } from './core/auth/guards/auth-guard';
 import { adminGuard } from './core/auth/guards/admin-guard';
 import { guestGuard } from './core/auth/guards/guest-guard';
+import { superAdminGuard } from './core/auth/guards/super-admin-guard';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'home', pathMatch: 'full' },
@@ -118,6 +119,8 @@ export const routes: Routes = [
       },
       {
         path: 'managers',
+        canActivate: [superAdminGuard],
+
         loadComponent: () =>
           import('./features/admin/admin-manager/admin-manager').then((c) => c.AdminManager),
         title: 'إدارة المشرفين | SafeDose AI',
@@ -127,7 +130,6 @@ export const routes: Routes = [
 
   { path: 'card/:id', component: PublicCard, title: 'البطاقة الرقمية | SafeDose AI' },
 
-  // Auth routes — محمية بـ guestGuard (اللوجن مش هيظهر للـ logged in)
   {
     path: 'login',
     component: Login,

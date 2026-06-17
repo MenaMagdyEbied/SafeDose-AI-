@@ -258,9 +258,8 @@
             class="flex gap-1 items-center hover:text-primary transition-colors cursor-pointer text-on-surface-variant text-xs font-bold"
           >
             <lucide-icon [img]="circleUserIcon" class="w-5 h-5"></lucide-icon>
-            <span class="hidden sm:inline">{{
-              (authService.user$ | async)?.userName || 'حسابي'
-            }}</span>
+            <span class="hidden sm:inline">{{ userName || 'حسابي' }}</span>
+
             <lucide-icon [img]="chevronDownIcon" class="w-3.5 h-3.5"></lucide-icon>
           </button>
 

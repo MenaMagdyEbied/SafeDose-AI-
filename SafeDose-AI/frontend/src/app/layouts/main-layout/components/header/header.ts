@@ -19,23 +19,25 @@ import {
   Users,
 } from 'lucide-angular';
 import { Auth } from '../../../../core/auth/services/auth';
-import { AsyncPipe } from '@angular/common';
+import { UserProfile } from '../../../../core/auth/services/user-profile';
 
 @Component({
   selector: 'app-header',
-  imports: [LucideAngularModule, RouterLink, RouterLinkActive, AsyncPipe],
+  imports: [LucideAngularModule, RouterLink, RouterLinkActive],
   templateUrl: './header.html',
   styleUrl: './header.css',
 })
 export class Header {
   private readonly router = inject(Router);
   private readonly cdr = inject(ChangeDetectorRef);
-  readonly authService = inject(Auth);
+  protected readonly authService = inject(Auth);
+  private readonly userProfileService = inject(UserProfile);
 
   showLogoutConfirm = false;
   accountMenu = false;
   bellMenu = false;
   bellTab: 'meds' | 'family' = 'meds';
+  userName = '';
 
   // Icons
   heartIcon = Heart;
@@ -54,7 +56,6 @@ export class Header {
   digitalCardIcon = CreditCard;
   alertIcon = TriangleAlert;
 
-  // Mock notifications — هتيجي من service لاحقاً
   medNotifications = [
     {
       id: 1,
@@ -124,5 +125,35 @@ export class Header {
     this.showLogoutConfirm = false;
     this.authService.logout();
     this.router.navigate(['/home']);
+  }
+
+  ngOnInit(): void {
+    if (this.authService.isLoggedIn) {
+      this.loadProfile();
+    }
+
+    this.authService.user$.subscribe((user) => {
+      if (user) {
+        this.userName = user.userName;
+        // يمكن تحديثه من الـ API كمان لو محتاجة
+      } else {
+        this.userName = '';
+      }
+    });
+  }
+
+  private loadProfile(): void {
+    this.userProfileService.getUserProfile().subscribe({
+      next: (profile: any) => {
+        this.userName =
+          profile?.userName || profile?.fullName || this.authService.user?.userName || '';
+        if (profile?.userName) {
+          this.authService.updateProfile({ userName: profile.userName });
+        }
+      },
+      error: () => {
+        this.userName = this.authService.user?.userName || '';
+      },
+    });
   }
 }

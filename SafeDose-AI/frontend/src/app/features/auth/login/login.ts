@@ -1,96 +1,63 @@
 import { Component, inject } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { ArrowLeft, LucideAngularModule, ShieldCheck, TriangleAlert } from 'lucide-angular';
+import { ArrowLeft, Eye, EyeOff, LucideAngularModule, ShieldCheck, TriangleAlert } from 'lucide-angular';
+import { Auth } from '../../../core/auth/services/auth';
 
 @Component({
   selector: 'app-login',
-  imports: [FormsModule, LucideAngularModule, RouterLink],
+  imports: [FormsModule, LucideAngularModule, RouterLink,ReactiveFormsModule],
 
   templateUrl: './login.html',
   styleUrl: './login.css',
 })
 export class Login {
+  private readonly fb = inject(FormBuilder);
+  private readonly authService = inject(Auth);
   private readonly router = inject(Router);
+
   arrowLeftIcon = ArrowLeft;
   shieldCheckIcon = ShieldCheck;
   alertTriangleIcon = TriangleAlert;
+  eyeIcon = Eye;
+  eyeOffIcon = EyeOff;
 
-  // State
-  isLogin = true;
-  step = 1;
-  phone = '';
-  digits: string[] = ['', '', '', ''];
+  showPassword = false;
   loading = false;
   errorText = '';
 
-  toggleMode(): void {
-    this.isLogin = !this.isLogin;
-    this.step = 1;
-    this.errorText = '';
-    this.phone = '';
-    this.digits = ['', '', '', ''];
+  loginForm: FormGroup = this.fb.group({
+    userName: ['', [Validators.required, Validators.minLength(3)]],
+    password: ['', [Validators.required, Validators.minLength(8)]],
+  });
+
+  get userName() {
+    return this.loginForm.get('userName');
+  }
+  get password() {
+    return this.loginForm.get('password');
   }
 
-  async sendOtp(): Promise<void> {
-    if (this.phone.length < 9) return;
+  submit(): void {
+    this.loginForm.markAllAsTouched();
+    if (this.loginForm.invalid) return;
+
     this.loading = true;
     this.errorText = '';
-    await this.delay(1000);
-    this.loading = false;
-    this.step = 2;
-    setTimeout(() => {
-      const first = document.querySelector<HTMLInputElement>('input[type="tel"][maxlength="1"]');
-      first?.focus();
-    }, 100);
-  }
 
-  async verifyOtp(): Promise<void> {
-    const code = this.digits.join('');
-    if (code.length < 4) return;
-    this.loading = true;
-    this.errorText = '';
-    await this.delay(1000);
-    this.loading = false;
-
-    if (code === '1234') {
-      this.router.navigate(['/patient-home']);
-    } else {
-      this.errorText = 'رمز التحقق غير صحيح. حاول مرة أخرى.';
-      this.digits = ['', '', '', ''];
-    }
-  }
-
-  resendOtp(): void {
-    this.digits = ['', '', '', ''];
-    this.errorText = '';
-    // mock resend
-  }
-
-  onDigitInput(index: number, event: Event): void {
-    const input = event.target as HTMLInputElement;
-    const val = input.value.replace(/\D/g, '');
-    this.digits[index] = val ? val[0] : '';
-
-    if (val && index < 3) {
-      const inputs = document.querySelectorAll<HTMLInputElement>('input[maxlength="1"]');
-      inputs[index + 1]?.focus();
-    }
-
-    // Auto verify when all filled
-    if (this.digits.every((d) => d !== '')) {
-      setTimeout(() => this.verifyOtp(), 200);
-    }
-  }
-
-  onDigitKeydown(index: number, event: KeyboardEvent): void {
-    if (event.key === 'Backspace' && !this.digits[index] && index > 0) {
-      const inputs = document.querySelectorAll<HTMLInputElement>('input[maxlength="1"]');
-      inputs[index - 1]?.focus();
-    }
-  }
-
-  private delay(ms: number): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, ms));
+    this.authService.login(this.loginForm.value).subscribe({
+      next: () => {
+        this.loading = false;
+        if (this.authService.isAdmin) {
+          this.router.navigate(['/admin']);
+        } else {
+          this.router.navigate(['/home']);
+        }
+      },
+      error: (err) => {
+        this.loading = false;
+        this.errorText = err?.error?.message || 'بيانات الدخول غير صحيحة.';
+      },
+    });
   }
 }

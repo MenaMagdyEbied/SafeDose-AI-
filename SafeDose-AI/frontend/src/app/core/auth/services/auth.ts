@@ -7,6 +7,7 @@ import { RegisterResponse } from '../../models/register-response';
 import { LoginResponse } from '../../models/login-response';
 import { CookieService } from 'ngx-cookie-service';
 import { SessionUser, UserRole } from '../../models/session-user';
+import { ApiResponse } from '../../models/api-response';
 const TOKEN_KEY = 'safedose_jwt';
 const USER_KEY = 'safedose_user';
 const COOKIE_DAYS = 30;
@@ -67,7 +68,6 @@ export class Auth {
     const claims = this.decodeToken(token);
     if (!claims) return 'User';
 
-    // الـ role claim في الـ JWT بييجي بالاسم ده
     const role =
       claims['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] ||
       claims['role'] ||
@@ -120,24 +120,34 @@ export class Auth {
     );
   }
 
-  register(payload: Record<string, unknown>): Observable<unknown> {
-    return this.http.post(`${this.apiUrl}/Auth/register`, payload);
+  register(
+    payload: Record<string, unknown>,
+  ): Observable<ApiResponse<{ userId: string; email: string }>> {
+    return this.http.post<ApiResponse<{ userId: string; email: string }>>(
+      `${this.apiUrl}/Auth/register`,
+      payload,
+    );
   }
 
-  registerAdmin(payload: Record<string, unknown>): Observable<unknown> {
-    return this.http.post(`${this.apiUrl}/Auth/registerAdmin`, payload);
+  registerAdmin(
+    payload: Record<string, unknown>,
+  ): Observable<ApiResponse<{ userId: string; email: string }>> {
+    return this.http.post<ApiResponse<{ userId: string; email: string }>>(
+      `${this.apiUrl}/Auth/registerAdmin`,
+      payload,
+    );
   }
 
-  confirmEmail(payload: Record<string, unknown>): Observable<unknown> {
-    return this.http.post(`${this.apiUrl}/Auth/emailConfirmation`, payload);
+  confirmEmail(payload: Record<string, unknown>): Observable<ApiResponse<unknown>> {
+    return this.http.post<ApiResponse<unknown>>(`${this.apiUrl}/Auth/emailConfirmation`, payload);
   }
 
-  forgotPassword(payload: Record<string, unknown>): Observable<unknown> {
-    return this.http.post(`${this.apiUrl}/Auth/forgotPassword`, payload);
+  forgotPassword(payload: Record<string, unknown>): Observable<ApiResponse<unknown>> {
+    return this.http.post<ApiResponse<unknown>>(`${this.apiUrl}/Auth/forgotPassword`, payload);
   }
 
-  resetPassword(payload: Record<string, unknown>): Observable<unknown> {
-    return this.http.post(`${this.apiUrl}/Auth/resetPassword`, payload);
+  resetPassword(payload: Record<string, unknown>): Observable<ApiResponse<unknown>> {
+    return this.http.post<ApiResponse<unknown>>(`${this.apiUrl}/Auth/resetPassword`, payload);
   }
 
   updateProfile(updates: Partial<SessionUser>): void {

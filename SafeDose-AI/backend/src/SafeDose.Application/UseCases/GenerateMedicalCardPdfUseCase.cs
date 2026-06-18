@@ -70,7 +70,12 @@ namespace SafeDose.Application.UseCases
                         infoColumn.Item().Text($"Age: {age} Years (DOB: {cardDto.DateOfBirth.Value:d})");
                     }
                     
-                    infoColumn.Item().Text($"Gender: {cardDto.Gender}");
+                    var genderStr = cardDto.Gender switch
+                    {
+                        1 => "Male",
+                        2 => "Female"
+                    };
+                    infoColumn.Item().Text($"Gender: {genderStr}");
                     infoColumn.Item().Text($"Blood Type: {cardDto.BloodType}");
                     infoColumn.Item().Text($"Allergies: {cardDto.Allergies}").FontColor(Colors.Red.Medium);
                     infoColumn.Item().Text($"Chronic Conditions: {cardDto.ChronicConditions}");

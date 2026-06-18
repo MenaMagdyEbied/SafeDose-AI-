@@ -29,7 +29,7 @@ namespace SafeDose.Application.UseCases
             // You might need to adjust the logic based on your exact Subscription Status enum
             var hasActiveSubscription = await _db.Subscriptions
                 .Where(s => s.AccountId == patient.AccountId)
-                .AnyAsync(s => s.Status == 1 && (s.EndAt == null || s.EndAt > DateTime.UtcNow));
+                .AnyAsync(s => s.Status == 2 && (s.EndAt == null || s.EndAt > DateTime.UtcNow));
 
             if (!hasActiveSubscription)
             {

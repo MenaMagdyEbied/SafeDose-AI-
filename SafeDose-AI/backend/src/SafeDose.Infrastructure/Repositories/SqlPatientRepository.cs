@@ -66,4 +66,10 @@ public class SqlPatientRepository : IPatientRepository
         => _db.Patients
             .IgnoreQueryFilters()
             .AnyAsync(p => p.PatientId == patientId && p.AccountId == accountId);
+
+    public Task<Patient?> GetByMedicalCardTokenAsync(Guid token)
+        => _db.Patients
+            .Include(p => p.PatientMedications)
+            .ThenInclude(pm => pm.Drug)
+            .FirstOrDefaultAsync(p => p.MedicalCardToken == token);
 }

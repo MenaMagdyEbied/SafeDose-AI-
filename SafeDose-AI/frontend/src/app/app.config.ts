@@ -1,8 +1,4 @@
-import {
-  ApplicationConfig,
-  provideBrowserGlobalErrorListeners,
-  provideZoneChangeDetection,
-} from '@angular/core';
+import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/core';
 import {
   provideRouter,
   withHashLocation,
@@ -10,14 +6,23 @@ import {
   withViewTransitions,
 } from '@angular/router';
 
-import { routes } from './app.routes';
 import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
-import { LucideAngularModule, Shield, Pill, Sparkles, Activity, AlertTriangle, Heart } from 'lucide-angular';
-import { LUCIDE_ICONS, LucideIconProvider } from 'lucide-angular';
+import {
+  Activity,
+  Heart,
+  LUCIDE_ICONS,
+  LucideIconProvider,
+  Pill,
+  Shield,
+  Sparkles,
+  TriangleAlert,
+} from 'lucide-angular';
+import { routes } from './app.routes';
+import { authInterceptor } from './core/interceptors/auth-interceptor';
+import { loaderInterceptor } from './core/interceptors/loader-interceptor';
+import { responseInterceptor } from './core/interceptors/response-interceptor';
 
-
-
-const icons = { Shield, Pill, Sparkles, Activity, AlertTriangle, Heart };
+const icons = { Shield, Pill, Sparkles, Activity, TriangleAlert, Heart };
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
@@ -28,10 +33,14 @@ export const appConfig: ApplicationConfig = {
       withViewTransitions(),
       withHashLocation(),
     ),
-    provideHttpClient(withFetch(), withInterceptors([])),{
+    provideHttpClient(
+      withFetch(),
+      withInterceptors([loaderInterceptor, authInterceptor, responseInterceptor]),
+    ),
+    {
       provide: LUCIDE_ICONS,
       multi: true,
-      useValue: new LucideIconProvider(icons)
-    }
+      useValue: new LucideIconProvider(icons),
+    },
   ],
 };

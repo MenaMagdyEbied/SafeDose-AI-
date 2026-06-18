@@ -53,6 +53,13 @@
           <lucide-icon [img]="uploadIcon" class="w-5 h-5"></lucide-icon>
           رفع صورة
         </button>
+        <button
+          (click)="openManualModal()"
+          class="border border-primary text-primary hover:bg-primary/5 px-6 py-3 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 cursor-pointer"
+        >
+          <lucide-icon [img]="plusIcon" class="w-5 h-5"></lucide-icon>
+          أضف يدوياً
+        </button>
       </div>
     </div>
   }
@@ -87,78 +94,54 @@
       >
         <lucide-icon [img]="checkCircleIcon" class="w-6 h-6 shrink-0"></lucide-icon>
         <div class="text-right">
-          <p class="font-bold text-sm">تم التعرف على الوصفة بنجاح</p>
-          <p class="text-xs text-emerald-600">تم استخراج {{ scannedMeds.length }} دواء من الوصفة</p>
+          <p class="font-bold text-sm">وصفاتك المحفوظة</p>
+          <p class="text-xs text-emerald-600">{{ prescriptions.length }} وصفة مسجلة</p>
         </div>
       </div>
 
-      <!-- Med Cards -->
-      <div class="flex gap-4 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-custom">
-        @for (med of scannedMeds; track med.name; let i = $index) {
-          <div
-            class="bg-white rounded-2xl border border-outline-variant shadow-sm p-5 space-y-4 text-right min-w-[280px] sm:min-w-[300px] snap-start"
-          >
-            <!-- Med Header -->
-            <div class="flex items-start justify-between gap-2">
-              <div
-                class="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center text-primary font-extrabold text-sm shrink-0"
-              >
-                {{ i + 1 }}
+      <!-- Prescriptions Cards -->
+      <div class="space-y-3">
+        @for (prescription of prescriptions; track prescription.id) {
+          <div class="bg-white rounded-2xl border border-outline-variant shadow-sm p-4 text-right">
+            <!-- Card Header -->
+            <div class="flex items-center justify-between mb-3">
+              <div class="flex items-center gap-2">
+                <button
+                  (click)="confirmDeletePrescription(prescription)"
+                  class="w-8 h-8 rounded-xl border border-danger/20 text-danger hover:bg-danger-container flex items-center justify-center transition-all cursor-pointer"
+                >
+                  <lucide-icon [img]="trashIcon" class="w-3.5 h-3.5"></lucide-icon>
+                </button>
+                <button
+                  (click)="viewPrescription(prescription)"
+                  class="px-3 py-1.5 bg-primary text-white rounded-xl text-xs font-bold hover:bg-primary-dark transition-all cursor-pointer flex items-center gap-1.5"
+                >
+                  <lucide-icon [img]="eyeIcon" class="w-3.5 h-3.5"></lucide-icon>
+                  عرض التفاصيل
+                </button>
               </div>
-              <div class="flex-1 text-right">
-                <h3 class="font-extrabold text-on-background text-base">{{ med.name }}</h3>
-                @if (med.chemicalName) {
-                  <p class="text-xs text-outline">{{ med.chemicalName }}</p>
-                }
+              <div>
+                <h3 class="font-extrabold text-on-background text-sm">{{ prescription.name }}</h3>
+                <p class="text-xs text-outline">
+                  {{ prescription.date }} · {{ prescription.meds.length }} أدوية ·
+                  <span [class]="prescription.source === 'scan' ? 'text-primary' : 'text-tertiary'">
+                    {{ prescription.source === 'scan' ? '📷 مسح' : '✍️ يدوي' }}
+                  </span>
+                </p>
               </div>
             </div>
 
-            <!-- Med Details Grid -->
-            <div class="grid grid-cols-2 gap-3">
-              <div class="bg-surface-container-low rounded-xl p-3">
-                <p class="text-xs text-outline mb-1">الجرعة</p>
-                <p class="font-bold text-on-background text-sm">{{ med.dose }}</p>
-              </div>
-              <div class="bg-surface-container-low rounded-xl p-3">
-                <p class="text-xs text-outline mb-1">التكرار</p>
-                <p class="font-bold text-on-background text-sm">{{ med.frequency }}</p>
-              </div>
-              <div class="bg-surface-container-low rounded-xl p-3">
-                <p class="text-xs text-outline mb-1">المدة</p>
-                <p class="font-bold text-on-background text-sm">{{ med.duration }}</p>
-              </div>
-              @if (med.registryCode) {
-                <div class="bg-surface-container-low rounded-xl p-3">
-                  <p class="text-xs text-outline mb-1">رمز السجل</p>
-                  <p class="font-bold text-on-background text-xs" dir="ltr">
-                    {{ med.registryCode }}
-                  </p>
-                </div>
+            <!-- Med Names Only -->
+            <div class="flex flex-wrap gap-2 justify-end">
+              @for (med of prescription.meds; track med.name) {
+                <span class="px-2.5 py-1 bg-primary/10 text-primary rounded-full text-xs font-bold">
+                  {{ med.name }}
+                </span>
               }
             </div>
-
-            <!-- Warning if exists -->
-            @if (med.warning) {
-              <div class="bg-danger-container p-3 rounded-xl flex items-center gap-2">
-                <lucide-icon
-                  [img]="alertTriangleIcon"
-                  class="w-5 h-5 text-danger shrink-0"
-                ></lucide-icon>
-                <p class="text-sm font-bold text-on-danger-container">{{ med.warning }}</p>
-              </div>
-            }
           </div>
         }
       </div>
-      <!-- Empty State -->
-      @if (scannedMeds.length === 0) {
-        <div
-          class="bg-white rounded-2xl border border-outline-variant p-8 text-center text-outline"
-        >
-          <p class="font-bold">لم يتم التعرف على أدوية في هذه الصورة</p>
-          <p class="text-sm mt-1">تأكد من وضوح الصورة وأنها وصفة طبية</p>
-        </div>
-      }
 
       <!-- Actions -->
       <div class="flex flex-col sm:flex-row gap-3 pt-2">
@@ -179,3 +162,162 @@
     </div>
   }
 </section>
+
+<!-- Manual Entry Modal (بيشتغل للإضافة اليدوية والمراجعة بعد المسح) -->
+@if (showManualModal) {
+  <div
+    class="fixed inset-0 top-0 left-0 w-screen h-screen bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto"
+    dir="rtl"
+    (click)="closeManualModal()"
+  >
+    <div
+      class="bg-white rounded-3xl shadow-xl w-full sm:max-w-md flex flex-col max-h-[85vh]"
+      (click)="$event.stopPropagation()"
+    >
+      <!-- Modal Header -->
+      <div
+        class="pt-4 pb-2 px-5 border-b border-outline-variant/30 flex items-center justify-between shrink-0"
+      >
+        <h3 class="font-extrabold text-on-background text-lg">مراجعة وتأكيد الوصفة</h3>
+
+        <button
+          (click)="closeManualModal()"
+          class="w-8 h-8 rounded-full hover:bg-slate-100 flex items-center justify-center cursor-pointer"
+        >
+          <lucide-icon [img]="xIcon" class="w-5 h-5 text-outline"></lucide-icon>
+        </button>
+      </div>
+
+      <!-- Modal Content -->
+      <div class="p-5 space-y-4 overflow-y-auto flex-1 text-right">
+        <!-- Prescription Name -->
+        <div class="space-y-1">
+          <label class="text-xs font-bold text-outline">اسم الوصفة</label>
+          <input
+            [(ngModel)]="manualForm.name"
+            placeholder="مثال: وصفة د. أحمد - السكري"
+            class="w-full h-10 px-3 bg-surface-container-low border border-outline-variant rounded-xl text-sm font-bold outline-none focus:border-primary"
+          />
+        </div>
+
+        <!-- Medications List -->
+        <div class="space-y-2">
+          <label class="text-xs font-bold text-outline">الأدوية — راجع وعدّل إن احتجت</label>
+          @for (med of manualForm.meds; track $index) {
+            <div class="bg-surface-container-low rounded-xl p-3 space-y-2">
+              <div class="flex items-center gap-2">
+                <button
+                  (click)="removeManualMed($index)"
+                  class="w-7 h-7 rounded-lg bg-danger/10 text-danger flex items-center justify-center hover:bg-danger/20 transition-all cursor-pointer shrink-0"
+                >
+                  <lucide-icon [img]="trashIcon" class="w-3.5 h-3.5"></lucide-icon>
+                </button>
+                <div class="relative flex-1">
+                  <input
+                    [(ngModel)]="med.name"
+                    (input)="onMedInput(med, $event)"
+                    (blur)="clearSuggestions()"
+                    placeholder="اسم الدواء"
+                    class="w-full h-9 px-3 bg-white border border-outline-variant rounded-xl text-sm font-bold outline-none focus:border-primary"
+                  />
+                  @if (activeSuggestions(med).length > 0) {
+                    <div
+                      class="absolute top-full right-0 left-0 z-50 bg-white border border-outline-variant rounded-xl shadow-lg overflow-hidden mt-1"
+                    >
+                      @for (s of activeSuggestions(med); track s) {
+                        <button
+                          (mousedown)="selectSuggestion(med, s)"
+                          class="w-full px-3 py-2 text-sm font-bold text-right hover:bg-surface-container-low transition-colors"
+                        >
+                          {{ s }}
+                        </button>
+                      }
+                    </div>
+                  }
+                </div>
+              </div>
+              <div class="grid grid-cols-3 gap-2">
+                <input
+                  [(ngModel)]="med.dose"
+                  placeholder="الجرعة"
+                  class="h-9 px-3 bg-white border border-outline-variant rounded-xl text-xs font-bold outline-none focus:border-primary"
+                />
+                <input
+                  [(ngModel)]="med.frequency"
+                  placeholder="التكرار"
+                  class="h-9 px-3 bg-white border border-outline-variant rounded-xl text-xs font-bold outline-none focus:border-primary"
+                />
+                <input
+                  [(ngModel)]="med.duration"
+                  placeholder="المدة"
+                  class="h-9 px-3 bg-white border border-outline-variant rounded-xl text-xs font-bold outline-none focus:border-primary"
+                />
+              </div>
+            </div>
+          }
+
+          <button
+            (click)="addManualMed()"
+            class="w-full h-10 rounded-xl border-2 border-dashed border-primary/30 text-primary text-sm font-bold hover:bg-primary/5 transition-all cursor-pointer flex items-center justify-center gap-2"
+          >
+            <lucide-icon [img]="plusIcon" class="w-4 h-4"></lucide-icon>
+            إضافة دواء
+          </button>
+        </div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="p-5 border-t border-outline-variant/30 flex gap-3 shrink-0">
+        <button
+          (click)="closeManualModal()"
+          class="flex-1 h-12 border border-outline-variant text-outline rounded-2xl font-bold text-sm hover:bg-slate-50 transition-all cursor-pointer"
+        >
+          إلغاء
+        </button>
+        <button
+          (click)="saveManualPrescription()"
+          [disabled]="!manualForm.meds.length || !manualForm.meds[0].name.trim()"
+          class="flex-[2] h-12 bg-primary hover:bg-primary-dark disabled:bg-slate-200 disabled:text-outline text-white rounded-2xl font-bold text-sm transition-all cursor-pointer"
+        >
+          حفظ الوصفة
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Delete Confirm Modal -->
+@if (showDeleteConfirm) {
+  <div
+    class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in"
+    dir="rtl"
+  >
+    <div class="bg-white rounded-3xl p-6 shadow-2xl max-w-sm w-full text-center space-y-4">
+      <div
+        class="w-14 h-14 bg-danger-container rounded-full flex items-center justify-center mx-auto"
+      >
+        <lucide-icon [img]="trashIcon" class="w-7 h-7 text-danger"></lucide-icon>
+      </div>
+      <div class="space-y-1">
+        <h3 class="text-lg font-extrabold text-on-background">حذف الوصفة؟</h3>
+        <p class="text-sm text-outline">
+          هيتم حذف "{{ prescriptionToDelete?.name }}" ومش هترجع تاني
+        </p>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <button
+          (click)="deleteConfirmed()"
+          class="w-full h-12 bg-danger hover:bg-red-700 text-white rounded-2xl font-bold text-sm cursor-pointer transition-all"
+        >
+          حذف
+        </button>
+        <button
+          (click)="showDeleteConfirm = false; prescriptionToDelete = null"
+          class="w-full h-12 bg-slate-100 hover:bg-slate-200 text-on-surface-variant rounded-2xl font-bold text-sm cursor-pointer transition-all"
+        >
+          إلغاء
+        </button>
+      </div>
+    </div>
+  </div>
+}

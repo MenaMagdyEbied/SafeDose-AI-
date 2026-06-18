@@ -19,5 +19,6 @@ public record MedicationResponseDto(
     string? MealTimingArabic,            // computed label
     bool IsVerified,                     // true = matched to catalog; false = unverified entry, shown with "غير موثق" badge
     string? VerificationLabelArabic,     // "موثق" or "غير موثق" - ready-to-display label
-    int? DrugCatalogId                   // catalog reference; frontend passes this to POST /api/interactions/check-catalog
+    int? DrugCatalogId,                  // catalog reference; frontend passes this to POST /api/interactions/check
+    TimeOnly[] Times                      // scheduled reminder times, e.g. ["08:00:00","12:00:00","22:00:00"]
 );

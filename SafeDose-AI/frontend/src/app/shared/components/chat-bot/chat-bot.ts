@@ -69,7 +69,7 @@ export class ChatBot {
     this.inputText = '';
     this.loading = true;
 
-    const patientName = this.auth.user?.name || 'أحمد';
+    const patientName = this.auth.user?.userName || 'أحمد';
     const result = await this.chatbotService.sendMessage(text, this.messages, patientName);
     this.messages = [
       ...this.messages,

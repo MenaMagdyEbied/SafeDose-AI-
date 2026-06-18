@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using SafeDose.Application.Auth.DTOs;
 using SafeDose.Application.Auth.ServicesInterfaces;
@@ -16,17 +17,33 @@ namespace SafeDose.Api.Controllers
             _authService = authService;
         }
 
+        [Authorize(Roles = "SuperAdmin")]
+        [HttpPost("registerAdmin")]
+        public async Task<IActionResult> RegisterAdmin(RegisterDTO dto)
+        {
+            try
+            {
+                AuthModelDTO result = await _authService.RegisterAdminAsync(dto);
+                return Ok(new { message = result.Message });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+
         [HttpPost("register")]
         public async Task<IActionResult> Register(RegisterDTO dto)
         {
             try 
             {
                 AuthModelDTO result = await _authService.RegisterAsync(dto);
-                return Ok(result.Message);  
+                return Ok(new { message = result.Message });  
             }
             catch(Exception ex)
             {
-                return BadRequest(ex.Message);  
+                return BadRequest(new { message = ex.Message });  
             }
         }
 
@@ -38,10 +55,10 @@ namespace SafeDose.Api.Controllers
             try
             {
                 string result = await _authService.ConfrimEmail(dto);
-                return Ok(result);
+                return Ok(new { message = result });
             }
             catch (Exception ex) { 
-                return BadRequest(ex.Message);      
+                return BadRequest(new { message = ex.Message });      
             }
         }
 
@@ -54,13 +71,13 @@ namespace SafeDose.Api.Controllers
                 AuthModelDTO result = await _authService.GetTokenAsync(dto);
 
                 if (!result.IsAuthenticated)
-                    return BadRequest(result.Message);
+                    return BadRequest(new { message = result.Message });
 
                 return Ok(result);
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(new { message = ex.Message });
             }
         }
 
@@ -74,11 +91,11 @@ namespace SafeDose.Api.Controllers
             try
             {
                 string result = await _authService.ForgotPass(dto);
-                return Ok(result);
+                return Ok(new { message = result });
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(new { message = ex.Message });
             }
         }
 
@@ -90,11 +107,11 @@ namespace SafeDose.Api.Controllers
             try
             {
                 string result = await _authService.ResetPass(dto);
-                return Ok(result);
+                return Ok(new { message = result });
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(new { message = ex.Message });
             }
         }
     }

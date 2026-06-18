@@ -1,239 +1,159 @@
-<div
-  class="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 py-12 pb-24"
-  dir="rtl"
->
+<div class="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 py-12 pb-24" dir="rtl">
   <div class="container-app max-w-md mx-auto space-y-5">
-    <!-- Header -->
-    <div class="text-center space-y-1">
-      <div
-        class="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg"
+
+    <!-- Verifying State -->
+    @if (verifying) {
+      <div class="bg-white rounded-2xl border border-outline-variant shadow-sm p-8 text-center space-y-4">
+        <div class="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto"></div>
+        <p class="font-bold text-on-background">جاري التحقق من حالة الدفع...</p>
+      </div>
+    }
+
+    @if (!verifying) {
+
+      <!-- Header -->
+      <div class="text-center space-y-1">
+        <div class="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg">
+          <lucide-icon [img]="lockIcon" class="w-6 h-6 text-white"></lucide-icon>
+        </div>
+        <h2 class="text-2xl font-extrabold text-on-background">إتمام الدفع</h2>
+        <p class="text-xs text-outline">آمن ومشفر بالكامل 🔒</p>
+      </div>
+
+      <!-- Order Summary -->
+      <div class="bg-gradient-to-l from-primary to-primary-dark rounded-2xl p-5 text-white shadow-lg">
+        <div class="flex items-center justify-between">
+          <div class="text-right">
+            <p class="text-xs text-white/60 mb-1">الباقة المختارة</p>
+            <h3 class="font-extrabold text-lg">{{ planName }}</h3>
+            <p class="text-xs text-white/70 mt-0.5">اشتراك شهري · يجدد تلقائياً</p>
+          </div>
+          <div class="text-left">
+            <p class="text-xs text-white/60 mb-1">الإجمالي</p>
+            <p class="text-3xl font-black">{{ planPrice }}</p>
+            <p class="text-xs text-white/70">ج.م / شهر</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Features -->
+      <div class="bg-white rounded-2xl border border-outline-variant shadow-sm p-5 space-y-3">
+        <h4 class="font-extrabold text-sm text-on-background text-right">مميزات الباقة</h4>
+        <div class="space-y-2">
+          @for (feature of planFeatures; track feature) {
+            <div class="flex items-center gap-2 text-right">
+              <lucide-icon [img]="checkCircleIcon" class="w-4 h-4 text-green-500 shrink-0"></lucide-icon>
+              <span class="text-sm text-on-surface-variant">{{ feature }}</span>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- User Info Form -->
+      <div class="bg-white rounded-2xl border border-outline-variant shadow-sm p-5 space-y-4 text-right">
+        <h4 class="font-extrabold text-sm text-on-background">بياناتك</h4>
+
+        <div class="space-y-1">
+          <label class="text-xs font-bold text-outline">الاسم الكامل</label>
+          <input
+            [(ngModel)]="userForm.fullName"
+            placeholder="أدخل اسمك الكامل"
+            class="w-full h-11 px-4 bg-surface-container-low border border-outline-variant rounded-xl text-sm font-bold outline-none focus:border-primary transition-colors"
+          />
+        </div>
+
+        <div class="space-y-1">
+          <label class="text-xs font-bold text-outline">البريد الإلكتروني</label>
+          <input
+            [(ngModel)]="userForm.email"
+            type="email"
+            placeholder="example@email.com"
+            dir="ltr"
+            class="w-full h-11 px-4 bg-surface-container-low border border-outline-variant rounded-xl text-sm font-bold outline-none focus:border-primary text-left transition-colors"
+          />
+        </div>
+
+        <div class="space-y-1">
+          <label class="text-xs font-bold text-outline">رقم الهاتف</label>
+          <input
+            [(ngModel)]="userForm.phoneNumber"
+            placeholder="01XXXXXXXXX"
+            dir="ltr"
+            class="w-full h-11 px-4 bg-surface-container-low border border-outline-variant rounded-xl text-sm font-bold outline-none focus:border-primary text-left transition-colors"
+          />
+        </div>
+      </div>
+
+      <!-- Payment Methods Info -->
+      <div class="bg-white rounded-2xl border border-outline-variant shadow-sm p-5 space-y-3">
+        <h4 class="font-extrabold text-sm text-on-background text-right">طرق الدفع المتاحة عبر Paymob</h4>
+        <div class="flex flex-wrap gap-2 justify-end">
+          <span class="px-3 py-1.5 bg-surface-container-low rounded-xl text-xs font-bold text-outline flex items-center gap-1.5">💳 فيزا / ماستركارد</span>
+          <span class="px-3 py-1.5 bg-surface-container-low rounded-xl text-xs font-bold text-outline flex items-center gap-1.5">🔴 فودافون كاش</span>
+          <span class="px-3 py-1.5 bg-surface-container-low rounded-xl text-xs font-bold text-outline flex items-center gap-1.5">🟠 اورنج كاش</span>
+          <span class="px-3 py-1.5 bg-surface-container-low rounded-xl text-xs font-bold text-outline flex items-center gap-1.5">🟢 اتصالات كاش</span>
+        </div>
+      </div>
+
+      <!-- Error -->
+      @if (showError) {
+        <div class="bg-danger-container p-4 rounded-xl flex items-center gap-2 text-right">
+          <span class="text-danger text-xl shrink-0">⚠️</span>
+          <p class="text-sm font-bold text-on-danger-container">{{ errorText }}</p>
+        </div>
+      }
+
+      <!-- Security -->
+      <div class="flex items-center justify-center gap-4 flex-wrap">
+        <div class="flex items-center gap-1.5 text-[10px] text-outline">
+          <lucide-icon [img]="lockIcon" class="w-3 h-3"></lucide-icon>
+          PCI DSS
+        </div>
+        <div class="w-1 h-1 rounded-full bg-outline-variant"></div>
+        <div class="flex items-center gap-1.5 text-[10px] text-outline">
+          <lucide-icon [img]="shieldIcon" class="w-3 h-3"></lucide-icon>
+          مدفوعات Paymob
+        </div>
+        <div class="w-1 h-1 rounded-full bg-outline-variant"></div>
+        <div class="flex items-center gap-1.5 text-[10px] text-outline">
+          <lucide-icon [img]="lockIcon" class="w-3 h-3"></lucide-icon>
+          256-bit SSL
+        </div>
+      </div>
+
+      <!-- Pay Button -->
+      <button
+        (click)="pay()"
+        [disabled]="loading"
+        class="w-full h-14 bg-primary hover:bg-primary-dark disabled:opacity-70 text-white rounded-2xl font-extrabold text-base flex items-center justify-center gap-2 transition-all active:scale-[0.98] shadow-lg cursor-pointer"
       >
-        <lucide-icon [img]="lockIcon" class="w-6 h-6 text-white"></lucide-icon>
-      </div>
-      <h2 class="text-2xl font-extrabold text-on-background">إتمام الدفع</h2>
-      <p class="text-xs text-outline">آمن ومشفر بالكامل 🔒</p>
-    </div>
-
-    <!-- Order Summary -->
-    <div class="bg-gradient-to-l from-primary to-primary-dark rounded-2xl p-5 text-white shadow-lg">
-      <div class="flex items-center justify-between">
-        <div class="text-right">
-          <p class="text-xs text-white/60 mb-1">الباقة المختارة</p>
-          <h3 class="font-extrabold text-lg">خطة العيلة 👨‍👩‍👧‍👦</h3>
-          <p class="text-xs text-white/70 mt-0.5">اشتراك شهري · يجدد تلقائياً</p>
-        </div>
-        <div class="text-left">
-          <p class="text-xs text-white/60 mb-1">الإجمالي</p>
-          <p class="text-3xl font-black">٩٩</p>
-          <p class="text-xs text-white/70">ج.م / شهر</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- Payment Method Tabs -->
-    <div class="bg-white rounded-2xl border border-outline-variant shadow-sm overflow-hidden">
-      <!-- Tabs -->
-      <div class="grid grid-cols-2 gap-2 p-2">
-        <button
-          (click)="method = 'card'"
-          [class]="
-            method === 'card'
-              ? 'py-3 rounded-xl text-xs font-extrabold text-white bg-primary flex items-center justify-center gap-1.5 cursor-pointer transition-all shadow-sm'
-              : 'py-3 rounded-xl text-xs font-bold text-outline hover:bg-slate-50 flex items-center justify-center gap-1.5 cursor-pointer transition-all'
-          "
-        >
-          <lucide-icon [img]="creditCardIcon" class="w-4 h-4"></lucide-icon>
-          بطاقة ائتمان
-        </button>
-        <button
-          (click)="method = 'wallet'"
-          [class]="
-            method === 'wallet'
-              ? 'py-3 rounded-xl text-xs font-extrabold text-white bg-primary flex items-center justify-center gap-1.5 cursor-pointer transition-all shadow-sm'
-              : 'py-3 rounded-xl text-xs font-bold text-outline hover:bg-slate-50 flex items-center justify-center gap-1.5 cursor-pointer transition-all'
-          "
-        >
-          <lucide-icon [img]="smartphoneIcon" class="w-4 h-4"></lucide-icon>
-          محفظة إلكترونية
-        </button>
-      </div>
-
-      <div class="px-5 pb-5 pt-2 space-y-4 text-right">
-        <!-- Card Form -->
-        @if (method === 'card') {
-          <!-- Card Preview -->
-          <div
-            class="bg-gradient-to-br from-neutral-dark to-[#1a1a2e] rounded-2xl p-4 text-white space-y-4 shadow-md"
-          >
-            <div class="flex justify-between items-center">
-              <span class="text-xs text-white/50 font-mono tracking-widest">
-                {{ card.number || '•••• •••• •••• ••••' }}
-              </span>
-              <lucide-icon [img]="creditCardIcon" class="w-5 h-5 text-secondary"></lucide-icon>
-            </div>
-            <div class="flex justify-between items-end">
-              <div>
-                <p class="text-[10px] text-white/40 mb-0.5">حامل البطاقة</p>
-                <p class="text-sm font-bold">{{ card.name || 'الاسم الكامل' }}</p>
-              </div>
-              <div class="text-left">
-                <p class="text-[10px] text-white/40 mb-0.5">تنتهي في</p>
-                <p class="text-sm font-bold">{{ card.expiry || 'MM/YY' }}</p>
-              </div>
-            </div>
-          </div>
-
-          <div class="space-y-1">
-            <label class="text-xs font-bold text-outline">اسم حامل البطاقة</label>
-            <input
-              [(ngModel)]="card.name"
-              placeholder="الاسم كما هو على البطاقة"
-              class="w-full h-11 px-4 bg-surface-container-low border border-outline-variant rounded-xl text-sm font-bold outline-none focus:border-primary transition-colors"
-            />
-          </div>
-
-          <div class="space-y-1">
-            <label class="text-xs font-bold text-outline">رقم البطاقة</label>
-            <div class="relative">
-              <input
-                [(ngModel)]="card.number"
-                (input)="formatCardNumber($event)"
-                placeholder="0000 0000 0000 0000"
-                maxlength="19"
-                dir="ltr"
-                class="w-full h-11 px-4 pl-10 bg-surface-container-low border border-outline-variant rounded-xl text-sm font-bold outline-none focus:border-primary text-left tracking-widest transition-colors"
-              />
-              <lucide-icon
-                [img]="creditCardIcon"
-                class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-outline"
-              ></lucide-icon>
-            </div>
-          </div>
-
-          <div class="grid grid-cols-2 gap-3">
-            <div class="space-y-1">
-              <label class="text-xs font-bold text-outline">تاريخ الانتهاء</label>
-              <input
-                [(ngModel)]="card.expiry"
-                (input)="formatExpiry($event)"
-                placeholder="MM/YY"
-                maxlength="5"
-                dir="ltr"
-                class="w-full h-11 px-4 bg-surface-container-low border border-outline-variant rounded-xl text-sm font-bold outline-none focus:border-primary text-left transition-colors"
-              />
-            </div>
-            <div class="space-y-1">
-              <label class="text-xs font-bold text-outline">CVV</label>
-              <input
-                [(ngModel)]="card.cvv"
-                placeholder="•••"
-                maxlength="3"
-                type="password"
-                dir="ltr"
-                class="w-full h-11 px-4 bg-surface-container-low border border-outline-variant rounded-xl text-sm font-bold outline-none focus:border-primary text-left transition-colors"
-              />
-            </div>
-          </div>
+        @if (loading) {
+          <div class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+          جاري التحضير...
+        } @else {
+          <lucide-icon [img]="lockIcon" class="w-5 h-5"></lucide-icon>
+          ادفع {{ planPrice }} ج.م عبر Paymob
         }
+      </button>
 
-        <!-- Wallet Form -->
-        @if (method === 'wallet') {
-          <div class="space-y-2">
-            <label class="text-xs font-bold text-outline">اختر المحفظة</label>
-            <div class="grid grid-cols-3 gap-2">
-              @for (w of wallets; track w.id) {
-                <button
-                  (click)="wallet.type = w.id"
-                  [class]="
-                    wallet.type === w.id
-                      ? 'py-4 rounded-xl border-2 border-primary bg-primary/5 flex flex-col items-center gap-1.5 cursor-pointer transition-all shadow-sm'
-                      : 'py-4 rounded-xl border border-outline-variant hover:bg-slate-50 flex flex-col items-center gap-1.5 cursor-pointer transition-all'
-                  "
-                >
-                  <span class="text-2xl">{{ w.icon }}</span>
-                  <span
-                    class="text-[10px] font-bold"
-                    [class]="wallet.type === w.id ? 'text-primary' : 'text-outline'"
-                  >
-                    {{ w.name }}
-                  </span>
-                </button>
-              }
-            </div>
-          </div>
+      <p class="text-center text-[10px] text-outline">
+        بالضغط ستنتقل لصفحة Paymob الآمنة لاختيار طريقة الدفع وإتمام العملية
+      </p>
 
-          <div class="space-y-1">
-            <label class="text-xs font-bold text-outline">رقم المحفظة</label>
-            <div class="relative">
-              <input
-                [(ngModel)]="wallet.phone"
-                placeholder="01XXXXXXXXX"
-                maxlength="11"
-                dir="ltr"
-                class="w-full h-11 px-4 pl-10 bg-surface-container-low border border-outline-variant rounded-xl text-sm font-bold outline-none focus:border-primary text-left transition-colors"
-              />
-              <lucide-icon
-                [img]="smartphoneIcon"
-                class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-outline"
-              ></lucide-icon>
-            </div>
-            <div class="flex items-center gap-1.5 mt-2 bg-secondary/10 rounded-xl px-3 py-2">
-              <lucide-icon
-                [img]="smartphoneIcon"
-                class="w-3.5 h-3.5 text-secondary shrink-0"
-              ></lucide-icon>
-              <p class="text-[10px] text-secondary font-bold">هيتبعتلك كود تأكيد على رقمك فوراً</p>
-            </div>
-          </div>
-        }
-      </div>
-    </div>
-
-    <!-- Security Badges -->
-    <div class="flex items-center justify-center gap-4 flex-wrap">
-      <div class="flex items-center gap-1.5 text-[10px] text-outline">
-        <lucide-icon [img]="lockIcon" class="w-3 h-3"></lucide-icon>
-        PCI DSS
-      </div>
-      <div class="w-1 h-1 rounded-full bg-outline-variant"></div>
-      <div class="flex items-center gap-1.5 text-[10px] text-outline">
-        <lucide-icon [img]="shieldIcon" class="w-3 h-3"></lucide-icon>
-        256-bit SSL
-      </div>
-      <div class="w-1 h-1 rounded-full bg-outline-variant"></div>
-      <div class="flex items-center gap-1.5 text-[10px] text-outline">
-        <lucide-icon [img]="lockIcon" class="w-3 h-3"></lucide-icon>
-        بيانات مشفرة
-      </div>
-    </div>
-
-    <!-- Pay Button -->
-    <button
-      (click)="pay()"
-      [disabled]="!isValid()"
-      class="w-full h-14 bg-primary hover:bg-primary-dark disabled:bg-slate-200 disabled:text-outline text-white rounded-2xl font-extrabold text-base flex items-center justify-center gap-2 transition-all active:scale-[0.98] shadow-lg cursor-pointer"
-    >
-      <lucide-icon [img]="lockIcon" class="w-5 h-5"></lucide-icon>
-      ادفع ٩٩ ج.م الآن
-    </button>
+    }
   </div>
 </div>
 
 <!-- Success Modal -->
 @if (showSuccess) {
-  <div
-    class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in"
-    dir="rtl"
-  >
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in" dir="rtl">
     <div class="bg-white rounded-3xl p-8 shadow-2xl max-w-sm w-full text-center space-y-4">
       <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto">
         <lucide-icon [img]="checkCircleIcon" class="w-10 h-10 text-green-500"></lucide-icon>
       </div>
       <div class="space-y-1">
         <h3 class="text-xl font-extrabold text-on-background">تم الدفع بنجاح! 🎉</h3>
-        <p class="text-sm text-outline leading-relaxed">
-          تم تفعيل خطة العيلة على حسابك. يمكنك الآن إضافة أفراد عيلتك.
-        </p>
+        <p class="text-sm text-outline leading-relaxed">تم تفعيل {{ planName }} على حسابك.</p>
       </div>
       <div class="bg-green-50 rounded-2xl p-3 flex items-center gap-2 text-right">
         <lucide-icon [img]="checkCircleIcon" class="w-4 h-4 text-green-500 shrink-0"></lucide-icon>

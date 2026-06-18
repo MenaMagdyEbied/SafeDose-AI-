@@ -54,7 +54,7 @@
               <lucide-icon [img]="editIcon" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></lucide-icon>
             </button>
             <button
-              (click)="deleteMember(member.id)"
+              (click)="confirmDeleteMember(member)"
               class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl border border-danger/20 text-danger hover:bg-danger-container flex items-center justify-center transition-all cursor-pointer"
             >
               <lucide-icon [img]="trashIcon" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></lucide-icon>
@@ -114,7 +114,7 @@
   <!-- Modal -->
   @if (showModal) {
     <div
-      class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4 sm:p-4"
+      class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4 mb-0 sm:p-4"
       (click)="closeModal()"
     >
       <div
@@ -123,9 +123,9 @@
       >
         <!-- Modal Header -->
         <div
-          class="p-5 sm:p-6 border-b border-outline-variant/30 flex items-center justify-between shrink-0"
+          class="pt-4 pb-2 px-5 border-b border-outline-variant/30 flex items-center justify-between shrink-0"
         >
-          <h3 class="font-extrabold text-on-background text-sm sm:text-base">
+          <h3 class="font-extrabold text-on-background text-lg">
             {{ editingId ? 'تعديل بيانات الفرد' : 'إضافة فرد جديد' }}
           </h3>
           <button
@@ -229,4 +229,17 @@
       </div>
     </div>
   }
+
+  <app-confirm-dialog
+    [isOpen]="showConfirmDelete"
+    title="تأكيد حذف فرد العائلة"
+    message="هل تريد بالتأكيد حذف {{
+      pendingDeleteMemberName
+    }} من العائلة؟ هذا الإجراء لا يمكن التراجع عنه."
+    confirmText="حذف"
+    cancelText="إلغاء"
+    variant="danger"
+    (confirmed)="executeDeleteMember()"
+    (cancelled)="cancelDelete()"
+  ></app-confirm-dialog>
 </section>

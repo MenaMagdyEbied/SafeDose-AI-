@@ -42,6 +42,7 @@ public class SqlPatientMedicationRepository
     public Task<PatientMedication?> GetByIdAsync(int id)
         => _db.PatientMedications
             .Include(pm => pm.Drug)
+            .Include(pm => pm.PatientMedicationTimes)
             .FirstOrDefaultAsync(pm => pm.PatientMedicationId == id);
 
     public async Task<IReadOnlyList<PatientMedication>> GetAllForPatientAsync(int patientId)
@@ -49,6 +50,7 @@ public class SqlPatientMedicationRepository
         return await _db.PatientMedications
             .AsNoTracking()
             .Include(pm => pm.Drug)
+            .Include(pm => pm.PatientMedicationTimes)
             .Where(pm => pm.PatientId == patientId)
             .OrderByDescending(pm => pm.StartDate ?? DateOnly.MinValue)
             .ToListAsync();
@@ -59,6 +61,7 @@ public class SqlPatientMedicationRepository
         return await _db.PatientMedications
             .AsNoTracking()
             .Include(pm => pm.Drug)
+            .Include(pm => pm.PatientMedicationTimes)
             .Where(pm => pm.PatientId == patientId && pm.Status == status)
             .OrderByDescending(pm => pm.StartDate ?? DateOnly.MinValue)
             .ToListAsync();
@@ -104,6 +107,38 @@ public class SqlPatientMedicationRepository
             .Where(pm => pm.Status == ActiveStatus
                       && pm.EndDate.HasValue
                       && pm.EndDate.Value < cutoff)
+            .ToListAsync();
+    }
+
+    public async Task SetTimesAsync(int patientMedicationId, string accountId, IEnumerable<TimeOnly> times)
+    {
+        // Wipe existing rows for this medication, then add the new set.
+        // Done in one transaction so the notification service never sees a partial state.
+        var existing = await _db.PatientMedicationTimes
+            .Where(t => t.PatientMedicationId == patientMedicationId)
+            .ToListAsync();
+        _db.PatientMedicationTimes.RemoveRange(existing);
+
+        var distinctOrdered = times
+            .Distinct()
+            .OrderBy(t => t)
+            .Select(t => new PatientMedicationTime
+            {
+                PatientMedicationId = patientMedicationId,
+                Time = t,
+                AccountId = accountId,
+            });
+        await _db.PatientMedicationTimes.AddRangeAsync(distinctOrdered);
+        await _db.SaveChangesAsync();
+    }
+
+    public async Task<IReadOnlyList<MedicationTimeView>> GetTimesAsync(int patientMedicationId)
+    {
+        return await _db.PatientMedicationTimes
+            .AsNoTracking()
+            .Where(t => t.PatientMedicationId == patientMedicationId)
+            .OrderBy(t => t.Time)
+            .Select(t => new MedicationTimeView(t.PatientMedicationTimeId, t.Time))
             .ToListAsync();
     }
 }

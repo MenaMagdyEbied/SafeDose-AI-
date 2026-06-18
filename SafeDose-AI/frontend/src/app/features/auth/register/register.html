@@ -1,12 +1,11 @@
-<section class="flex min-h-screen items-center justify-center bg-background p-6">
-  <!-- Form Side -->
+<section class="flex min-h-screen items-center justify-center bg-background p-6 pt-16 pb-24">
   <div
     class="w-full bg-white rounded-3xl shadow-xl overflow-hidden flex flex-col lg:flex-row max-w-5xl"
   >
     <div
       class="w-full lg:w-1/2 flex flex-col justify-center items-center px-8 py-10 order-2 lg:order-1"
     >
-      <div class="max-w-[480px] w-full">
+      <div class="max-w-120 w-full">
         <!-- Brand -->
         <div class="mb-10 text-right">
           <h1 class="text-3xl font-extrabold text-primary mb-1">SafeDose AI</h1>
@@ -23,9 +22,19 @@
           }
         </div>
 
+        <!-- Global Error -->
+        @if (errorText) {
+          <div
+            class="mb-4 p-3.5 bg-danger-container border-r-4 border-danger text-on-danger-container text-xs font-bold rounded-l-xl flex items-start gap-2.5"
+          >
+            <lucide-icon [img]="alertTriangleIcon" class="w-5 h-5 shrink-0 mt-0.5"></lucide-icon>
+            <p>{{ errorText }}</p>
+          </div>
+        }
+
         <!-- Step 1: Basic Info -->
         @if (currentStep === 1) {
-          <div class="space-y-5 animate-fade-in">
+          <form [formGroup]="step1Form" class="space-y-5 animate-fade-in">
             <h2 class="text-xs font-extrabold text-outline uppercase tracking-widest">
               المعلومات الأساسية
             </h2>
@@ -34,47 +43,111 @@
               <label class="text-sm font-bold text-on-background block">الاسم الكامل</label>
               <input
                 type="text"
+                formControlName="fullName"
                 placeholder="أدخل اسمك الثلاثي"
-                [(ngModel)]="form.fullName"
-                class="w-full h-12 px-4 bg-white border border-outline-variant rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none text-sm font-medium transition-all"
+                [class]="
+                  fullName?.invalid && fullName?.touched
+                    ? 'w-full h-12 px-4 bg-white border border-danger rounded-xl focus:ring-2 focus:ring-danger/10 outline-none text-sm font-medium transition-all'
+                    : 'w-full h-12 px-4 bg-white border border-outline-variant rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none text-sm font-medium transition-all'
+                "
               />
+              @if (fullName?.invalid && fullName?.touched) {
+                <p class="text-xs text-danger font-bold mt-1">
+                  @if (fullName?.errors?.['required']) {
+                    الاسم مطلوب
+                  } @else if (fullName?.errors?.['minlength']) {
+                    الاسم يجب أن يكون 3 أحرف على الأقل
+                  }
+                </p>
+              }
             </div>
-
+            <div class="space-y-1">
+              <label class="text-sm font-bold text-on-background block">اسم المستخدم</label>
+              <input
+                type="text"
+                formControlName="userName"
+                placeholder="مثال: ahmed_ali"
+                dir="ltr"
+                [class]="
+                  userName?.invalid && userName?.touched
+                    ? 'w-full h-12 px-4 bg-white border border-danger rounded-xl focus:ring-2 focus:ring-danger/10 outline-none text-sm font-medium transition-all text-left'
+                    : 'w-full h-12 px-4 bg-white border border-outline-variant rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none text-sm font-medium transition-all text-left'
+                "
+              />
+              @if (userName?.invalid && userName?.touched) {
+                <p class="text-xs text-danger font-bold mt-1">
+                  @if (userName?.errors?.['required']) {
+                    اسم المستخدم مطلوب
+                  } @else if (userName?.errors?.['minlength']) {
+                    على الأقل 3 أحرف
+                  } @else if (userName?.errors?.['englishOnly']) {
+                    يجب إدخال اسم المستخدم باللغة الإنجليزية فقط
+                  }
+                </p>
+              }
+            </div>
             <div class="space-y-1">
               <label class="text-sm font-bold text-on-background block">رقم الهاتف</label>
               <input
                 type="tel"
+                formControlName="phone"
                 placeholder="+20 1X XXXX XXXX"
-                [(ngModel)]="form.phone"
                 dir="ltr"
-                class="w-full h-12 px-4 bg-white border border-outline-variant rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none text-sm font-medium transition-all text-left"
+                [class]="
+                  phone?.invalid && phone?.touched
+                    ? 'w-full h-12 px-4 bg-white border border-danger rounded-xl focus:ring-2 focus:ring-danger/10 outline-none text-sm font-medium transition-all text-left'
+                    : 'w-full h-12 px-4 bg-white border border-outline-variant rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none text-sm font-medium transition-all text-left'
+                "
               />
+              @if (phone?.invalid && phone?.touched) {
+                <p class="text-xs text-danger font-bold mt-1">
+                  @if (phone?.errors?.['required']) {
+                    رقم الهاتف مطلوب
+                  } @else if (phone?.errors?.['pattern']) {
+                    رقم الهاتف غير صحيح (يجيب أن يكون 11 رقم يبدا ب 010 او 011 او 015 او012 )
+                  }
+                </p>
+              }
             </div>
 
             <div class="space-y-1">
               <label class="text-sm font-bold text-on-background block">البريد الإلكتروني</label>
               <input
                 type="email"
+                formControlName="email"
                 placeholder="example@health.com"
-                [(ngModel)]="form.email"
                 dir="ltr"
-                class="w-full h-12 px-4 bg-white border border-outline-variant rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none text-sm font-medium transition-all text-left"
+                [class]="
+                  email?.invalid && email?.touched
+                    ? 'w-full h-12 px-4 bg-white border border-danger rounded-xl focus:ring-2 focus:ring-danger/10 outline-none text-sm font-medium transition-all text-left'
+                    : 'w-full h-12 px-4 bg-white border border-outline-variant rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none text-sm font-medium transition-all text-left'
+                "
               />
+              @if (email?.invalid && email?.touched) {
+                <p class="text-xs text-danger font-bold mt-1">
+                  @if (email?.errors?.['required']) {
+                    البريد الإلكتروني مطلوب
+                  } @else if (email?.errors?.['email']) {
+                    صيغة البريد الإلكتروني غير صحيحة
+                  }
+                </p>
+              }
             </div>
 
             <button
+              type="button"
               (click)="nextStep()"
-              class="w-full h-14 bg-primary hover:bg-primary-dark text-white rounded-2xl font-bold text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.98] shadow-md mt-2"
+              class="w-full h-14 bg-primary hover:bg-primary-dark text-white rounded-2xl font-bold text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.98] shadow-md mt-2 cursor-pointer"
             >
               <span>المتابعة</span>
               <lucide-icon [img]="arrowLeftIcon" class="w-5 h-5"></lucide-icon>
             </button>
-          </div>
+          </form>
         }
 
         <!-- Step 2: Health Details -->
         @if (currentStep === 2) {
-          <div class="space-y-5 animate-fade-in">
+          <form [formGroup]="step2Form" class="space-y-5 animate-fade-in">
             <h2 class="text-xs font-extrabold text-outline uppercase tracking-widest">
               التفاصيل الصحية
             </h2>
@@ -83,10 +156,23 @@
               <label class="text-sm font-bold text-on-background block">العمر</label>
               <input
                 type="number"
+                formControlName="age"
                 placeholder="سنوات"
-                [(ngModel)]="form.age"
-                class="w-full h-12 px-4 bg-white border border-outline-variant rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none text-sm font-medium transition-all"
+                [class]="
+                  age?.invalid && age?.touched
+                    ? 'w-full h-12 px-4 bg-white border border-danger rounded-xl focus:ring-2 focus:ring-danger/10 outline-none text-sm font-medium transition-all'
+                    : 'w-full h-12 px-4 bg-white border border-outline-variant rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none text-sm font-medium transition-all'
+                "
               />
+              @if (age?.invalid && age?.touched) {
+                <p class="text-xs text-danger font-bold mt-1">
+                  @if (age?.errors?.['required']) {
+                    العمر مطلوب
+                  } @else if (age?.errors?.['min'] || age?.errors?.['max']) {
+                    العمر غير صحيح
+                  }
+                </p>
+              }
             </div>
 
             <div class="space-y-2">
@@ -96,11 +182,12 @@
               <div class="flex flex-wrap gap-2">
                 @for (cond of conditions; track cond) {
                   <button
+                    type="button"
                     (click)="toggleCondition(cond)"
                     [class]="
-                      form.conditions.includes(cond)
-                        ? 'px-4 py-2 rounded-full text-xs font-bold bg-primary text-white border border-primary transition-all'
-                        : 'px-4 py-2 rounded-full text-xs font-bold bg-surface-container-low border border-outline-variant text-on-background hover:bg-surface-container transition-all'
+                      selectedConditions.includes(cond)
+                        ? 'px-4 py-2 rounded-full text-xs font-bold bg-primary text-white border border-primary transition-all cursor-pointer'
+                        : 'px-4 py-2 rounded-full text-xs font-bold bg-surface-container-low border border-outline-variant text-on-background hover:bg-surface-container transition-all cursor-pointer'
                     "
                   >
                     {{ cond }}
@@ -113,30 +200,39 @@
               <label class="text-sm font-bold text-on-background block">رقم الطوارئ</label>
               <input
                 type="tel"
+                formControlName="emergency"
                 placeholder="رقم شخص مقرب"
-                [(ngModel)]="form.emergency"
                 dir="ltr"
-                class="w-full h-12 px-4 bg-white border border-outline-variant rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none text-sm font-medium transition-all text-left"
+                [class]="
+                  emergency?.invalid && emergency?.touched
+                    ? 'w-full h-12 px-4 bg-white border border-danger rounded-xl focus:ring-2 focus:ring-danger/10 outline-none text-sm font-medium transition-all text-left'
+                    : 'w-full h-12 px-4 bg-white border border-outline-variant rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none text-sm font-medium transition-all text-left'
+                "
               />
+              @if (emergency?.invalid && emergency?.touched) {
+                <p class="text-xs text-danger font-bold mt-1">رقم الهاتف غير صحيح</p>
+              }
             </div>
 
             <div class="flex gap-3 mt-2">
               <button
+                type="button"
                 (click)="prevStep()"
-                class="flex-1 h-14 bg-surface-container-high hover:bg-surface-container text-on-background rounded-2xl font-bold text-sm flex items-center justify-center gap-2 transition-all"
+                class="flex-1 h-14 bg-surface-container-high hover:bg-surface-container text-on-background rounded-2xl font-bold text-sm flex items-center justify-center gap-2 transition-all cursor-pointer"
               >
                 <lucide-icon [img]="arrowRightIcon" class="w-5 h-5"></lucide-icon>
                 <span>السابق</span>
               </button>
               <button
+                type="button"
                 (click)="nextStep()"
-                class="flex-[2] h-14 bg-primary hover:bg-primary-dark text-white rounded-2xl font-bold text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.98] shadow-md"
+                class="flex-2 h-14 bg-primary hover:bg-primary-dark text-white rounded-2xl font-bold text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.98] shadow-md cursor-pointer"
               >
                 <span>المتابعة</span>
                 <lucide-icon [img]="arrowLeftIcon" class="w-5 h-5"></lucide-icon>
               </button>
             </div>
-          </div>
+          </form>
         }
 
         <!-- Step 3: Consent / Permissions -->
@@ -156,14 +252,14 @@
                 <label
                   class="flex items-start gap-4 p-4 bg-white border rounded-2xl cursor-pointer transition-all hover:border-primary/40"
                   [class]="
-                    form.permissions.includes(perm.id)
+                    selectedPermissions.includes(perm.id)
                       ? 'border-primary bg-primary/5'
                       : 'border-outline-variant'
                   "
                 >
                   <input
                     type="checkbox"
-                    [checked]="form.permissions.includes(perm.id)"
+                    [checked]="selectedPermissions.includes(perm.id)"
                     (change)="togglePermission(perm.id)"
                     class="mt-0.5 w-5 h-5 accent-primary rounded shrink-0"
                   />
@@ -191,16 +287,18 @@
 
             <div class="flex gap-3 mt-2">
               <button
+                type="button"
                 (click)="prevStep()"
-                class="flex-1 h-14 bg-surface-container-high hover:bg-surface-container text-on-background rounded-2xl font-bold text-sm flex items-center justify-center gap-2 transition-all"
+                class="flex-1 h-14 bg-surface-container-high hover:bg-surface-container text-on-background rounded-2xl font-bold text-sm flex items-center justify-center gap-2 transition-all cursor-pointer"
               >
                 <lucide-icon [img]="arrowRightIcon" class="w-5 h-5"></lucide-icon>
                 <span>السابق</span>
               </button>
               <button
+                type="button"
                 (click)="nextStep()"
                 [disabled]="!requiredPermissionsAccepted"
-                class="flex-[2] h-14 bg-primary hover:bg-primary-dark text-white disabled:bg-slate-300 disabled:text-outline disabled:cursor-not-allowed rounded-2xl font-bold text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.98] shadow-md"
+                class="flex-[2] h-14 bg-primary hover:bg-primary-dark text-white disabled:bg-slate-300 disabled:text-outline disabled:cursor-not-allowed rounded-2xl font-bold text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.98] shadow-md cursor-pointer"
               >
                 <span>المتابعة</span>
                 <lucide-icon [img]="arrowLeftIcon" class="w-5 h-5"></lucide-icon>
@@ -211,7 +309,7 @@
 
         <!-- Step 4: Password -->
         @if (currentStep === 4) {
-          <div class="space-y-5 animate-fade-in">
+          <form [formGroup]="step4Form" class="space-y-5 animate-fade-in">
             <h2 class="text-xs font-extrabold text-outline uppercase tracking-widest">
               الأمان والحساب
             </h2>
@@ -221,21 +319,36 @@
               <div class="relative">
                 <input
                   [type]="showPassword ? 'text' : 'password'"
+                  formControlName="password"
                   placeholder="••••••••"
-                  [(ngModel)]="form.password"
-                  class="w-full h-12 px-4 pl-12 bg-white border border-outline-variant rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none text-sm font-medium transition-all"
+                  [class]="
+                    password?.invalid && password?.touched
+                      ? 'w-full h-12 px-4 pl-12 bg-white border border-danger rounded-xl focus:ring-2 focus:ring-danger/10 outline-none text-sm font-medium transition-all'
+                      : 'w-full h-12 px-4 pl-12 bg-white border border-outline-variant rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none text-sm font-medium transition-all'
+                  "
                 />
                 <button
                   type="button"
                   (click)="showPassword = !showPassword"
-                  class="absolute left-3 top-1/2 -translate-y-1/2 text-outline hover:text-on-background transition-colors p-1"
+                  class="absolute left-3 top-1/2 -translate-y-1/2 text-outline hover:text-on-background transition-colors p-1 cursor-pointer"
                 >
                   <lucide-icon
-                    [img]="showPassword ? eyeOffIcon : eyeIcon"
+                    [img]="showConfirm ? eyeIcon : eyeOffIcon"
                     class="w-5 h-5"
                   ></lucide-icon>
                 </button>
               </div>
+              @if (password?.invalid && password?.touched) {
+                <p class="text-xs text-danger font-bold mt-1">
+                  @if (password?.errors?.['required']) {
+                    كلمة المرور مطلوبة
+                  } @else if (password?.errors?.['minlength']) {
+                    كلمة المرور يجب أن تكون 8 أحرف على الأقل
+                  } @else if (password?.errors?.['pattern']) {
+                    يجب أن تحتوي كلمة المرور على حرف كبير وصغير ورقم ورمز خاص
+                  }
+                </p>
+              }
             </div>
 
             <div class="space-y-1">
@@ -243,44 +356,64 @@
               <div class="relative">
                 <input
                   [type]="showConfirm ? 'text' : 'password'"
+                  formControlName="confirmPassword"
                   placeholder="••••••••"
-                  [(ngModel)]="form.confirmPassword"
-                  class="w-full h-12 px-4 pl-12 bg-white border border-outline-variant rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none text-sm font-medium transition-all"
+                  [class]="
+                    (confirmPassword?.touched && step4Form.errors?.['passwordsMismatch']) ||
+                    (confirmPassword?.invalid && confirmPassword?.touched)
+                      ? 'w-full h-12 px-4 pl-12 bg-white border border-danger rounded-xl focus:ring-2 focus:ring-danger/10 outline-none text-sm font-medium transition-all'
+                      : 'w-full h-12 px-4 pl-12 bg-white border border-outline-variant rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none text-sm font-medium transition-all'
+                  "
                 />
                 <button
                   type="button"
                   (click)="showConfirm = !showConfirm"
-                  class="absolute left-3 top-1/2 -translate-y-1/2 text-outline hover:text-on-background transition-colors p-1"
+                  class="absolute left-3 top-1/2 -translate-y-1/2 text-outline hover:text-on-background transition-colors p-1 cursor-pointer"
                 >
                   <lucide-icon
-                    [img]="showConfirm ? eyeOffIcon : eyeIcon"
+                    [img]="showConfirm ? eyeIcon : eyeOffIcon"
                     class="w-5 h-5"
                   ></lucide-icon>
                 </button>
               </div>
-              @if (form.confirmPassword && form.password !== form.confirmPassword) {
+              @if (confirmPassword?.touched && step4Form.errors?.['passwordsMismatch']) {
                 <p class="text-xs text-danger font-bold mt-1">كلمتا المرور غير متطابقتان</p>
+              }
+              @if (
+                confirmPassword?.invalid &&
+                confirmPassword?.touched &&
+                !step4Form.errors?.['passwordsMismatch']
+              ) {
+                <p class="text-xs text-danger font-bold mt-1">تأكيد كلمة المرور مطلوب</p>
               }
             </div>
 
             <div class="flex gap-3 mt-2">
               <button
+                type="button"
                 (click)="prevStep()"
-                class="flex-1 h-14 bg-surface-container-high hover:bg-surface-container text-on-background rounded-2xl font-bold text-sm flex items-center justify-center gap-2 transition-all"
+                class="flex-1 h-14 bg-surface-container-high hover:bg-surface-container text-on-background rounded-2xl font-bold text-sm flex items-center justify-center gap-2 transition-all cursor-pointer"
               >
                 <lucide-icon [img]="arrowRightIcon" class="w-5 h-5"></lucide-icon>
                 <span>السابق</span>
               </button>
               <button
+                type="button"
                 (click)="submit()"
-                [disabled]="!canSubmit"
-                class="flex-[2] h-14 bg-primary hover:bg-primary-dark text-white disabled:bg-slate-300 disabled:text-outline disabled:cursor-not-allowed rounded-2xl font-bold text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.98] shadow-md"
+                [disabled]="!canSubmit || loading()"
+                class="flex-2 h-14 bg-primary hover:bg-primary-dark text-white disabled:bg-slate-300 disabled:text-outline disabled:cursor-not-allowed rounded-2xl font-bold text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.98] shadow-md cursor-pointer"
               >
-                <lucide-icon [img]="shieldCheckIcon" class="w-5 h-5"></lucide-icon>
-                <span>إنشاء الحساب</span>
+                @if (loading()) {
+                  <div
+                    class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"
+                  ></div>
+                } @else {
+                  <lucide-icon [img]="shieldCheckIcon" class="w-5 h-5"></lucide-icon>
+                  <span>إنشاء الحساب</span>
+                }
               </button>
             </div>
-          </div>
+          </form>
         }
 
         <div class="mt-8 text-center">
@@ -298,26 +431,26 @@
     </div>
 
     <!-- Illustration Side -->
+    <!-- Illustration Side -->
     <div
-      class="hidden lg:flex w-full lg:w-1/2 order-1 lg:order-2 relative overflow-hidden flex-col justify-center items-center text-center p-16"
+      class="flex w-full lg:w-1/2 order-1 lg:order-2 relative overflow-hidden flex-col justify-center items-center text-center p-8 lg:p-16 min-h-[280px] lg:min-h-0"
       style="background: linear-gradient(135deg, #005eb8 0%, #003366 60%, #007f7c 100%)"
     >
-      <!-- Background Image -->
       <img
         src="/images/register.png"
         alt=""
         class="absolute inset-0 w-full h-full object-cover opacity-20 mix-blend-luminosity"
       />
+      <div class="absolute inset-0 bg-linear-to-t from-primary/80 to-transparent z-0"></div>
 
-      <!-- Content -->
-      <div class="max-w-[440px] z-10 relative">
-        <h2 class="text-4xl font-extrabold text-white mb-4 leading-tight">
+      <div class="max-w-110 z-10 relative">
+        <h2 class="text-2xl lg:text-4xl font-extrabold text-white mb-3 lg:mb-4 leading-tight">
           رعاية صحية شاملة لعائلتك
         </h2>
-        <p class="text-base text-white/70 mb-8 leading-relaxed">
+        <p class="text-sm lg:text-base text-white/70 mb-5 lg:mb-8 leading-relaxed">
           نستخدم الذكاء الاصطناعي لضمان حصولك على الجرعة الصحيحة في الوقت الصحيح
         </p>
-        <div class="grid grid-cols-2 gap-3 text-right">
+        <div class="grid grid-cols-2 gap-2 lg:gap-3 text-right">
           @for (feat of features; track feat) {
             <div
               class="flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-xl px-3 py-2.5 border border-white/20"
@@ -332,7 +465,6 @@
         </div>
       </div>
 
-      <!-- Decorative blobs -->
       <div class="absolute -bottom-24 -right-24 w-96 h-96 bg-white/5 rounded-full blur-3xl"></div>
       <div class="absolute top-12 -left-12 w-64 h-64 bg-white/10 rounded-full blur-2xl"></div>
     </div>

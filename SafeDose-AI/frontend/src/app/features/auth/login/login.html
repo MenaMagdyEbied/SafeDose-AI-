@@ -1,8 +1,8 @@
-<section class="flex min-h-screen items-center justify-center bg-background p-6">
-  <!-- Form Side -->
+<section class="flex min-h-screen items-center justify-center bg-background p-6 pt-16 pb-24">
   <div
     class="w-full bg-white rounded-3xl shadow-xl overflow-hidden flex flex-col lg:flex-row max-w-6xl"
   >
+    <!-- Form Side -->
     <div
       class="w-full lg:w-1/2 flex flex-col justify-center items-center px-8 py-10 order-2 lg:order-1"
     >
@@ -11,16 +11,8 @@
           <!-- Header -->
           <div class="mb-10 text-right">
             <h1 class="text-3xl font-extrabold text-primary mb-1">SafeDose AI</h1>
-            <h2 class="text-2xl font-extrabold text-on-background mb-1">
-              {{ isLogin ? 'مرحباً بك مجدداً' : 'انضم إلى SafeDose AI' }}
-            </h2>
-            <p class="text-sm text-outline">
-              {{
-                isLogin
-                  ? 'قم بتسجيل الدخول لمتابعة حالتك الصحية'
-                  : 'ابدأ رحلة الرعاية الصحية الذكية اليوم'
-              }}
-            </p>
+            <h2 class="text-2xl font-extrabold text-on-background mb-1">مرحباً بك مجدداً</h2>
+            <p class="text-sm text-outline">قم بتسجيل الدخول لمتابعة حالتك الصحية</p>
           </div>
 
           <!-- Error -->
@@ -33,145 +25,94 @@
             </div>
           }
 
-          <!-- Step 1: Phone -->
-          @if (step === 1) {
-            <div class="space-y-5 animate-fade-in">
-              <div class="space-y-1.5 text-right">
-                <label class="text-sm font-bold text-on-background flex justify-between">
-                  <span>رقم الهاتف المحمول</span>
-                  <span class="text-primary text-xs font-bold">🇪🇬 مصر</span>
-                </label>
-                <div
-                  class="relative flex items-center bg-white border border-outline-variant focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/10 rounded-xl overflow-hidden transition-all"
-                  dir="ltr"
-                >
-                  <div
-                    class="bg-surface-container-low px-4 py-3.5 border-r border-outline-variant text-outline font-bold text-sm select-none"
-                  >
-                    +20
-                  </div>
-                  <input
-                    type="tel"
-                    placeholder="01X XXXX XXXX"
-                    [(ngModel)]="phone"
-                    [disabled]="loading"
-                    class="w-full px-4 py-3.5 text-sm font-bold text-on-background focus:outline-none bg-transparent"
-                  />
-                </div>
-                <p class="text-xs text-outline">سنقوم بإرسال رمز التحقق (OTP) إلى هذا الرقم</p>
-              </div>
-
-              <button
-                (click)="sendOtp()"
-                [disabled]="loading || phone.length < 9"
-                class="w-full h-14 bg-primary hover:bg-primary-dark disabled:bg-slate-200 disabled:text-outline text-white rounded-2xl font-bold text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.98] shadow-md"
-              >
-                @if (loading) {
-                  <div
-                    class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"
-                  ></div>
-                } @else {
-                  <span>إرسال رمز التحقق</span>
-                  <lucide-icon [img]="arrowLeftIcon" class="w-5 h-5"></lucide-icon>
-                }
-              </button>
-
-              <!-- Divider -->
-              <div class="relative py-2">
-                <div class="absolute inset-0 flex items-center">
-                  <div class="w-full border-t border-outline-variant"></div>
-                </div>
-                <div class="relative flex justify-center">
-                  <span class="bg-background px-4 text-xs text-outline font-bold">أو</span>
-                </div>
-              </div>
-
-              <!-- Google -->
-              <button
-                type="button"
-                class="cursor-pointer flex items-center justify-center gap-3 h-12 w-full border border-outline-variant rounded-xl text-sm font-bold text-on-background hover:bg-surface-container-low transition-colors"
-              >
-                <svg class="w-5 h-5" viewBox="0 0 24 24">
-                  <path
-                    fill="#4285F4"
-                    d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                  />
-                  <path
-                    fill="#34A853"
-                    d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                  />
-                  <path
-                    fill="#FBBC05"
-                    d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"
-                  />
-                  <path
-                    fill="#EA4335"
-                    d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                  />
-                </svg>
-                <span>المتابعة باستخدام جوجل</span>
-              </button>
-            </div>
-          }
-
-          <!-- Step 2: OTP -->
-          @if (step === 2) {
-            <div class="space-y-6 animate-fade-in">
-              <div class="text-right space-y-1">
-                <h3 class="text-lg font-extrabold text-on-background">أدخل رمز التحقق</h3>
-                <p class="text-xs text-outline">
-                  أرسلنا كود مكون من ٤ أرقام إلى
-                  <span class="font-bold text-primary" dir="ltr">+20 {{ phone }}</span>
+          <form [formGroup]="loginForm" class="space-y-5 animate-fade-in">
+            <!-- Username -->
+            <div class="space-y-1.5 text-right">
+              <label class="text-sm font-bold text-on-background block">اسم المستخدم</label>
+              <input
+                type="text"
+                formControlName="userName"
+                placeholder="أدخل اسم المستخدم"
+                [class]="
+                  userName?.invalid && userName?.touched
+                    ? 'w-full h-12 px-4 bg-white border border-danger rounded-xl focus:ring-2 focus:ring-danger/10 outline-none text-sm font-medium transition-all'
+                    : 'w-full h-12 px-4 bg-white border border-outline-variant rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none text-sm font-medium transition-all'
+                "
+              />
+              @if (userName?.invalid && userName?.touched) {
+                <p class="text-xs text-danger font-bold mt-1">
+                  @if (userName?.errors?.['required']) {
+                    اسم المستخدم مطلوب
+                  } @else if (userName?.errors?.['minlength']) {
+                    على الأقل 3 أحرف
+                  }
                 </p>
-              </div>
-
-              <div class="flex gap-3 justify-center py-2" dir="ltr">
-                @for (d of digits; track $index) {
-                  <input
-                    type="tel"
-                    maxlength="1"
-                    [value]="d"
-                    (input)="onDigitInput($index, $event)"
-                    (keydown)="onDigitKeydown($index, $event)"
-                    [disabled]="loading"
-                    class="w-14 h-16 border-2 border-outline-variant focus:border-primary focus:ring-2 focus:ring-primary/10 text-center text-2xl font-bold bg-white text-on-background transition-all rounded-xl outline-none"
-                  />
-                }
-              </div>
-
-              <button
-                (click)="verifyOtp()"
-                [disabled]="loading || digits.join('').length < 4"
-                class="cursor-pointer w-full h-14 bg-primary hover:bg-primary-dark disabled:bg-slate-200 disabled:text-outline text-white rounded-2xl font-bold text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.98] shadow-md"
-              >
-                @if (loading) {
-                  <div
-                    class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"
-                  ></div>
-                } @else {
-                  <lucide-icon [img]="shieldCheckIcon" class="w-5 h-5"></lucide-icon>
-                  <span>تأكيد الرمز</span>
-                }
-              </button>
-
-              <div class="flex flex-col items-center gap-2 text-center">
-                <button
-                  (click)="resendOtp()"
-                  class="text-primary font-extrabold text-xs hover:underline cursor-pointer"
-                >
-                  🔄 إعادة إرسال الرمز
-                </button>
-                <button
-                  (click)="step = 1; digits = ['', '', '', '']"
-                  class="text-outline font-bold text-xs hover:underline cursor-pointer"
-                >
-                  ✏️ تغيير رقم الهاتف
-                </button>
-              </div>
+              }
             </div>
-          }
 
-          <!-- Toggle Login/Register -->
+            <!-- Password -->
+            <div class="space-y-1.5 text-right">
+              <label class="text-sm font-bold text-on-background flex justify-between items-center">
+                <a
+                  routerLink="/forgot-password"
+                  class="text-xs font-bold text-primary hover:underline cursor-pointer"
+                >
+                  نسيت كلمة المرور؟
+                </a>
+                <span>كلمة المرور</span>
+              </label>
+              <div class="relative">
+                <input
+                  [type]="showPassword ? 'text' : 'password'"
+                  formControlName="password"
+                  placeholder="••••••••"
+                  [class]="
+                    password?.invalid && password?.touched
+                      ? 'w-full h-12 px-4 pl-12 bg-white border border-danger rounded-xl focus:ring-2 focus:ring-danger/10 outline-none text-sm font-medium transition-all'
+                      : 'w-full h-12 px-4 pl-12 bg-white border border-outline-variant rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none text-sm font-medium transition-all'
+                  "
+                />
+                <button
+                  type="button"
+                  (click)="showPassword = !showPassword"
+                  class="absolute left-3 top-1/2 -translate-y-1/2 text-outline hover:text-on-background transition-colors p-1 cursor-pointer"
+                >
+                  <lucide-icon
+                    [img]="showPassword ? eyeIcon : eyeOffIcon"
+                    class="w-5 h-5"
+                  ></lucide-icon>
+                </button>
+              </div>
+              @if (password?.invalid && password?.touched) {
+                <p class="text-xs text-danger font-bold mt-1">
+                  @if (password?.errors?.['required']) {
+                    كلمة المرور مطلوبة
+                  } @else if (password?.errors?.['minlength']) {
+                    على الأقل 8 أحرف
+                  }
+                </p>
+              }
+            </div>
+
+            <!-- Submit -->
+            <button
+              type="button"
+              (click)="submit()"
+              [disabled]="loading"
+              class="w-full h-14 bg-primary hover:bg-primary-dark disabled:bg-slate-200 disabled:text-outline text-white rounded-2xl font-bold text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.98] shadow-md cursor-pointer"
+            >
+              @if (loading) {
+                <div
+                  class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"
+                ></div>
+              } @else {
+                <lucide-icon [img]="shieldCheckIcon" class="w-5 h-5"></lucide-icon>
+                <span>تسجيل الدخول</span>
+              }
+            </button>
+          </form>
+
+          <!-- Register Link -->
           <div class="mt-8 text-center">
             <p class="text-sm text-outline">
               ليس لديك حساب؟
@@ -207,32 +148,26 @@
         <span class="text-outline text-xs">© 2024 SafeDose AI</span>
       </footer>
     </div>
-
     <!-- Illustration Side -->
     <div
-      class="hidden lg:flex lg:flex w-full lg:w-1/2 relative overflow-hidden flex-col justify-end p-16"
+      class="flex w-full lg:w-1/2 relative overflow-hidden flex-col justify-end p-8 lg:p-16 order-1 lg:order-2 min-h-[220px] lg:min-h-0"
       style="background: linear-gradient(135deg, #005eb8 0%, #003366 60%, #007f7c 100%)"
     >
-      <!-- Background Image -->
       <img
         src="/images/login.png"
         alt=""
         class="absolute inset-0 w-full h-full object-cover opacity-50 mix-blend-luminosity"
       />
-
-      <!-- Gradient overlay bottom -->
       <div class="absolute inset-0 bg-gradient-to-t from-primary/80 to-transparent z-0"></div>
-
-      <!-- Content -->
       <div class="relative z-10 mb-6">
-        <h2 class="text-4xl font-extrabold text-white mb-3 leading-tight">SafeDose AI</h2>
-        <p class="text-base text-white/80 leading-relaxed max-w-md">
+        <h2 class="text-2xl lg:text-4xl font-extrabold text-white mb-3 leading-tight">
+          SafeDose AI
+        </h2>
+        <p class="text-sm lg:text-base text-white/80 leading-relaxed max-w-md">
           نحن نهتم بصحتك من خلال تقنيات الذكاء الاصطناعي المتقدمة. رفيقك الرقمي لضمان جرعات آمنة
           وحياة أكثر صحة لعائلتك.
         </p>
       </div>
-
-      <!-- Trust Badge -->
       <div
         class="relative z-10 flex items-center gap-4 bg-white/10 backdrop-blur-md p-4 rounded-2xl border border-white/20 w-fit"
       >
@@ -245,8 +180,6 @@
           <p class="text-xs text-white/70">حلول موثوقة لأكثر من ١٠٠,٠٠٠ مستخدم</p>
         </div>
       </div>
-
-      <!-- Decorative blobs -->
       <div class="absolute top-12 -left-12 w-64 h-64 bg-white/10 rounded-full blur-2xl"></div>
     </div>
   </div>

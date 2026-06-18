@@ -1,0 +1,63 @@
+<section class="flex min-h-screen items-center justify-center bg-background p-6" dir="rtl">
+  <div class="w-full max-w-md bg-white rounded-3xl shadow-xl p-8 text-center space-y-6">
+    <div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
+      <lucide-icon [img]="shieldCheckIcon" class="w-8 h-8 text-primary"></lucide-icon>
+    </div>
+
+    <div class="space-y-1">
+      <h2 class="text-xl font-extrabold text-on-background">تأكيد البريد الإلكتروني</h2>
+      <p class="text-sm text-outline">
+        أرسلنا كود التأكيد إلى
+        <span class="font-bold text-primary" dir="ltr">{{ email }}</span>
+      </p>
+    </div>
+
+    @if (errorText) {
+      <div
+        class="p-3.5 bg-danger-container border-r-4 border-danger text-on-danger-container text-xs font-bold rounded-l-xl flex items-start gap-2.5 text-right"
+      >
+        <lucide-icon [img]="alertTriangleIcon" class="w-5 h-5 shrink-0 mt-0.5"></lucide-icon>
+        <p>{{ errorText }}</p>
+      </div>
+    }
+
+    <div class="space-y-2">
+      <div class="flex gap-2 sm:gap-3 justify-center py-2" dir="ltr">
+        @for (d of digits; track $index) {
+          <input
+            type="tel"
+            maxlength="1"
+            [value]="d"
+            (input)="onDigitInput($index, $event)"
+            (keydown)="onDigitKeydown($index, $event)"
+            (blur)="onDigitBlur()"
+            [disabled]="loading()"
+            [class]="
+              codeTouched && !isCodeComplete
+                ? 'w-11 h-14 sm:w-14 sm:h-16 border-2 border-danger focus:ring-2 focus:ring-danger/10 text-center text-xl sm:text-2xl font-bold bg-white text-on-background transition-all rounded-xl outline-none'
+                : 'w-11 h-14 sm:w-14 sm:h-16 border-2 border-outline-variant focus:border-primary focus:ring-2 focus:ring-primary/10 text-center text-xl sm:text-2xl font-bold bg-white text-on-background transition-all rounded-xl outline-none'
+            "
+          />
+        }
+      </div>
+      @if (codeTouched && !isCodeComplete) {
+        <p class="text-xs text-danger font-bold">يجب إدخال الكود كاملاً (6 أرقام)</p>
+      }
+    </div>
+
+    <button
+      (click)="confirm()"
+      [disabled]="loading() || !isCodeComplete"
+      class="w-full h-14 bg-primary hover:bg-primary-dark disabled:bg-slate-200 disabled:text-outline text-white rounded-2xl font-bold text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.98] shadow-md cursor-pointer"
+    >
+      @if (loading()) {
+        <div
+          class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"
+        ></div>
+      } @else {
+        <lucide-icon [img]="shieldCheckIcon" class="w-5 h-5"></lucide-icon>
+        <span>تأكيد الكود</span>
+      }
+    </button>
+  </div>
+</section>

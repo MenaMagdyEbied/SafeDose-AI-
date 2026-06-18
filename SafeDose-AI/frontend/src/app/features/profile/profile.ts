@@ -16,7 +16,8 @@ import {
   User,
   X,
 } from 'lucide-angular';
-import { UserProfile } from '../../core/models/user-profile';
+import { UserProfileData } from '../../core/models/user-profile';
+import { HealthProfile } from '../../core/models';
 
 @Component({
   selector: 'app-profile',
@@ -45,7 +46,7 @@ export class Profile {
   bloodTypes = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
   genders = ['ذكر', 'أنثى'];
 
-  profile: UserProfile = {
+  profile: HealthProfile = {
     id: '',
     fullName: '',
     phone: '',
@@ -110,11 +111,11 @@ export class Profile {
   }
 
   clearSuggestions() {
-    // تأخير بسيط عشان الـ mousedown يشتغل الأول
     setTimeout(() => this.currentSuggestionsMap.clear(), 150);
   }
+
   // Mock API response
-  private mockApiResponse: UserProfile = {
+  private mockApiResponse: HealthProfile = {
     id: 'USR-00412',
     fullName: 'دعاء أحمد محمود',
     phone: '+20 1099 999 999',
@@ -145,7 +146,6 @@ export class Profile {
 
   fetchProfile(): void {
     this.loading = true;
-    // Simulate API call delay
     this.profile = { ...this.mockApiResponse };
     this.loading = false;
   }
@@ -178,11 +178,11 @@ export class Profile {
       family: 'bg-tertiary-container text-on-tertiary-container',
     };
     return colors[this.profile.subscriptionPlan] ?? '';
-  } // Properties
-  newConditionInput = '';
-  customConditions: string[] = []; // الحالات المخصصة غير الموجودة في allConditions
+  }
 
-  // Medications
+  newConditionInput = '';
+  customConditions: string[] = [];
+
   addMedication() {
     this.profile.medications.push({
       name: '',
@@ -196,7 +196,6 @@ export class Profile {
     this.profile.medications.splice(index, 1);
   }
 
-  // Conditions
   addCustomCondition() {
     const val = this.newConditionInput.trim();
     if (val && !this.customConditions.includes(val) && !this.profile.conditions.includes(val)) {
@@ -208,6 +207,6 @@ export class Profile {
 
   removeCustomCondition(cond: string) {
     this.customConditions = this.customConditions.filter((c) => c !== cond);
-    this.profile.conditions = this.profile.conditions.filter((c) => c !== cond);
+    this.profile.conditions = this.profile.conditions.filter((c: any) => c !== cond);
   }
 }

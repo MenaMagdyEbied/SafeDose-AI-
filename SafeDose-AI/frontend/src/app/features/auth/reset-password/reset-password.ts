@@ -1,7 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { AlertTriangle, Check, Eye, EyeOff, Lock, LucideAngularModule, TriangleAlert } from 'lucide-angular';
+import { Check, Eye, EyeOff, Lock, LucideAngularModule, TriangleAlert } from 'lucide-angular';
 import { Auth } from '../../../core/auth/services/auth';
 import { passwordsMatchValidator } from '../../../shared/validators/passwords-match-validator';
 

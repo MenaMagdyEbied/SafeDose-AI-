@@ -117,6 +117,8 @@ public class PricingTierConfiguration : IEntityTypeConfiguration<PricingTier>
         b.Property(x => x.TierName).HasMaxLength(80);
         b.Property(x => x.MonthlyPrice).HasColumnType("decimal(10,2)");
         b.Property(x => x.Currency).HasMaxLength(3);
+        b.Property(x => x.InteractionCheckLimitPerDay).HasDefaultValue(3);
+        b.Property(x => x.MedicationLimitPerPatient).HasDefaultValue(5);
         b.Property(x => x.BillingCycleDays).HasDefaultValue(0);
         b.Property(x => x.CreatedAt).HasDefaultValueSql("GETDATE()");
 
@@ -175,6 +177,7 @@ public class PaymentConfiguration : IEntityTypeConfiguration<Payment>
         b.HasKey(x => x.PaymentId);
 
         b.Property(x => x.GateWay).HasMaxLength(40).IsRequired();
+        b.Property(x => x.MerchantOrderId).HasMaxLength(100);
         b.Property(x => x.GateWayReference).HasMaxLength(100);
         b.Property(x => x.Amount).HasColumnType("decimal(10,2)");
         b.Property(x => x.Currency).HasMaxLength(3).IsRequired();
@@ -184,6 +187,8 @@ public class PaymentConfiguration : IEntityTypeConfiguration<Payment>
             .WithMany(s => s.Payments)
             .HasForeignKey(x => x.SubscriptionId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        b.HasIndex(x => x.MerchantOrderId).IsUnique().HasFilter("[MerchantOrderId] IS NOT NULL");
     }
 }
 
@@ -343,6 +348,7 @@ public class InteractionCheckConfiguration : IEntityTypeConfiguration<Interactio
         b.Property(x => x.PineconeIndexVersion).HasMaxLength(80);
         b.Property(x => x.CacheKey).HasMaxLength(64);
         b.Property(x => x.CheckedAt).HasDefaultValueSql("GETDATE()");
+        b.Property(x => x.AccountId).HasMaxLength(450);
         b.Property(x => x.AcknowledgedByAccountId).HasMaxLength(450);  // Identity user ID length
 
         // Optional patient - UI supports anonymous multi-drug check
@@ -362,6 +368,7 @@ public class InteractionCheckConfiguration : IEntityTypeConfiguration<Interactio
         // Indexes for common queries
         b.HasIndex(x => x.PatientId);
         b.HasIndex(x => new { x.PatientId, x.CheckedAt });
+        b.HasIndex(x => new { x.AccountId, x.CheckedAt });
         b.HasIndex(x => x.CacheKey);  // for de-duplication lookups
         b.HasIndex(x => x.AcknowledgedByAccountId);
 

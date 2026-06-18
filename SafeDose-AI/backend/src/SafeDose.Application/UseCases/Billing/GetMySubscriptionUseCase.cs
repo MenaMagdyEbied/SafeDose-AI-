@@ -3,8 +3,6 @@ using SafeDose.Application.Interfaces;
 
 namespace SafeDose.Application.UseCases.Billing;
 
-// Returns the current patient's plan info. The UI uses this to show the badge and
-// whether to gate premium endpoints.
 public class GetMySubscriptionUseCase
 {
     private readonly ISubscriptionRepository _subs;

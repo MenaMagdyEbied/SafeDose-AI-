@@ -5,9 +5,6 @@ using SafeDose.Domain.Enums;
 
 namespace SafeDose.Application.UseCases.Billing;
 
-// Creates a pending Payment row, calls Paymob to register the order + get an iframe URL,
-// and returns the URL so the frontend can redirect or embed.
-// Subscription is NOT activated here - that happens in ProcessWebhook when Paymob confirms.
 public class InitiateCheckoutUseCase
 {
     private readonly IPricingTierRepository _tiers;
@@ -51,7 +48,9 @@ public class InitiateCheckoutUseCase
         if (tier.MonthlyPrice <= 0)
             throw new ArgumentException("Free tier does not require checkout");
 
-        // Block double-paying while a subscription is already active
+        if (method == Domain.Enums.PaymentMethod.Wallet && !IsValidEgyptianWalletPhone(phoneNumber))
+            throw new ArgumentException("A valid Egyptian wallet phone number is required");
+
         var existing = await _subs.GetActiveByAccountAsync(accountId);
         if (existing != null)
             throw new ArgumentException("You already have an active subscription");
@@ -61,7 +60,7 @@ public class InitiateCheckoutUseCase
             AccountId = accountId,
             PricingTierId = tier.PricingTierId,
             StartAt = DateTime.UtcNow,
-            EndAt = null,                  // populated by webhook on successful payment
+            EndAt = null,
             AutoRenew = false,
             Status = (byte)SubscriptionStatus.Pending,
         };
@@ -78,22 +77,34 @@ public class InitiateCheckoutUseCase
         };
         await _payments.CreateAsync(payment);
 
-        // Use our PaymentId as the merchant_order_id so the webhook can find this row
         var merchantOrderId = $"SD-{payment.PaymentId}";
+        payment.MerchantOrderId = merchantOrderId;
 
-        var session = await _paymob.CreateCheckoutSessionAsync(
-            new PaymobCheckoutRequest(
-                AccountId: accountId,
-                FullName: fullName,
-                Email: email,
-                PhoneNumber: phoneNumber,
-                AmountEgp: tier.MonthlyPrice,
-                MerchantOrderId: merchantOrderId,
-                Method: method
-            ),
-            cancellationToken);
+        PaymobCheckoutSession session;
+        try
+        {
+            session = await _paymob.CreateCheckoutSessionAsync(
+                new PaymobCheckoutRequest(
+                    AccountId: accountId,
+                    FullName: fullName,
+                    Email: email,
+                    PhoneNumber: phoneNumber,
+                    AmountEgp: tier.MonthlyPrice,
+                    MerchantOrderId: merchantOrderId,
+                    Method: method
+                ),
+                cancellationToken);
+        }
+        catch
+        {
+            payment.Status = (byte)PaymentStatus.Failed;
+            subscription.Status = (byte)SubscriptionStatus.Failed;
+            subscription.EndAt = DateTime.UtcNow;
+            await _payments.UpdateAsync(payment);
+            await _subs.UpdateAsync(subscription);
+            throw;
+        }
 
-        // Store Paymob's order id on the Payment for webhook matching
         payment.GateWayReference = session.PaymobOrderId;
         await _payments.UpdateAsync(payment);
 
@@ -107,10 +118,20 @@ public class InitiateCheckoutUseCase
 
         return new InitiateCheckoutResponseDto(
             PaymentId: payment.PaymentId,
+            MerchantOrderId: merchantOrderId,
             PaymobOrderId: session.PaymobOrderId,
             IframeUrl: session.IframeUrl,
             Amount: tier.MonthlyPrice,
             Currency: tier.Currency
         );
+    }
+
+    private static bool IsValidEgyptianWalletPhone(string phoneNumber)
+    {
+        var digits = new string((phoneNumber ?? string.Empty).Where(char.IsDigit).ToArray());
+        if (digits.StartsWith("20") && digits.Length == 12)
+            digits = $"0{digits[2..]}";
+
+        return digits.Length == 11 && digits.StartsWith("01");
     }
 }

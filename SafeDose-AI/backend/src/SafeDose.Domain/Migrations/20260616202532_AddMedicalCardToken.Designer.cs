@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SafeDose.Domain.ApplicationDbContext;
 
@@ -11,9 +12,11 @@ using SafeDose.Domain.ApplicationDbContext;
 namespace SafeDose.Domain.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260616202532_AddMedicalCardToken")]
+    partial class AddMedicalCardToken
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -60,12 +63,6 @@ namespace SafeDose.Domain.Migrations
                             Id = "2",
                             Name = "User",
                             NormalizedName = "USER"
-                        },
-                        new
-                        {
-                            Id = "3",
-                            Name = "SuperAdmin",
-                            NormalizedName = "SUPERADMIN"
                         });
                 });
 
@@ -154,13 +151,6 @@ namespace SafeDose.Domain.Migrations
                     b.HasIndex("RoleId");
 
                     b.ToTable("AspNetUserRoles", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            UserId = "1",
-                            RoleId = "3"
-                        });
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
@@ -274,28 +264,6 @@ namespace SafeDose.Domain.Migrations
                         .HasFilter("[PhoneNumber] IS NOT NULL");
 
                     b.ToTable("AspNetUsers", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = "1",
-                            AccessFailedCount = 0,
-                            AccountStatus = (byte)0,
-                            ConcurrencyStamp = "b17214fe-29e5-4f82-85d3-e4154c93c56a",
-                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Email = "superadmin@gmail.com",
-                            EmailConfirmed = true,
-                            IsDeleted = false,
-                            LockoutEnabled = false,
-                            Name = "superadmin",
-                            NormalizedEmail = "SUPERADMIN@GMAIL.COM",
-                            NormalizedUserName = "SUPERADMIN",
-                            PasswordHash = "AQAAAAIAAYagAAAAEPO1TOtZZUk0lmS0chNC6PGOvxqnKGw6APQfT8J8QFj98bAZWqEnnWN/RfWIOoQRmQ==",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "2b5c2514-e302-469c-a4ab-7fd7c47bf641",
-                            TwoFactorEnabled = false,
-                            UserName = "superadmin"
-                        });
                 });
 
             modelBuilder.Entity("SafeDose.Domain.Entities.AuditLog", b =>
@@ -1030,11 +998,6 @@ namespace SafeDose.Domain.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("PricingTierId"));
-
-                    b.Property<int>("BillingCycleDays")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasDefaultValue(0);
 
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()

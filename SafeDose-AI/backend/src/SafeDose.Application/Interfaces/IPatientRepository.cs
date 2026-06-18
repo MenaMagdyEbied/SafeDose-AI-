@@ -12,4 +12,5 @@ public interface IPatientRepository
     Task UpdateAsync(Patient patient);
     Task SoftDeleteAsync(int patientId);
     Task<bool> ExistsForAccountAsync(int patientId, string accountId);
+    Task<Patient?> GetByMedicalCardTokenAsync(Guid token);
 }

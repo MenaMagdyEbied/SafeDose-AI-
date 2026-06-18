@@ -13,6 +13,7 @@ namespace SafeDose.Domain.Entities
         public string? ChronicConditions { get; set; }
         public string? Allergies { get; set; }
         public DateTime CreatedAt { get; set; }
+        public Guid MedicalCardToken { get; set; } = Guid.NewGuid();
 
         // ── Soft delete ──
         public bool IsActive { get; set; } = true;

@@ -156,6 +156,10 @@ builder.Services.AddScoped<UpdatePatientUseCase>();
 builder.Services.AddScoped<GetMyPatientsUseCase>();
 builder.Services.AddScoped<GetPatientByIdUseCase>();
 builder.Services.AddScoped<DeactivatePatientUseCase>();
+builder.Services.AddScoped<GetPublicMedicalCardUseCase>();
+builder.Services.AddScoped<GetPrivateMedicalCardUseCase>();
+builder.Services.AddScoped<GenerateQrCodeUseCase>();
+builder.Services.AddScoped<GenerateMedicalCardPdfUseCase>();
 
 // Medication use cases
 builder.Services.AddScoped<AddMedicationManuallyUseCase>();

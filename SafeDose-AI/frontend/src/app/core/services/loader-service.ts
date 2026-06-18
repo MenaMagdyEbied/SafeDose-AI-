@@ -10,22 +10,13 @@ export class LoaderService {
 
   show(): void {
     this.activeRequests++;
-    this.update();
+    this.zone.run(() => this.loading.set(true));
   }
 
   hide(): void {
     this.activeRequests = Math.max(0, this.activeRequests - 1);
-    this.update();
-  }
-
-  private update(): void {
-    const shouldShow = this.activeRequests > 0;
-    if (this.loading() === shouldShow) return; 
-
-    queueMicrotask(() => {
-      this.zone.run(() => {
-        this.loading.set(shouldShow);
-      });
-    });
+    if (this.activeRequests === 0) {
+      this.zone.run(() => this.loading.set(false));
+    }
   }
 }

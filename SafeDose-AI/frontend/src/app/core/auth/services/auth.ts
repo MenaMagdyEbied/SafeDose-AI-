@@ -1,11 +1,9 @@
-import { inject, Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, catchError, Observable, of, switchMap, tap } from 'rxjs';
-import { Patient } from '../../models';
-import { environment } from '../../../../environments/environment';
-import { RegisterResponse } from '../../models/register-response';
-import { LoginResponse, MessageResponse } from '../../models/login-response';
+import { inject, Injectable, signal } from '@angular/core';
 import { CookieService } from 'ngx-cookie-service';
+import { BehaviorSubject, catchError, Observable, of, switchMap, tap } from 'rxjs';
+import { environment } from '../../../../environments/environment';
+import { LoginResponse, MessageResponse } from '../../models/login-response';
 import { SessionUser, UserRole } from '../../models/session-user';
 import { UserProfileData } from '../../models/user-profile';
 const TOKEN_KEY = 'safedose_jwt';

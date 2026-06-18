@@ -8,9 +8,9 @@ export const guestGuard: CanActivateFn = (route, state) => {
   if (!auth.isLoggedIn) return true;
 
   if (auth.isAdmin) {
-    router.navigate(['/admin']);
+    router.createUrlTree(['/admin']);
   } else {
-    router.navigate(['/home']);
+    router.createUrlTree(['/home']);
   }
   return false;
 };

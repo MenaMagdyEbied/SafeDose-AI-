@@ -17,6 +17,7 @@ import { authGuard } from './core/auth/guards/auth-guard';
 import { adminGuard } from './core/auth/guards/admin-guard';
 import { guestGuard } from './core/auth/guards/guest-guard';
 import { superAdminGuard } from './core/auth/guards/super-admin-guard';
+import { limitGuard } from './core/auth/guards/limit-guard';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'home', pathMatch: 'full' },
@@ -71,16 +72,17 @@ export const routes: Routes = [
       },
       {
         path: 'family-plan',
-        canActivate: [authGuard],
+        canActivate: [authGuard, limitGuard],
         loadComponent: () => import('./features/family-plan/family-plan').then((c) => c.FamilyPlan),
         title: 'خطة العيلة | SafeDose AI',
       },
+
       {
         path: 'payment',
-        canActivate: [authGuard],
-        loadComponent: () => import('./features/payment/payment').then((c) => c.Payment),
-        title: 'الدفع | SafeDose AI',
+        loadComponent: () => import('./features/payment/payment').then((m) => m.Payment),
       },
+      { path: 'payment/success', redirectTo: '/payment', pathMatch: 'full' },
+
       {
         path: 'notifications',
         canActivate: [authGuard],

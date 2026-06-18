@@ -1,0 +1,36 @@
+<div
+  class="bg-secondary/10 border border-secondary/30 rounded-2xl p-4 flex items-center justify-between gap-3"
+  dir="rtl"
+>
+  <button
+    (click)="upgrade()"
+    class="shrink-0 px-4 py-2 bg-secondary text-on-secondary rounded-xl text-xs font-bold hover:bg-secondary-dark transition-all cursor-pointer"
+  >
+    ترقية الآن
+  </button>
+  <div class="text-right">
+    <p class="text-sm font-extrabold text-on-background">{{ title }}</p>
+    <p class="text-xs text-outline">{{ description }}</p>
+  </div>
+  <div class="w-10 h-10 bg-secondary/20 rounded-xl flex items-center justify-center shrink-0">
+    <lucide-icon [img]="lockIcon" class="w-5 h-5 text-secondary"></lucide-icon>
+  </div>
+</div>
+<!-- في أي صفحة فيها limit -->
+@if (!isPremium) {
+  <div class="bg-gradient-to-l from-secondary/20 to-secondary/5 border border-secondary/30 rounded-2xl p-4 flex items-center justify-between gap-3" dir="rtl">
+    <button
+      routerLink="/pricing"
+      class="shrink-0 px-4 py-2 bg-secondary text-on-secondary rounded-xl text-xs font-bold hover:bg-secondary-dark transition-all cursor-pointer"
+    >
+      ترقية الآن
+    </button>
+    <div class="text-right">
+      <p class="text-sm font-extrabold text-on-background">🔒 هذه الميزة للمشتركين فقط</p>
+      <p class="text-xs text-outline">قم بالترقية للوصول لميزة إدارة أفراد العيلة</p>
+    </div>
+    <div class="w-10 h-10 bg-secondary/20 rounded-xl flex items-center justify-center shrink-0">
+      <lucide-icon [img]="crownIcon" class="w-5 h-5 text-secondary"></lucide-icon>
+    </div>
+  </div>
+}

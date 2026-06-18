@@ -1,7 +1,6 @@
 export interface SubscriptionPlan {
   id: 'free' | 'family';
-  nameAr: string;
-  nameEn: string;
+  name: string;
   price: number;
   currency: string;
   features: string[];

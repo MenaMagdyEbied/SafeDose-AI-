@@ -11,19 +11,25 @@ public class AddMedicationManuallyUseCase
     private readonly IDrugRepository _drugs;
     private readonly IAuditLogService _audit;
     private readonly CheckDrugInteractionUseCase _interactionCheck;
+    private readonly ISubscriptionRepository _subscriptions;
+    private readonly IPricingTierRepository _tiers;
 
     public AddMedicationManuallyUseCase(
         IPatientMedicationRepository meds,
         IPatientRepository patients,
         IDrugRepository drugs,
         IAuditLogService audit,
-        CheckDrugInteractionUseCase interactionCheck)
+        CheckDrugInteractionUseCase interactionCheck,
+        ISubscriptionRepository subscriptions,
+        IPricingTierRepository tiers)
     {
         _meds = meds;
         _patients = patients;
         _drugs = drugs;
         _audit = audit;
         _interactionCheck = interactionCheck;
+        _subscriptions = subscriptions;
+        _tiers = tiers;
     }
 
     public async Task<MedicationResponseDto> ExecuteAsync(
@@ -45,8 +51,8 @@ public class AddMedicationManuallyUseCase
         ValidateMealTiming(dto.MealTiming);
         ValidateFrequency(dto.Frequency);
         ValidateDates(dto.StartDate, dto.EndDate);
+        await EnforceMedicationLimitAsync(accountId, dto.PatientId, medicationsToAdd: 1);
 
-        // Verify against catalog
         DrugCatalog? catalogEntry = null;
         if (dto.DrugCatalogId.HasValue)
         {
@@ -88,8 +94,6 @@ public class AddMedicationManuallyUseCase
         var newId = await _meds.CreateAsync(med);
         med.Drug = drug;
 
-        // Save the reminder times the patient set on this medication.
-        // Notification service polls PatientMedicationTime to know when to push.
         if (dto.Times is { Length: > 0 })
         {
             ValidateTimesAgainstFrequency(dto.Times, dto.Frequency);
@@ -106,8 +110,6 @@ public class AddMedicationManuallyUseCase
                 : "Medication added manually (unverified)"
         ), cancellationToken);
 
-        // Interaction check is on-demand from the check page, not automatic on add.
-
         return MedicationMappers.ToDto(med);
     }
 
@@ -116,10 +118,8 @@ public class AddMedicationManuallyUseCase
         if (times.Length > 12)
             throw new ArgumentException("At most 12 reminder times per medication");
 
-        // Allow clearing (empty array) regardless of frequency.
         if (times.Length == 0) return;
 
-        // If patient said "3 times a day" but only provided 2 times - reject.
         if (frequency.HasValue && times.Length != frequency.Value)
             throw new ArgumentException(
                 $"Number of times ({times.Length}) must match frequency ({frequency.Value})");
@@ -159,7 +159,25 @@ public class AddMedicationManuallyUseCase
         }
         catch
         {
-            // Medication save must not fail if AI pipeline is unavailable
         }
+    }
+
+    private async Task EnforceMedicationLimitAsync(
+        string accountId,
+        int patientId,
+        int medicationsToAdd)
+    {
+        var subscription = await _subscriptions.GetActiveByAccountAsync(accountId);
+        var tier = subscription?.PricingTier
+            ?? await _tiers.GetByCodeAsync("free")
+            ?? throw new InvalidOperationException("Free pricing tier is not configured");
+
+        if (tier.MedicationLimitPerPatient == int.MaxValue)
+            return;
+
+        var activeCount = await _meds.CountActiveForPatientAsync(patientId);
+        if (activeCount + medicationsToAdd > tier.MedicationLimitPerPatient)
+            throw new ArgumentException(
+                $"Medication limit reached for your plan ({tier.MedicationLimitPerPatient} active medications per patient).");
     }
 }

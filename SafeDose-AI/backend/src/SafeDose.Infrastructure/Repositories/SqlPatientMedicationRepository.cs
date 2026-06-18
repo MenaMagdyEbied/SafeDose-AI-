@@ -70,6 +70,9 @@ public class SqlPatientMedicationRepository
     public Task<bool> ExistsAsync(int id)
         => _db.PatientMedications.AnyAsync(pm => pm.PatientMedicationId == id);
 
+    public Task<int> CountActiveForPatientAsync(int patientId)
+        => _db.PatientMedications.CountAsync(pm => pm.PatientId == patientId && pm.Status == ActiveStatus);
+
     public async Task<int> CreateAsync(PatientMedication med)
     {
         await _db.PatientMedications.AddAsync(med);

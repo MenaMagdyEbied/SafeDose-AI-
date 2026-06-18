@@ -18,7 +18,6 @@ using SafeDose.Domain.ApplicationDbContext;
 using SafeDose.Domain.Entities;
 using SafeDose.Domain.Services;
 using SafeDose.Infrastructure.Auth;
-using SafeDose.Infrastructure.ExternalServices;
 using SafeDose.Infrastructure.Repositories;
 using SafeDose.Infrastructure.Seeders;
 using SafeDose.Infrastructure.UserProfile.RepositoryImplementation;

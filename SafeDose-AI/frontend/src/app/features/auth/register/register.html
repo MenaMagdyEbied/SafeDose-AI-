@@ -400,10 +400,10 @@
               <button
                 type="button"
                 (click)="submit()"
-                [disabled]="!canSubmit || loading"
-                class="flex-[2] h-14 bg-primary hover:bg-primary-dark text-white disabled:bg-slate-300 disabled:text-outline disabled:cursor-not-allowed rounded-2xl font-bold text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.98] shadow-md cursor-pointer"
+                [disabled]="!canSubmit || loading()"
+                class="flex-2 h-14 bg-primary hover:bg-primary-dark text-white disabled:bg-slate-300 disabled:text-outline disabled:cursor-not-allowed rounded-2xl font-bold text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.98] shadow-md cursor-pointer"
               >
-                @if (loading) {
+                @if (loading()) {
                   <div
                     class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"
                   ></div>
@@ -431,8 +431,9 @@
     </div>
 
     <!-- Illustration Side -->
+    <!-- Illustration Side -->
     <div
-      class="hidden lg:flex w-full lg:w-1/2 order-1 lg:order-2 relative overflow-hidden flex-col justify-center items-center text-center p-16"
+      class="flex w-full lg:w-1/2 order-1 lg:order-2 relative overflow-hidden flex-col justify-center items-center text-center p-8 lg:p-16 min-h-[280px] lg:min-h-0"
       style="background: linear-gradient(135deg, #005eb8 0%, #003366 60%, #007f7c 100%)"
     >
       <img
@@ -443,13 +444,13 @@
       <div class="absolute inset-0 bg-linear-to-t from-primary/80 to-transparent z-0"></div>
 
       <div class="max-w-110 z-10 relative">
-        <h2 class="text-4xl font-extrabold text-white mb-4 leading-tight">
+        <h2 class="text-2xl lg:text-4xl font-extrabold text-white mb-3 lg:mb-4 leading-tight">
           رعاية صحية شاملة لعائلتك
         </h2>
-        <p class="text-base text-white/70 mb-8 leading-relaxed">
+        <p class="text-sm lg:text-base text-white/70 mb-5 lg:mb-8 leading-relaxed">
           نستخدم الذكاء الاصطناعي لضمان حصولك على الجرعة الصحيحة في الوقت الصحيح
         </p>
-        <div class="grid grid-cols-2 gap-3 text-right">
+        <div class="grid grid-cols-2 gap-2 lg:gap-3 text-right">
           @for (feat of features; track feat) {
             <div
               class="flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-xl px-3 py-2.5 border border-white/20"

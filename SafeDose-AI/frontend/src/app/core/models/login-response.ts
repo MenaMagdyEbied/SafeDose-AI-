@@ -6,3 +6,6 @@ export interface LoginResponse {
   expiresOn: string;
   token: string;
 }
+export interface MessageResponse {
+  message: string;
+}

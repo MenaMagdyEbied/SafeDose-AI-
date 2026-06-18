@@ -1,175 +1,225 @@
-import { Component } from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import {
-  LucideAngularModule,
-  Pill,
-  Plus,
-  SquarePen,
-  Trash2,
-  TriangleAlert,
-  Users,
-  X,
-} from 'lucide-angular';
-import { FamilyMember } from '../../core/models';
-import { MemberForm } from '../../core/models/member-form';
+import { Component, DestroyRef, computed, inject, OnInit, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { LucideAngularModule, Plus, SquarePen, Trash2, Users, X } from 'lucide-angular';
+import { EMPTY, from } from 'rxjs';
+import { catchError, finalize, switchMap } from 'rxjs/operators';
+import { Patient } from '../../core/models/patient';
+import { PatientService } from '../../core/services/patient';
 import { ConfirmDialog } from '../../shared/components/confirm-dialog/confirm-dialog';
+import { Info } from 'lucide-angular';
+import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-family-plan',
-  imports: [FormsModule, LucideAngularModule, ConfirmDialog],
+  imports: [ReactiveFormsModule, LucideAngularModule, ConfirmDialog, RouterLink],
   templateUrl: './family-plan.html',
   styleUrl: './family-plan.css',
 })
-export class FamilyPlan {
+export class FamilyPlan implements OnInit {
+  private readonly fb = inject(FormBuilder);
+  private readonly patientService = inject(PatientService);
+  private readonly destroyRef = inject(DestroyRef);
+
+  readonly isEditing = computed(() => this.editingId() !== null && this.editingId() !== undefined);
+  readonly modalTitle = computed(() =>
+    this.isEditing() ? 'تعديل بيانات المريض' : 'إضافة مريض جديد',
+  );
+  readonly saveButtonText = computed(() => (this.isEditing() ? 'حفظ التعديلات' : 'إضافة المريض'));
   plusIcon = Plus;
   usersIcon = Users;
   editIcon = SquarePen;
   trashIcon = Trash2;
   xIcon = X;
-  pillIcon = Pill;
-  alertTriangleIcon = TriangleAlert;
+  infoIcon = Info;
 
-  members: FamilyMember[] = [];
-  showModal = false;
-  showConfirmDelete = false;
-  pendingDeleteMemberId: string | null = null;
+  members = signal<Patient[]>([]);
+  loading = signal(false);
+  showModal = signal(false);
+  showConfirmDelete = signal(false);
+  editingId = signal<number | null>(null);
+
+  pendingDeleteMemberId: number | null = null;
   pendingDeleteMemberName = '';
-  editingId: string | null = null;
+  error = '';
 
-  allConditions = ['السكري', 'ارتفاع ضغط الدم', 'الربو', 'أمراض القلب', 'الحساسية', 'أخرى'];
-  relations = ['زوج/زوجة', 'ابن/ابنة', 'أب/أم', 'أخ/أخت', 'جد/جدة', 'أخرى'];
+  readonly genderOptions = [
+    { value: 0, label: 'ذكر' },
+    { value: 1, label: 'أنثى' },
+  ];
 
-  form: MemberForm = this.emptyForm();
+  readonly form = this.fb.nonNullable.group({
+    fullName: ['', [Validators.required, Validators.minLength(2)]],
+    dateOfBirth: ['', Validators.required],
+    gender: [0, Validators.required],
+    bloodType: ['', [Validators.pattern(/^(A|B|AB|O)[+-]$/)]],
+    chronicConditions: [''],
+    allergies: [''],
+  });
 
   ngOnInit(): void {
-    const saved = localStorage.getItem('familyMembers');
-    if (saved) {
-      this.members = JSON.parse(saved);
-    } else {
-      this.members = this.getMockMembers();
-    }
+    this.loadPatients();
   }
 
-  private getMockMembers(): FamilyMember[] {
-    return [
-      {
-        id: 'm1',
-        name: 'سارة محمود',
-        age: 36,
-        relationship: 'زوجة',
-        conditions: ['السكري', 'ارتفاع ضغط الدم'],
-        medications: ['ميتفورمين', 'أملوديبين'],
-        allergies: 'لا يوجد حساسية',
-      },
-      {
-        id: 'm2',
-        name: 'علي محمود',
-        age: 10,
-        relationship: 'ابن',
-        conditions: ['الربو'],
-        medications: ['سالمتيرول'],
-        allergies: 'الحساسية من الاسبرين',
-      },
-    ];
+  loadPatients(): void {
+    this.loading.set(true);
+    this.error = '';
+
+    from(this.patientService.getMyPatients())
+      .pipe(
+        catchError(() => {
+          this.members.set([]);
+          this.error = 'تعذر تحميل بيانات أفراد العائلة.';
+          return EMPTY;
+        }),
+        finalize(() => this.loading.set(false)),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe((response) => {
+        this.members.set(Array.isArray(response) ? response : []);
+      });
   }
 
   saveMember(): void {
-    if (!this.form.fullName.trim()) return;
+    this.form.markAllAsTouched();
+    if (this.form.invalid) return;
 
-    const meds = (this.form.medsText || '')
-      .split('\n')
-      .map((m: string) => m.trim())
-      .filter((m: string) => m.length > 0);
+    const payload = {
+      fullName: this.form.value.fullName?.trim() ?? '',
+      dateOfBirth: this.form.value.dateOfBirth ?? '',
+      gender: Number(this.form.value.gender ?? 0),
+      bloodType: this.form.value.bloodType?.trim() ?? '',
+      chronicConditions: this.parseList(this.form.value.chronicConditions ?? ''),
+      allergies: this.parseList(this.form.value.allergies ?? ''),
+    };
 
-    if (this.editingId) {
-      this.members = this.members.map((m) =>
-        m.id === this.editingId
-          ? {
-              ...m,
-              name: this.form.fullName,
-              age: this.form.age ?? m.age,
-              relationship: this.form.relation,
-              conditions: [...this.form.conditions],
-              medications: meds,
-              allergies: this.form.allergies,
-            }
-          : m,
-      );
-    } else {
-      this.members.push({
-        id: Date.now().toString(),
-        name: this.form.fullName,
-        age: this.form.age ?? 0,
-        relationship: this.form.relation,
-        conditions: [...this.form.conditions],
-        medications: meds,
-        allergies: this.form.allergies,
+    const currentEditingId = this.editingId();
+    const save$ =
+      currentEditingId !== null
+        ? from(this.patientService.updatePatient(currentEditingId, payload))
+        : from(this.patientService.createPatient(payload));
+
+    save$
+      .pipe(
+        catchError(() => {
+          this.error =
+            currentEditingId !== null ? 'تعذر تحديث بيانات المريض.' : 'تعذر إضافة المريض.';
+          return EMPTY;
+        }),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe(() => {
+        this.closeModal();
+        this.loadPatients();
       });
-    }
-
-    this.saveToStorage();
-    this.closeModal();
   }
 
-  deleteMember(id: string): void {
-    this.members = this.members.filter((m) => m.id !== id);
-    this.saveToStorage();
+  deleteMember(id: number): void {
+    this.error = '';
+
+    from(this.patientService.deletePatient(id))
+      .pipe(
+        catchError(() => {
+          this.error = 'تعذر حذف المريض.';
+          return EMPTY;
+        }),
+        switchMap(() => from(this.patientService.getMyPatients())),
+        catchError(() => {
+          this.members.set([]);
+          this.error = 'تعذر تحديث بيانات أفراد العائلة.';
+          return EMPTY;
+        }),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe((response) => {
+        this.members.set(Array.isArray(response) ? response : []);
+      });
   }
 
-  confirmDeleteMember(member: FamilyMember): void {
-    this.pendingDeleteMemberId = member.id;
-    this.pendingDeleteMemberName = member.name;
-    this.showConfirmDelete = true;
+  confirmDeleteMember(member: Patient): void {
+    const memberId = (member as Patient & { patientId?: number }).patientId ?? member.id;
+    this.pendingDeleteMemberId = memberId ?? null;
+    this.pendingDeleteMemberName = member.fullName;
+    this.showConfirmDelete.set(true);
   }
 
   executeDeleteMember(): void {
-    if (!this.pendingDeleteMemberId) return;
-    this.deleteMember(this.pendingDeleteMemberId);
+    const id =
+      this.pendingDeleteMemberId ??
+      this.members().find((m) => m.fullName === this.pendingDeleteMemberName)?.id ??
+      null;
+    if (id === null) {
+      return;
+    }
+
     this.cancelDelete();
+    this.deleteMember(id);
   }
 
   cancelDelete(): void {
-    this.showConfirmDelete = false;
+    this.showConfirmDelete.set(false);
     this.pendingDeleteMemberId = null;
     this.pendingDeleteMemberName = '';
   }
 
-  toggleFormCondition(cond: string): void {
-    const idx = this.form.conditions.indexOf(cond);
-    if (idx === -1) this.form.conditions.push(cond);
-    else this.form.conditions.splice(idx, 1);
-  }
-
-  private saveToStorage(): void {
-    localStorage.setItem('familyMembers', JSON.stringify(this.members));
-  }
-
-  private emptyForm(): MemberForm {
-    return {
-      fullName: '',
-      age: null,
-      relation: '',
-      conditions: [],
-      medsText: '',
-      allergies: '',
-    };
-  }
   openAddModal(): void {
-    this.editingId = null;
-    this.form = this.emptyForm();
-    this.showModal = true;
-    document.body.style.overflow = 'hidden'; // ← امنع الـ scroll
+    this.editingId.set(null); // ✅ signal
+    this.error = '';
+    this.form.reset({
+      fullName: '',
+      dateOfBirth: '',
+      gender: 0,
+      bloodType: '',
+      chronicConditions: '',
+      allergies: '',
+    });
+    this.showModal.set(true);
+    document.body.style.overflow = 'hidden';
   }
 
-  editMember(member: FamilyMember): void {
-    // ...
-    this.showModal = true;
-    document.body.style.overflow = 'hidden'; // ← امنع الـ scroll
+  editMember(member: Patient): void {
+    console.log('editing member:', member);
+    console.log('editingId before:', this.editingId());
+    const memberId = (member as any).patientId ?? member.id ?? null;
+    this.editingId.set(memberId);
+    console.log('editingId after:', this.editingId());
+
+
+
+
+    this.editingId.set(memberId);
+    this.error = '';
+    this.form.reset({
+      fullName: member.fullName,
+      dateOfBirth: member.dateOfBirth,
+      gender: member.gender,
+      bloodType: member.bloodType,
+      chronicConditions: member.chronicConditions.join('\n'),
+      allergies: member.allergies.join('\n'),
+    });
+    this.showModal.set(true);
+    document.body.style.overflow = 'hidden';
   }
 
   closeModal(): void {
-    this.showModal = false;
-    this.editingId = null;
-    document.body.style.overflow = ''; // ← رجّع الـ scroll
+    this.showModal.set(false);
+    this.editingId.set(null); // ✅ signal
+    this.error = '';
+    this.form.reset({
+      fullName: '',
+      dateOfBirth: '',
+      gender: 0,
+      bloodType: '',
+      chronicConditions: '',
+      allergies: '',
+    });
+    document.body.style.overflow = '';
+  }
+
+  private parseList(value: string): string[] {
+    return value
+      .split(/\n|,/)
+      .map((i) => i.trim())
+      .filter((i) => i.length > 0);
   }
 }

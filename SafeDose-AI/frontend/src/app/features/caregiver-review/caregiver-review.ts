@@ -1,4 +1,5 @@
-import { ChangeDetectorRef, Component, inject, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, DestroyRef, inject, OnInit } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router, RouterLink } from '@angular/router';
 import {
   Camera,
@@ -15,6 +16,8 @@ import {
 import { ScannedMed } from '../../core/models/scanned-med';
 import { FormsModule } from '@angular/forms';
 import { Prescription } from '../../core/services/prescription';
+import { EMPTY, from } from 'rxjs';
+import { catchError, finalize, map, switchMap } from 'rxjs/operators';
 
 @Component({
   selector: 'app-caregiver-review',
@@ -26,6 +29,7 @@ export class CaregiverReview implements OnInit {
   private readonly router = inject(Router);
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly prescriptionService = inject(Prescription);
+  private readonly destroyRef = inject(DestroyRef);
 
   scanned = false;
   loading = false;
@@ -115,21 +119,30 @@ export class CaregiverReview implements OnInit {
     return this.prescriptionService.prescriptions;
   }
 
-  async openCamera(): Promise<void> {
-    try {
-      this.showCamera = true;
-      this.lockBodyScroll(); // ← أضيفي السطر ده
-      this.videoStream = await navigator.mediaDevices.getUserMedia({
+  openCamera(): void {
+    this.showCamera = true;
+    this.lockBodyScroll();
+
+    from(
+      navigator.mediaDevices.getUserMedia({
         video: { facingMode: 'environment' },
+      }),
+    )
+      .pipe(
+        catchError(() => {
+          this.showCamera = false;
+          this.unlockBodyScroll();
+          return EMPTY;
+        }),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe((stream) => {
+        this.videoStream = stream;
+        setTimeout(() => {
+          const video = document.getElementById('cameraFeed') as HTMLVideoElement;
+          if (video) video.srcObject = this.videoStream;
+        }, 100);
       });
-      setTimeout(() => {
-        const video = document.getElementById('cameraFeed') as HTMLVideoElement;
-        if (video) video.srcObject = this.videoStream;
-      }, 100);
-    } catch (err) {
-      this.showCamera = false;
-      this.unlockBodyScroll(); // ← وده لو فشل الفتح
-    }
   }
 
   closeCamera(): void {
@@ -165,22 +178,27 @@ export class CaregiverReview implements OnInit {
     input.click();
   }
 
-  async handleFile(file: File): Promise<void> {
+  handleFile(file: File): void {
     this.loading = true;
     this.errorText = '';
     this.cdr.detectChanges();
 
-    try {
-      const base64 = await this.fileToBase64(file);
-      const meds = await this.extractMedsFromImage(base64, file.type);
-      this.openReviewModal(meds);
-    } catch (err) {
-      this.errorText = 'حدث خطأ أثناء تحليل الوصفة. حاول مرة أخرى.';
-      this.openReviewModal(this.getMockMeds());
-    } finally {
-      this.loading = false;
-      this.cdr.detectChanges();
-    }
+    from(this.fileToBase64(file))
+      .pipe(
+        switchMap((base64) => this.extractMedsFromImage(base64, file.type)),
+        catchError(() => {
+          this.errorText = 'حدث خطأ أثناء تحليل الوصفة. حاول مرة أخرى.';
+          return from([this.getMockMeds()]);
+        }),
+        finalize(() => {
+          this.loading = false;
+          this.cdr.detectChanges();
+        }),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe((meds) => {
+        this.openReviewModal(meds);
+      });
   }
   openReviewModal(meds: ScannedMed[]): void {
     this.manualForm = {
@@ -195,24 +213,25 @@ export class CaregiverReview implements OnInit {
     this.showManualModal = true;
     this.lockBodyScroll(); // ← أضيفي السطر ده
   }
-  private async extractMedsFromImage(base64: string, mediaType: string): Promise<ScannedMed[]> {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 1000,
-        messages: [
-          {
-            role: 'user',
-            content: [
-              {
-                type: 'image',
-                source: { type: 'base64', media_type: mediaType, data: base64 },
-              },
-              {
-                type: 'text',
-                text: `أنت نظام OCR طبي متخصص. استخرج كل الأدوية من هذه الوصفة الطبية.
+  private extractMedsFromImage(base64: string, mediaType: string) {
+    return from(
+      fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-6',
+          max_tokens: 1000,
+          messages: [
+            {
+              role: 'user',
+              content: [
+                {
+                  type: 'image',
+                  source: { type: 'base64', media_type: mediaType, data: base64 },
+                },
+                {
+                  type: 'text',
+                  text: `أنت نظام OCR طبي متخصص. استخرج كل الأدوية من هذه الوصفة الطبية.
 أعد الرد فقط كـ JSON بهذا الشكل بدون أي نص إضافي أو markdown:
 [
   {
@@ -226,17 +245,21 @@ export class CaregiverReview implements OnInit {
   }
 ]
 إذا لم تجد وصفة طبية واضحة، أعد مصفوفة فارغة [].`,
-              },
-            ],
-          },
-        ],
+                },
+              ],
+            },
+          ],
+        }),
       }),
-    });
-
-    const data = await response.json();
-    const text = data.content?.find((b: any) => b.type === 'text')?.text ?? '[]';
-    const clean = text.replace(/```json|```/g, '').trim();
-    return JSON.parse(clean) as ScannedMed[];
+    ).pipe(
+      switchMap((response) => from(response.json())),
+      map((data: any) => {
+        const text = data.content?.find((b: any) => b.type === 'text')?.text ?? '[]';
+        const clean = text.replace(/```json|```/g, '').trim();
+        return JSON.parse(clean) as ScannedMed[];
+      }),
+      catchError(() => from([this.getMockMeds()])),
+    );
   }
 
   private fileToBase64(file: File): Promise<string> {

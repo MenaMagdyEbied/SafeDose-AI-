@@ -1,4 +1,5 @@
-import { ChangeDetectorRef, Component, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, DestroyRef, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import {
@@ -11,8 +12,10 @@ import {
   Search,
   Sparkles,
   TriangleAlert,
-  X
+  X,
 } from 'lucide-angular';
+import { EMPTY, from } from 'rxjs';
+import { catchError, finalize } from 'rxjs/operators';
 import { Interaction } from '../../core/services/interaction';
 
 @Component({
@@ -25,6 +28,7 @@ export class InteractionChecker {
   private readonly router = inject(Router);
   private readonly interaction = inject(Interaction);
   private readonly cdr = inject(ChangeDetectorRef);
+  private readonly destroyRef = inject(DestroyRef);
   scanned = false;
   videoStream: MediaStream | null = null;
   showCamera = false;
@@ -99,28 +103,48 @@ export class InteractionChecker {
     recognition.start();
   }
 
-  async runCheck(): Promise<void> {
+  runCheck(): void {
     this.loading = true;
-    const result = await this.interaction.checkInteractions(this.selectedMeds);
-    sessionStorage.setItem('lastCheckedFlowOutput', JSON.stringify(result));
-    this.loading = false;
-    this.router.navigate(['/interaction-results']);
+
+    from(this.interaction.checkInteractions(this.selectedMeds))
+      .pipe(
+        catchError(() => EMPTY),
+        finalize(() => {
+          this.loading = false;
+        }),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe((result) => {
+        sessionStorage.setItem('lastCheckedFlowOutput', JSON.stringify(result));
+        this.router.navigate(['/interaction-results']);
+      });
   }
 
-  async scanBarcode(): Promise<void> {
-    try {
-      this.showCamera = true;
-      this.videoStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment' },
-      });
+  scanBarcode(): void {
+    this.showCamera = true;
 
-      setTimeout(() => {
-        const video = document.getElementById('cameraFeed') as HTMLVideoElement;
-        if (video) video.srcObject = this.videoStream;
-      }, 100);
-    } catch (err) {
-      this.showCamera = false;
-    }
+    from(
+      navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment' },
+      }),
+    )
+      .pipe(
+        catchError(() => {
+          this.showCamera = false;
+          return EMPTY;
+        }),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe((stream) => {
+        this.videoStream = stream;
+
+        setTimeout(() => {
+          const video = document.getElementById('cameraFeed') as HTMLVideoElement;
+          if (video) {
+            video.srcObject = this.videoStream;
+          }
+        }, 100);
+      });
   }
 
   capturePhoto(): void {

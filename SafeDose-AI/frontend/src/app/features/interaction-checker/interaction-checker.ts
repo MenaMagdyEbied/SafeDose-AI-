@@ -7,6 +7,7 @@ import {
   BookOpen,
   ChevronRight,
   LucideAngularModule,
+  Mic,
   Pill,
   QrCode,
   Search,
@@ -19,7 +20,7 @@ import { catchError, finalize } from 'rxjs/operators';
 import { Interaction } from '../../core/services/interaction';
 import { Medications } from '../../core/services/medications';
 import { PatientService } from '../../core/services/patient';
-import { DrugSearchResult } from '../../core/models';
+import { CheckInteractionsPayload, DrugSearchResult } from '../../core/models';
 interface SelectedMed {
   drugCatalogId: number;
   name: string;
@@ -45,15 +46,17 @@ export class InteractionChecker {
   resultsOpen = signal(false);
   loading = signal(false);
   selectedMeds = signal<SelectedMed[]>([]);
-
-  // قائمة "من ملف أدويتي"
   showProfileMeds = signal(false);
   profileMedsLoading = signal(false);
-  profileMeds = signal<{ drugCatalogId: number; name: string; checked: boolean }[]>([]);
+  profileMeds = signal<{ drugCatalogId: number | null; name: string; checked: boolean }[]>([]);
+  voiceRecording = signal(false);
+  voiceStatusMessage = signal('');
+  voiceStatusError = signal(false);
 
   pillIcon = Pill;
   searchIcon = Search;
   xIcon = X;
+  micIcon = Mic;
   bookOpenIcon = BookOpen;
   qrCodeIcon = QrCode;
   sparklesIcon = Sparkles;
@@ -66,7 +69,6 @@ export class InteractionChecker {
   readonly filteredDrugs = computed(() => this.interaction.searchResults());
 
   ngOnInit(): void {
-    // نجيب الـ patientId الأساسي بمجرد ما الصفحة تفتح، هنحتاجه وقت الفحص والتحميل من البروفايل
     this.patientService
       .getMyPatients()
       .then((patients) => {
@@ -113,7 +115,6 @@ export class InteractionChecker {
     this.selectedMeds.update((list) => list.filter((_, i) => i !== index));
   }
 
-  /** فتح قائمة "من ملف أدويتي" مع checkbox لكل دواء */
   loadFromProfile(): void {
     this.showProfileMeds.set(true);
 
@@ -133,9 +134,9 @@ export class InteractionChecker {
       .subscribe((meds) => {
         this.profileMeds.set(
           meds.map((m) => ({
-            drugCatalogId: m.drugCatalogId,
+            drugCatalogId: m.drugCatalogId ?? null,
             name: m.drugName,
-            checked: this.selectedMeds().some((s) => s.drugCatalogId === m.drugCatalogId),
+            checked: this.selectedMeds().some((s) => s.drugCatalogId === (m.drugCatalogId ?? null)),
           })),
         );
       });
@@ -145,8 +146,9 @@ export class InteractionChecker {
     this.showProfileMeds.set(false);
   }
 
-  /** بمجرد ما اليوزر يدوس على checkbox، الدوا يتضاف أو يتشال من selectedMeds على طول */
-  toggleProfileMed(med: { drugCatalogId: number; name: string; checked: boolean }): void {
+  toggleProfileMed(med: { drugCatalogId: number | null; name: string; checked: boolean }): void {
+    if (med.drugCatalogId == null) return;
+
     const isCurrentlyChecked = this.selectedMeds().some(
       (m) => m.drugCatalogId === med.drugCatalogId,
     );
@@ -157,7 +159,7 @@ export class InteractionChecker {
       if (this.selectedMeds().length >= 6) return;
       this.selectedMeds.update((list) => [
         ...list,
-        { drugCatalogId: med.drugCatalogId, name: med.name },
+        { drugCatalogId: med.drugCatalogId as number, name: med.name },
       ]);
     }
 
@@ -173,9 +175,15 @@ export class InteractionChecker {
       (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
 
     if (!SpeechRecognition) {
-      alert('متصفحك مش بيدعم التعرف على الصوت');
+      this.voiceRecording.set(false);
+      this.voiceStatusError.set(true);
+      this.voiceStatusMessage.set('المتصفح لا يدعم التعرف على الصوت');
       return;
     }
+
+    this.voiceRecording.set(true);
+    this.voiceStatusError.set(false);
+    this.voiceStatusMessage.set('جاري تسجيل الصوت…');
 
     const recognition = new SpeechRecognition();
     recognition.lang = 'ar-EG';
@@ -183,27 +191,45 @@ export class InteractionChecker {
     recognition.interimResults = false;
 
     recognition.onstart = () => {
-      window.alert('بدأ التسجيل...');
+      this.voiceRecording.set(true);
+      this.voiceStatusError.set(false);
+      this.voiceStatusMessage.set('جاري تسجيل الصوت…');
     };
 
     recognition.onresult = (event: any) => {
       const transcript = event.results[0][0].transcript;
+      this.voiceRecording.set(false);
+      this.voiceStatusError.set(false);
+      this.voiceStatusMessage.set('');
       this.onSearchChange(transcript);
     };
+
     recognition.onerror = (event: any) => {
+      this.voiceRecording.set(false);
+      this.voiceStatusError.set(true);
+      this.voiceStatusMessage.set('تعذر إكمال التسجيل');
       console.error('خطأ في التسجيل:', event.error);
+    };
+
+    recognition.onend = () => {
+      this.voiceRecording.set(false);
     };
 
     recognition.start();
   }
-
   runCheck(): void {
     if (!this.currentPatientId) return;
 
+    const validDrugCatalogIds = this.selectedMeds()
+      .filter((med) => med.drugCatalogId > 0)
+      .map((med) => med.drugCatalogId);
+
+    if (validDrugCatalogIds.length < 1) return;
+
     this.loading.set(true);
 
-    const payload = {
-      drugCatalogIds: this.selectedMeds().map((m) => m.drugCatalogId),
+    const payload: CheckInteractionsPayload = {
+      drugCatalogIds: validDrugCatalogIds,
       patientId: this.currentPatientId,
     };
 
@@ -218,58 +244,57 @@ export class InteractionChecker {
         this.router.navigate(['/interaction-results']);
       });
   }
+  // scanBarcode(): void {
+  //   this.showCamera.set(true);
 
-  scanBarcode(): void {
-    this.showCamera.set(true);
+  //   from(
+  //     navigator.mediaDevices.getUserMedia({
+  //       video: { facingMode: 'environment' },
+  //     }),
+  //   )
+  //     .pipe(
+  //       catchError(() => {
+  //         this.showCamera.set(false);
+  //         return EMPTY;
+  //       }),
+  //       takeUntilDestroyed(this.destroyRef),
+  //     )
+  //     .subscribe((stream) => {
+  //       this.videoStream.set(stream);
 
-    from(
-      navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment' },
-      }),
-    )
-      .pipe(
-        catchError(() => {
-          this.showCamera.set(false);
-          return EMPTY;
-        }),
-        takeUntilDestroyed(this.destroyRef),
-      )
-      .subscribe((stream) => {
-        this.videoStream.set(stream);
+  //       setTimeout(() => {
+  //         const video = document.getElementById('cameraFeed') as HTMLVideoElement;
+  //         if (video) {
+  //           video.srcObject = this.videoStream();
+  //         }
+  //       }, 100);
+  //     });
+  // }
 
-        setTimeout(() => {
-          const video = document.getElementById('cameraFeed') as HTMLVideoElement;
-          if (video) {
-            video.srcObject = this.videoStream();
-          }
-        }, 100);
-      });
-  }
+  // capturePhoto(): void {
+  //   const video = document.getElementById('cameraFeed') as HTMLVideoElement;
+  //   const canvas = document.createElement('canvas');
+  //   canvas.width = video.videoWidth;
+  //   canvas.height = video.videoHeight;
+  //   canvas.getContext('2d')?.drawImage(video, 0, 0);
 
-  capturePhoto(): void {
-    const video = document.getElementById('cameraFeed') as HTMLVideoElement;
-    const canvas = document.createElement('canvas');
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    canvas.getContext('2d')?.drawImage(video, 0, 0);
+  //   canvas.toBlob((blob) => {
+  //     if (blob) {
+  //       const file = new File([blob], 'prescription.jpg', { type: 'image/jpeg' });
+  //       this.handleFile(file);
+  //     }
+  //   });
 
-    canvas.toBlob((blob) => {
-      if (blob) {
-        const file = new File([blob], 'prescription.jpg', { type: 'image/jpeg' });
-        this.handleFile(file);
-      }
-    });
+  //   this.closeCamera();
+  // }
 
-    this.closeCamera();
-  }
-
-  closeCamera(): void {
-    this.videoStream()
-      ?.getTracks()
-      .forEach((t) => t.stop());
-    this.videoStream.set(null);
-    this.showCamera.set(false);
-  }
+  // closeCamera(): void {
+  //   this.videoStream()
+  //     ?.getTracks()
+  //     .forEach((t) => t.stop());
+  //   this.videoStream.set(null);
+  //   this.showCamera.set(false);
+  // }
 
   openFilePicker(): void {
     const input = document.createElement('input');

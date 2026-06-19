@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import {
   Activity,
@@ -18,18 +18,25 @@ import {
   X,
 } from 'lucide-angular';
 import { Auth } from '../../core/auth/services/auth';
-import { FormsModule } from '@angular/forms';
+import { Medications } from '../../core/services/medications';
+import { PatientService } from '../../core/services/patient';
+import { AddMedication } from '../../shared/components/add-medication/add-medication';
 
 @Component({
   selector: 'app-patient-home',
-  imports: [LucideAngularModule, RouterLink, FormsModule],
+  imports: [LucideAngularModule, RouterLink, AddMedication],
   templateUrl: './patient-home.html',
   styleUrl: './patient-home.css',
 })
-export class PatientHome {
+export class PatientHome implements OnInit {
   protected readonly router = inject(Router);
   private readonly auth = inject(Auth);
+  private readonly patientService = inject(PatientService);
+  private readonly medicationsService = inject(Medications);
+
   taken = signal(false);
+  loading = signal(false);
+  errorText = signal('');
   defaultConditions = ['السكري', 'الضغط', 'القلب'];
 
   pillIcon = Pill;
@@ -99,11 +106,8 @@ export class PatientHome {
     setTimeout(() => this.currentSuggestionsMap.clear(), 150);
   }
 
-  medications = signal<{ name: string; dose: string; frequency: string }[]>([
-    { name: 'جلوكوفاج', dose: '٥٠٠ ملغ', frequency: 'مرتان يومياً' },
-    { name: 'كونكور', dose: '٥ ملغ', frequency: 'مرة مساءً' },
-    { name: 'وارفارين', dose: '٥ ملغ', frequency: 'مرة يومياً' },
-  ]);
+  medications = signal<{ name: string; dose: string; frequency: string }[]>([]);
+  currentPatientId = signal<number | null>(null);
 
   get user() {
     return {
@@ -117,6 +121,39 @@ export class PatientHome {
     };
 
     // return this.auth.user;
+  }
+
+  ngOnInit(): void {
+    this.loadPatientData();
+  }
+
+  private async loadPatientData(): Promise<void> {
+    this.loading.set(true);
+    this.errorText.set('');
+
+    try {
+      const patients = await this.patientService.getMyPatients();
+      const patient = patients[0];
+      this.currentPatientId.set(patient?.patientId ?? patient?.id ?? null);
+
+      if (!this.currentPatientId()) {
+        this.errorText.set('تعذر تحديد المريض الحالي.');
+        return;
+      }
+
+      const meds = await this.medicationsService.getByPatient(this.currentPatientId()!);
+      this.medications.set(
+        meds.map((item) => ({
+          name: item.drugName,
+          dose: item.dose ?? item.drugDose ?? '—',
+          frequency: item.frequency ? `${item.frequency} مرة يومياً` : '—',
+        })),
+      );
+    } catch {
+      this.errorText.set('تعذر تحميل الأدوية من الخادم.');
+    } finally {
+      this.loading.set(false);
+    }
   }
 
   takeDose(): void {

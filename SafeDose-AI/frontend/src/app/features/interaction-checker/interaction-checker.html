@@ -20,7 +20,10 @@
             (focus)="resultsOpen.set(true)"
             class="w-full h-[56px] pr-12 pl-4 rounded-xl border-2 border-outline-variant outline-none focus:border-primary text-right"
           />
-          <lucide-icon [img]="searchIcon" class="absolute right-4 text-outline w-5 h-5"></lucide-icon>
+          <lucide-icon
+            [img]="searchIcon"
+            class="absolute right-4 text-outline w-5 h-5"
+          ></lucide-icon>
         </div>
 
         @if (resultsOpen()) {
@@ -46,6 +49,7 @@
                 لا توجد نتائج لـ "{{ searchWord() }}"
               </div>
             }
+
             <div
               (click)="resultsOpen.set(false)"
               class="px-4 py-1.5 bg-slate-50 text-center text-xs text-outline cursor-pointer hover:bg-slate-100 font-semibold"
@@ -58,7 +62,7 @@
 
       <!-- Selected Meds Chips -->
       <div
-        class="bg-surface-container-low p-4 sm:p-6 rounded-2xl border border-outline-variant shadow-sm min-h-[160px] flex flex-col justify-between"
+        class="bg-surface-container-low p-4 sm:p-6 rounded-2xl border border-outline-variant shadow-sm min-h-[120px] flex flex-col justify-between"
       >
         <div class="flex flex-wrap justify-between items-center gap-2 mb-4">
           <h3 class="text-md font-bold text-on-background">الأدوية المختارة للفحص</h3>
@@ -113,7 +117,7 @@
         ></lucide-icon>
       </button>
 
-      <button
+      <!-- <button
         (click)="scanBarcode()"
         class="flex items-center justify-between w-full p-4 bg-white hover:bg-slate-50 rounded-2xl border border-outline-variant shadow-sm transition-all text-right group cursor-pointer"
       >
@@ -132,7 +136,7 @@
           [img]="chevronRightIcon"
           class="w-5 h-5 text-outline group-hover:-translate-x-1 transition-transform shrink-0"
         ></lucide-icon>
-      </button>
+      </button> -->
 
       <button
         (click)="voiceInput()"
@@ -154,6 +158,24 @@
           class="w-5 h-5 text-outline group-hover:-translate-x-1 transition-transform shrink-0"
         ></lucide-icon>
       </button>
+
+      @if (voiceRecording() || voiceStatusMessage() || voiceStatusError()) {
+        <div
+          class="mt-2 rounded-2xl px-3 py-2 text-xs font-semibold flex items-center justify-start gap-2"
+          [class.bg-secondary-container]="voiceRecording()"
+          [class.text-on-secondary-container]="voiceRecording()"
+          [class.bg-danger-container]="voiceStatusError()"
+          [class.text-on-danger-container]="voiceStatusError()"
+          aria-live="polite"
+        >
+          @if (voiceRecording()) {
+            <lucide-icon [img]="micIcon" class="w-4 h-4 animate-pulse"></lucide-icon>
+            <span>جاري تسجيل الصوت…</span>
+          } @else {
+            <span>{{ voiceStatusMessage() }}</span>
+          }
+        </div>
+      }
     </div>
   </div>
 
@@ -161,11 +183,13 @@
   <div class="mt-8 flex flex-col items-center justify-center gap-4">
     <button
       (click)="runCheck()"
-      [disabled]="selectedMeds().length < 2 || loading()"
+      [disabled]="selectedMeds().length < 1 || loading()"
       class="w-full max-w-lg h-[60px] bg-primary hover:bg-primary-dark text-white rounded-full font-bold text-base sm:text-lg flex items-center justify-center gap-3 transition-all active:scale-95 shadow-md disabled:bg-slate-300 disabled:text-outline disabled:cursor-not-allowed cursor-pointer"
     >
       @if (loading()) {
-        <div class="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+        <div
+          class="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"
+        ></div>
         <span>جاري فحص تعارض الأدوية...</span>
       } @else {
         <span>افحص التداخلات الدوائية الآن</span>
@@ -176,7 +200,10 @@
     <div
       class="bg-danger-container text-on-danger-container p-4 rounded-xl flex items-start gap-4 max-w-lg w-full"
     >
-      <lucide-icon [img]="alertTriangleIcon" class="w-5 h-5 shrink-0 text-danger mt-0.5"></lucide-icon>
+      <lucide-icon
+        [img]="alertTriangleIcon"
+        class="w-5 h-5 shrink-0 text-danger mt-0.5"
+      ></lucide-icon>
       <p class="text-xs text-right leading-relaxed">
         تنبيه: محرك فحص التداخلات هو نظام استشاري رقمي مساند بالذكاء الاصطناعي ولا يغني عن مراجعة
         طبيبك المختص.
@@ -195,7 +222,9 @@
         (click)="$event.stopPropagation()"
       >
         <!-- Header -->
-        <div class="pt-4 pb-3 px-5 border-b border-outline-variant/30 flex items-center justify-between shrink-0">
+        <div
+          class="pt-4 pb-3 px-5 border-b border-outline-variant/30 flex items-center justify-between shrink-0"
+        >
           <h3 class="font-extrabold text-on-background text-base">أدويتي المسجّلة</h3>
           <button
             type="button"
@@ -263,9 +292,14 @@
   }
 
   <!-- ============ Camera Modal ============ -->
-  @if (showCamera()) {
+  <!-- @if (showCamera()) {
     <div class="fixed inset-0 bg-black z-50 flex flex-col items-center justify-center p-4">
-      <video id="cameraFeed" autoplay playsinline class="max-w-full max-h-[70vh] rounded-2xl"></video>
+      <video
+        id="cameraFeed"
+        autoplay
+        playsinline
+        class="max-w-full max-h-[70vh] rounded-2xl"
+      ></video>
       <div class="flex gap-4 mt-6">
         <button
           type="button"
@@ -283,5 +317,5 @@
         </button>
       </div>
     </div>
-  }
+  } -->
 </section>

@@ -27,11 +27,11 @@ export class PrescriptionDetail implements OnInit {
   showDeleteConfirm = false;
 
   ngOnInit() {
-    const id = Number(this.route.snapshot.paramMap.get('id'));
-    const found = this.prescriptionService.getById(id);
-    if (found) {
-      this.selectedPrescription = JSON.parse(JSON.stringify(found));
-    }
+    // const id = Number(this.route.snapshot.paramMap.get('id'));
+    // const found = this.prescriptionService.getById(id);
+    // if (found) {
+    //   this.selectedPrescription = JSON.parse(JSON.stringify(found));
+    // }
   }
 
   get warningsCount(): number {
@@ -55,8 +55,8 @@ export class PrescriptionDetail implements OnInit {
   }
 
   save() {
-    this.prescriptionService.update(this.selectedPrescription);
-    this.editMode = false;
+    // this.prescriptionService.update(this.selectedPrescription);
+    // this.editMode = false;
   }
 
   deletePrescription() {
@@ -64,9 +64,9 @@ export class PrescriptionDetail implements OnInit {
   }
 
   confirmDelete() {
-    this.prescriptionService.delete(this.selectedPrescription.id);
-    this.showDeleteConfirm = false;
-    this.goBack();
+    // this.prescriptionService.delete(this.selectedPrescription.id);
+    // this.showDeleteConfirm = false;
+    // this.goBack();
   }
 
   goBack() {

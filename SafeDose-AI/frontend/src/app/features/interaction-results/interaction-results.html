@@ -10,7 +10,7 @@
   </div>
 } @else {
   <div class="container-app pt-16 pb-24">
-    <div class="max-w-2xl mx-auto space-y-4 sm:space-y-6">
+    <div class="max-w-5xl mx-auto space-y-4 sm:space-y-6">
       <!-- Severity Banner -->
       <div
         class="p-6 sm:p-8 text-center rounded-2xl sm:rounded-3xl text-white"
@@ -56,7 +56,7 @@
           class="bg-white p-5 sm:p-6 rounded-2xl shadow-sm border border-outline-variant space-y-3 text-right"
         >
           <h3 class="text-base sm:text-lg font-bold text-on-background">الأدوية المفحوصة</h3>
-          @for (drug of data()!.analyzedDrugs; track $index) {
+          @for (drug of data()!.analyzedDrugs; track drug.drugId) {
             <div class="flex items-center gap-3 sm:gap-4 p-3 rounded-xl bg-surface-container-low">
               <lucide-icon
                 [img]="pillIcon"
@@ -64,8 +64,11 @@
               ></lucide-icon>
               <div class="flex-1 min-w-0">
                 <p class="font-bold text-on-background text-sm sm:text-base truncate">
-                  {{ drug.name || 'دواء #' + (drug.drugCatalogId ?? $index) }}
+                  {{ drug.arabicName || drug.englishName || 'دواء #' + drug.drugId }}
                 </p>
+                @if (drug.dosageNote) {
+                  <p class="text-xs text-outline">{{ drug.dosageNote }}</p>
+                }
               </div>
             </div>
           }
@@ -79,8 +82,13 @@
         >
           <h3 class="text-base sm:text-lg font-bold text-on-danger-container">تعارضات مكتشفة</h3>
           @for (pair of data()!.conflictingPairs; track $index) {
-            <div class="bg-white/60 rounded-xl p-3 text-xs text-on-danger-container">
-              {{ pair | json }}
+            <div class="bg-white/70 rounded-xl p-4 space-y-1.5 text-right">
+              <p class="text-sm font-bold text-on-danger-container">
+                {{ pair.drugA }} + {{ pair.drugB }}
+              </p>
+              <p class="text-xs text-on-danger-container/80 leading-relaxed">
+                {{ pair.reasonArabic }}
+              </p>
             </div>
           }
         </div>

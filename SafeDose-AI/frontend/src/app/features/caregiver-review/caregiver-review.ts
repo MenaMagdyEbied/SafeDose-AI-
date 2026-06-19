@@ -1,12 +1,4 @@
-import {
-  ChangeDetectorRef,
-  Component,
-  computed,
-  DestroyRef,
-  inject,
-  OnInit,
-  signal,
-} from '@angular/core';
+import { ChangeDetectorRef, Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router, RouterLink } from '@angular/router';
 import {
@@ -22,27 +14,26 @@ import {
   X,
 } from 'lucide-angular';
 import { ScannedMed } from '../../core/models/scanned-med';
-import { FormsModule } from '@angular/forms';
-import { Prescription } from '../../core/services/prescription';
 import { EMPTY, from } from 'rxjs';
 import { catchError, finalize, map, switchMap } from 'rxjs/operators';
+import { AddMedication } from '../../shared/components/add-medication/add-medication';
 
 @Component({
   selector: 'app-caregiver-review',
-  imports: [LucideAngularModule, RouterLink, FormsModule],
+  imports: [LucideAngularModule, RouterLink, AddMedication],
   templateUrl: './caregiver-review.html',
   styleUrl: './caregiver-review.css',
 })
 export class CaregiverReview implements OnInit {
   private readonly router = inject(Router);
   private readonly cdr = inject(ChangeDetectorRef);
-  private readonly prescriptionService = inject(Prescription);
   private readonly destroyRef = inject(DestroyRef);
 
   scanned = signal(false);
   loading = signal(false);
   errorText = signal('');
   scannedMeds: ScannedMed[] = [];
+  prescriptions = signal<any[]>([]);
 
   cameraIcon = Camera;
   uploadIcon = Upload;
@@ -122,8 +113,6 @@ export class CaregiverReview implements OnInit {
       this.scanned.set(true);
     }
   }
-
-  readonly prescriptions = computed(() => this.prescriptionService.prescriptions());
 
   openCamera(): void {
     this.showCamera.set(true);
@@ -345,17 +334,17 @@ export class CaregiverReview implements OnInit {
   }
 
   saveManualPrescription() {
-    const prescription = {
-      id: Date.now(),
-      name: this.manualForm.name || 'وصفة يدوية',
-      date: new Date().toLocaleDateString('ar-EG'),
-      source: 'manual',
-      meds: this.manualForm.meds.filter((m) => m.name.trim()),
-    };
-    this.prescriptionService.add(prescription);
-    this.scanned.set(true);
-    this.closeManualModal();
-    this.manualForm = { name: '', meds: [{ name: '', dose: '', frequency: '', duration: '' }] };
+    //   const prescription = {
+    //     id: Date.now(),
+    //     name: this.manualForm.name || 'وصفة يدوية',
+    //     date: new Date().toLocaleDateString('ar-EG'),
+    //     source: 'manual',
+    //     meds: this.manualForm.meds.filter((m) => m.name.trim()),
+    //   };
+    //   this.prescriptionService.add(prescription);
+    //   this.scanned.set(true);
+    //   this.closeManualModal();
+    //   this.manualForm = { name: '', meds: [{ name: '', dose: '', frequency: '', duration: '' }] };
   }
 
   viewPrescription(prescription: any) {
@@ -369,15 +358,15 @@ export class CaregiverReview implements OnInit {
   }
 
   deleteConfirmed() {
-    const prescription = this.prescriptionToDelete();
-    if (prescription) {
-      this.prescriptionService.delete(prescription.id);
-      this.prescriptionToDelete.set(null);
-      this.showDeleteConfirm.set(false);
-      this.unlockBodyScroll();
-      if (this.prescriptions().length === 0) {
-        this.scanned.set(false);
-      }
-    }
+    // const prescription = this.prescriptionToDelete();
+    // if (prescription) {
+    //   this.prescriptionService.delete(prescription.id);
+    //   this.prescriptionToDelete.set(null);
+    //   this.showDeleteConfirm.set(false);
+    //   this.unlockBodyScroll();
+    //   if (this.prescriptions().length === 0) {
+    //     this.scanned.set(false);
+    //   }
+    // }
   }
 }

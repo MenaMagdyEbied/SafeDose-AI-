@@ -1,11 +1,16 @@
 export interface AnalyzedDrug {
-  drugCatalogId?: number;
-  name?: string;
-  [key: string]: unknown;
+  drugId: number;
+  arabicName: string | null;
+  englishName: string | null;
+  dosageNote: string | null;
+  role: string | null;
 }
 
 export interface ConflictingPair {
-  [key: string]: unknown;
+  drugA: string;
+  drugB: string;
+  reasonArabic: string;
+  severity: 'low' | 'moderate' | 'high' | string;
 }
 
 export interface InteractionResult {

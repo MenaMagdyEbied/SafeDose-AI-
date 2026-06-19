@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import {
   Activity,
@@ -29,7 +29,7 @@ import { FormsModule } from '@angular/forms';
 export class PatientHome {
   protected readonly router = inject(Router);
   private readonly auth = inject(Auth);
-  taken = false;
+  taken = signal(false);
   defaultConditions = ['السكري', 'الضغط', 'القلب'];
 
   pillIcon = Pill;
@@ -39,7 +39,7 @@ export class PatientHome {
   checkCircleIcon = CircleCheck;
   alertTriangleIcon = TriangleAlert;
   calendarIcon = Calendar;
-  showEditModal = false;
+  showEditModal = signal(false);
 
   heartIcon = Heart;
   printerIcon = Printer;
@@ -50,7 +50,7 @@ export class PatientHome {
   plusIcon = Plus;
   xIcon = X;
 
-  editMeds: { name: string; dose: string; frequency: string }[] = [];
+  editMeds = signal<{ name: string; dose: string; frequency: string }[]>([]);
 
   commonMeds = [
     'بنادول اكسترا',
@@ -99,11 +99,11 @@ export class PatientHome {
     setTimeout(() => this.currentSuggestionsMap.clear(), 150);
   }
 
-  medications: { name: string; dose: string; frequency: string }[] = [
+  medications = signal<{ name: string; dose: string; frequency: string }[]>([
     { name: 'جلوكوفاج', dose: '٥٠٠ ملغ', frequency: 'مرتان يومياً' },
     { name: 'كونكور', dose: '٥ ملغ', frequency: 'مرة مساءً' },
     { name: 'وارفارين', dose: '٥ ملغ', frequency: 'مرة يومياً' },
-  ];
+  ]);
 
   get user() {
     return {
@@ -120,32 +120,38 @@ export class PatientHome {
   }
 
   takeDose(): void {
-    this.taken = true;
+    this.taken.set(true);
   }
 
   showSymptomsReport(): void {
     window.alert('تم فتح تقرير الأعراض.');
   }
   openEditModal() {
-    this.editMeds = this.medications.map((m) => ({ ...m }));
-    this.showEditModal = true;
+    this.editMeds.set(this.medications().map((m) => ({ ...m })));
+    this.showEditModal.set(true);
     document.body.style.overflow = 'hidden';
   }
   closeEditModal() {
-    this.showEditModal = false;
+    this.showEditModal.set(false);
     document.body.style.overflow = '';
   }
 
   addMed() {
-    this.editMeds.push({ name: '', dose: '', frequency: '' });
+    this.editMeds.update((meds) => [...meds, { name: '', dose: '', frequency: '' }]);
   }
 
   removeMed(index: number) {
-    this.editMeds.splice(index, 1);
+    this.editMeds.update((meds) => meds.filter((_, i) => i !== index));
+  }
+
+  updateEditMed(index: number, field: 'name' | 'dose' | 'frequency', value: string) {
+    this.editMeds.update((meds) =>
+      meds.map((med, i) => (i === index ? { ...med, [field]: value } : med)),
+    );
   }
 
   saveMeds() {
-    this.medications = this.editMeds.filter((m) => m.name.trim());
+    this.medications.set(this.editMeds().filter((m) => m.name.trim()));
     this.closeEditModal();
     // TODO: PUT /api/user/medications
   }

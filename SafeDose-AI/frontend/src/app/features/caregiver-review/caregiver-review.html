@@ -5,7 +5,7 @@
   </div>
 
   <!-- Camera Modal -->
-  @if (showCamera) {
+  @if (showCamera()) {
     <div class="fixed inset-0 bg-black/80 z-50 flex flex-col items-center justify-center gap-4 p-4">
       <video id="cameraFeed" autoplay playsinline class="w-full max-w-lg rounded-xl"></video>
       <div class="flex flex-col sm:flex-row gap-3 w-full max-w-lg">
@@ -26,7 +26,7 @@
   }
 
   <!-- Upload Area -->
-  @if (!scanned && !loading) {
+  @if (!scanned() && !loading()) {
     <div
       class="bg-white border-2 border-dashed border-primary/30 rounded-3xl p-6 sm:p-12 text-center hover:border-primary/60 transition-all"
     >
@@ -65,7 +65,7 @@
   }
 
   <!-- Loading State -->
-  @if (loading) {
+  @if (loading()) {
     <div
       class="bg-white rounded-3xl border border-outline-variant p-8 sm:p-12 text-center space-y-4"
     >
@@ -78,15 +78,15 @@
   }
 
   <!-- Error -->
-  @if (errorText) {
+  @if (errorText()) {
     <div class="bg-danger-container p-4 rounded-xl flex items-center gap-2 text-right">
       <lucide-icon [img]="alertTriangleIcon" class="w-5 h-5 text-danger shrink-0"></lucide-icon>
-      <p class="text-sm font-bold text-on-danger-container">{{ errorText }}</p>
+      <p class="text-sm font-bold text-on-danger-container">{{ errorText() }}</p>
     </div>
   }
 
   <!-- Scan Results -->
-  @if (scanned && !loading) {
+  @if (scanned() && !loading()) {
     <div class="space-y-4">
       <!-- Success Banner -->
       <div
@@ -95,13 +95,13 @@
         <lucide-icon [img]="checkCircleIcon" class="w-6 h-6 shrink-0"></lucide-icon>
         <div class="text-right">
           <p class="font-bold text-sm">وصفاتك المحفوظة</p>
-          <p class="text-xs text-emerald-600">{{ prescriptions.length }} وصفة مسجلة</p>
+          <p class="text-xs text-emerald-600">{{ prescriptions().length }} وصفة مسجلة</p>
         </div>
       </div>
 
       <!-- Prescriptions Cards -->
       <div class="space-y-3">
-        @for (prescription of prescriptions; track prescription.id) {
+        @for (prescription of prescriptions(); track prescription.id) {
           <div class="bg-white rounded-2xl border border-outline-variant shadow-sm p-4 text-right">
             <!-- Card Header -->
             <div class="flex items-center justify-between mb-3">
@@ -164,14 +164,14 @@
 </section>
 
 <!-- Manual Entry Modal (بيشتغل للإضافة اليدوية والمراجعة بعد المسح) -->
-@if (showManualModal) {
+@if (showManualModal()) {
   <div
     class="fixed inset-0 top-0 left-0 w-screen h-screen bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto"
     dir="rtl"
     (click)="closeManualModal()"
   >
     <div
-      class="bg-white rounded-3xl shadow-xl w-full sm:max-w-md flex flex-col max-h-[85vh]"
+      class="bg-white rounded-3xl shadow-xl w-full sm:max-w-md flex flex-col max-h-screen"
       (click)="$event.stopPropagation()"
     >
       <!-- Modal Header -->
@@ -277,7 +277,7 @@
         <button
           (click)="saveManualPrescription()"
           [disabled]="!manualForm.meds.length || !manualForm.meds[0].name.trim()"
-          class="flex-[2] h-12 bg-primary hover:bg-primary-dark disabled:bg-slate-200 disabled:text-outline text-white rounded-2xl font-bold text-sm transition-all cursor-pointer"
+          class="flex-2 h-12 bg-primary hover:bg-primary-dark disabled:bg-slate-200 disabled:text-outline text-white rounded-2xl font-bold text-sm transition-all cursor-pointer"
         >
           حفظ الوصفة
         </button>
@@ -287,7 +287,7 @@
 }
 
 <!-- Delete Confirm Modal -->
-@if (showDeleteConfirm) {
+@if (showDeleteConfirm()) {
   <div
     class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in"
     dir="rtl"
@@ -301,7 +301,7 @@
       <div class="space-y-1">
         <h3 class="text-lg font-extrabold text-on-background">حذف الوصفة؟</h3>
         <p class="text-sm text-outline">
-          هيتم حذف "{{ prescriptionToDelete?.name }}" ومش هترجع تاني
+          هيتم حذف "{{ prescriptionToDelete()?.name }}" ومش هترجع تاني
         </p>
       </div>
       <div class="grid grid-cols-2 gap-3">
@@ -312,7 +312,7 @@
           حذف
         </button>
         <button
-          (click)="showDeleteConfirm = false; prescriptionToDelete = null"
+          (click)="showDeleteConfirm.set(false); prescriptionToDelete.set(null)"
           class="w-full h-12 bg-slate-100 hover:bg-slate-200 text-on-surface-variant rounded-2xl font-bold text-sm cursor-pointer transition-all"
         >
           إلغاء

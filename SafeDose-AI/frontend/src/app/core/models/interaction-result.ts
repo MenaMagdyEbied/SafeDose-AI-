@@ -1,10 +1,29 @@
-import { CheckedMed } from './checked-med';
+export interface AnalyzedDrug {
+  drugCatalogId?: number;
+  name?: string;
+  [key: string]: unknown;
+}
+
+export interface ConflictingPair {
+  [key: string]: unknown;
+}
 
 export interface InteractionResult {
-  status: 'high' | 'medium' | 'low';
-  title: string;
-  severityText: string;
-  explanation: string;
-  checkedMeds: CheckedMed[];
-  source: string;
+  interactionCheckId: number;
+  level: number;
+  labelArabic: string;
+  color: string;
+  titleArabic: string;
+  explanationArabic: string;
+  recommendedActionArabic: string;
+  analyzedDrugs: AnalyzedDrug[];
+  conflictingPairs: ConflictingPair[];
+  sources: string[];
+  safetyDisclaimerArabic: string;
+  checkedAt: string;
+}
+
+export interface CheckInteractionsPayload {
+  drugCatalogIds: number[];
+  patientId: number;
 }

@@ -1,10 +1,10 @@
-import { Injectable } from '@angular/core';
+import { Injectable, signal } from '@angular/core';
 
 @Injectable({
   providedIn: 'root',
 })
 export class Prescription {
-  prescriptions: any[] = [
+  prescriptions = signal<any[]>([
     {
       id: 1,
       name: 'وصفة د. محمد السيد',
@@ -110,22 +110,21 @@ export class Prescription {
         },
       ],
     },
-  ];
+  ]);
 
   getById(id: number) {
-    return this.prescriptions.find((p) => p.id === id);
+    return this.prescriptions().find((p) => p.id === id);
   }
 
   delete(id: number) {
-    this.prescriptions = this.prescriptions.filter((p) => p.id !== id);
+    this.prescriptions.update((list) => list.filter((p) => p.id !== id));
   }
 
   update(updated: any) {
-    const idx = this.prescriptions.findIndex((p) => p.id === updated.id);
-    if (idx !== -1) this.prescriptions[idx] = updated;
+    this.prescriptions.update((list) => list.map((p) => (p.id === updated.id ? updated : p)));
   }
 
   add(prescription: any) {
-    this.prescriptions.push(prescription);
+    this.prescriptions.update((list) => [...list, prescription]);
   }
 }

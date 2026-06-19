@@ -1,71 +1,58 @@
-import { Injectable } from '@angular/core';
-import { InteractionResult } from '../models';
-
+import { inject, Injectable, signal } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { firstValueFrom } from 'rxjs';
+import { environment } from '../../../environments/environment';
+import { DrugSearchResult, InteractionResult, CheckInteractionsPayload } from '../models';
 @Injectable({
   providedIn: 'root',
 })
 export class Interaction {
-  private famousDrugs = [
-    'وارفارين (Warfarin)',
-    'أسبرين (Aspirin)',
-    'بانادول (Panadol)',
-    'كونكور (Concor)',
-    'ميتفورمين (Metformin)',
-    'بروفين (Brufen)',
-  ];
+  private readonly apiUrl = environment.apiUrl;
+  private readonly http = inject(HttpClient);
 
-  getFamousDrugs(): string[] {
-    return this.famousDrugs;
-  }
+  readonly searchResults = signal<DrugSearchResult[]>([]);
+  readonly history = signal<InteractionResult[]>([]);
 
-  searchDrugs(query: string): string[] {
-    if (!query) return this.famousDrugs;
-    return this.famousDrugs.filter((d) => d.toLowerCase().includes(query.toLowerCase()));
-  }
-  async checkInteractions(drugs: string[]): Promise<InteractionResult> {
-    // نظف الأسماء - شيل الجزء الإنجليزي
-    const cleanDrugs = drugs.map((d) => d.split('(')[0].trim());
-
-    try {
-      const resp = await fetch('/api/check-interactions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ drugs: cleanDrugs }),
-      });
-      if (!resp.ok) throw new Error('Server error');
-      return await resp.json();
-    } catch {
-      return this.clientFallback(drugs);
+  async searchDrugs(query: string, limit = 10): Promise<DrugSearchResult[]> {
+    if (!query) {
+      this.searchResults.set([]);
+      return [];
     }
+    const results = await firstValueFrom(
+      this.http.get<DrugSearchResult[]>(`${this.apiUrl}/drugs/search`, {
+        params: { q: query, limit },
+      }),
+    );
+    this.searchResults.set(results);
+    return results;
   }
 
-  private clientFallback(drugs: string[]): InteractionResult {
-    const norm = drugs.map((m) => m.toLowerCase());
-    const hasAspirin = norm.some((m) => m.includes('aspirin') || m.includes('أسبرين'));
-    const hasWarfarin = norm.some((m) => m.includes('warfarin') || m.includes('وارفارين'));
+  async checkInteractions(payload: CheckInteractionsPayload): Promise<InteractionResult> {
+    return firstValueFrom(
+      this.http.post<InteractionResult>(`${this.apiUrl}/interactions/check`, payload),
+    );
+  }
 
-    if (hasAspirin && hasWarfarin) {
-      return {
-        status: 'high',
-        title: 'لا تتناولهم معًا — استشر طبيبك فورًا',
-        severityText: 'خطر تفاعل دوائي حاد',
-        explanation:
-          'يؤدي الجمع بين هذين العقارين (الوارفارين والأسبرين) إلى زيادة مفرطة في خطر حدوث نزيف داخلي أو آثار جانبية قلبية خطيرة. هذا التفاعل يعتبر من الدرجة الثالثة (شديد الخطورة) ويتطلب تدخلاً طبياً فورياً لمراجعة الخطة العلاجية.',
-        checkedMeds: [
-          { name: 'وارفارين (Warfarin)', dose: 'الجرعة: ٥ ملجم يومياً', severity: 'error' },
-          { name: 'أسبرين (Aspirin)', dose: 'الجرعة: ٨١ ملجم عند اللزوم', severity: 'error' },
-        ],
-        source: 'DrugBank / EDA',
-      };
-    }
+  async getHistory(patientId: number, limit = 20, offset = 0): Promise<InteractionResult[]> {
+    const list = await firstValueFrom(
+      this.http.get<InteractionResult[]>(`${this.apiUrl}/interactions/history`, {
+        params: { patientId, limit, offset },
+      }),
+    );
+    this.history.set(list);
+    return list;
+  }
 
-    return {
-      status: 'low',
-      title: 'أدويتك متوافقة للمتابعة الآمنة',
-      severityText: 'لم يتم العثور على تداخلات خطيرة',
-      explanation: `بناءً على الفحص المبدئي للأدوية التالية: (${drugs.join(' - ')}). لا توجد تداخلات دوائية حادة مسجلة في قاعدة البيانات المبدئية. ومع ذلك، يوصى دائماً بمراجعة الطبيب المعالج أو الصيدلاني عند بدء تناول أدوية جديدة معاً.`,
-      checkedMeds: drugs.map((m) => ({ name: m, dose: 'الجرعة المعتادة', severity: 'success' })),
-      source: 'SafeDose Core DB / FDA',
-    };
+  getById(id: number): Promise<InteractionResult> {
+    return firstValueFrom(this.http.get<InteractionResult>(`${this.apiUrl}/interactions/${id}`));
+  }
+
+  async deleteCheck(id: number): Promise<void> {
+    await firstValueFrom(this.http.delete(`${this.apiUrl}/interactions/${id}`));
+    this.history.update((list) => list.filter((h) => h.interactionCheckId !== id));
+  }
+
+  acknowledge(id: number): Promise<unknown> {
+    return firstValueFrom(this.http.post(`${this.apiUrl}/interactions/${id}/acknowledge`, {}));
   }
 }

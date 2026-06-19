@@ -9,3 +9,5 @@ export * from './subscription-plan';
 export * from './admin-stats';
 export * from './chat-action';
 export * from './chat-message';
+export * from './patient-medication';
+export * from './drug-search-result';

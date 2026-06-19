@@ -15,43 +15,39 @@
           <input
             type="text"
             placeholder="مثلاً: بانادول، أسبرين، وارفارين..."
-            [(ngModel)]="searchWord"
+            [ngModel]="searchWord()"
             (ngModelChange)="onSearchChange($event)"
-            (focus)="resultsOpen = true"
+            (focus)="resultsOpen.set(true)"
             class="w-full h-[56px] pr-12 pl-4 rounded-xl border-2 border-outline-variant outline-none focus:border-primary text-right"
           />
-          <lucide-icon
-            [img]="searchIcon"
-            class="absolute right-4 text-outline w-5 h-5"
-          ></lucide-icon>
+          <lucide-icon [img]="searchIcon" class="absolute right-4 text-outline w-5 h-5"></lucide-icon>
         </div>
-        @if (resultsOpen) {
+
+        @if (resultsOpen()) {
           <div
             class="absolute top-[100%] right-0 left-0 mt-2 bg-white border border-outline-variant rounded-xl shadow-lg z-30 overflow-hidden"
           >
             <div
               class="bg-slate-50 px-4 py-2 text-xs font-bold text-outline border-b border-outline-variant/30 text-right"
             >
-              أدوية شائعة:
+              نتائج البحث:
             </div>
-            @for (d of filteredDrugs; track d) {
+            @for (drug of filteredDrugs(); track drug.drugCatalogId) {
               <div
-                (click)="addMed(d)"
+                (click)="addMed(drug)"
                 class="px-4 py-3 hover:bg-surface-container-low transition-colors cursor-pointer border-b border-outline-variant/20 text-right text-sm hover:text-primary font-medium"
               >
-                {{ d }}
+                <p class="font-bold">{{ drug.commercialNameAr || drug.commercialNameEn }}</p>
+                <p class="text-xs text-outline">{{ drug.scientificName }}</p>
               </div>
             }
-            @if (filteredDrugs.length === 0 && searchWord) {
-              <div
-                (click)="addMed(searchWord)"
-                class="px-4 py-3 hover:bg-surface-container-low transition-colors cursor-pointer text-right text-sm text-primary font-bold"
-              >
-                إضافة دواء مخصص: "{{ searchWord }}"
+            @if (filteredDrugs().length === 0 && searchWord()) {
+              <div class="px-4 py-3 text-right text-sm text-outline">
+                لا توجد نتائج لـ "{{ searchWord() }}"
               </div>
             }
             <div
-              (click)="resultsOpen = false"
+              (click)="resultsOpen.set(false)"
               class="px-4 py-1.5 bg-slate-50 text-center text-xs text-outline cursor-pointer hover:bg-slate-100 font-semibold"
             >
               إغلاق القائمة ✕
@@ -68,18 +64,19 @@
           <h3 class="text-md font-bold text-on-background">الأدوية المختارة للفحص</h3>
           <span class="text-xs text-outline">يمكنك إضافة حتى ٦ أدوية</span>
         </div>
-        @if (selectedMeds.length === 0) {
+
+        @if (selectedMeds().length === 0) {
           <div class="flex-1 flex flex-col items-center justify-center text-outline py-6">
             <lucide-icon [img]="pillIcon" class="w-10 h-10 mb-2 opacity-50"></lucide-icon>
             <span class="text-xs">لم يتم اختيار أي أدوية بعد</span>
           </div>
         } @else {
           <div class="flex flex-wrap gap-2.5">
-            @for (med of selectedMeds; track med; let i = $index) {
+            @for (med of selectedMeds(); track med.drugCatalogId; let i = $index) {
               <div
                 class="inline-flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-full shadow-sm text-sm font-bold"
               >
-                <span>{{ med }}</span>
+                <span>{{ med.name }}</span>
                 <button
                   (click)="removeMed(i)"
                   class="hover:bg-white/20 p-0.5 rounded-full transition-colors cursor-pointer"
@@ -164,30 +161,127 @@
   <div class="mt-8 flex flex-col items-center justify-center gap-4">
     <button
       (click)="runCheck()"
-      [disabled]="selectedMeds.length < 2 || loading"
+      [disabled]="selectedMeds().length < 2 || loading()"
       class="w-full max-w-lg h-[60px] bg-primary hover:bg-primary-dark text-white rounded-full font-bold text-base sm:text-lg flex items-center justify-center gap-3 transition-all active:scale-95 shadow-md disabled:bg-slate-300 disabled:text-outline disabled:cursor-not-allowed cursor-pointer"
     >
-      @if (loading) {
-        <div
-          class="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"
-        ></div>
+      @if (loading()) {
+        <div class="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
         <span>جاري فحص تعارض الأدوية...</span>
       } @else {
         <span>افحص التداخلات الدوائية الآن</span>
         <lucide-icon [img]="activityIcon" class="w-6 h-6 animate-pulse"></lucide-icon>
       }
     </button>
+
     <div
       class="bg-danger-container text-on-danger-container p-4 rounded-xl flex items-start gap-4 max-w-lg w-full"
     >
-      <lucide-icon
-        [img]="alertTriangleIcon"
-        class="w-5 h-5 shrink-0 text-danger mt-0.5"
-      ></lucide-icon>
+      <lucide-icon [img]="alertTriangleIcon" class="w-5 h-5 shrink-0 text-danger mt-0.5"></lucide-icon>
       <p class="text-xs text-right leading-relaxed">
         تنبيه: محرك فحص التداخلات هو نظام استشاري رقمي مساند بالذكاء الاصطناعي ولا يغني عن مراجعة
         طبيبك المختص.
       </p>
     </div>
   </div>
+
+  <!-- ============ Profile Medications Modal ============ -->
+  @if (showProfileMeds()) {
+    <div
+      class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4 sm:p-4"
+      (click)="closeProfileMeds()"
+    >
+      <div
+        class="bg-white rounded-3xl shadow-xl w-full sm:max-w-md flex flex-col max-h-[80vh]"
+        (click)="$event.stopPropagation()"
+      >
+        <!-- Header -->
+        <div class="pt-4 pb-3 px-5 border-b border-outline-variant/30 flex items-center justify-between shrink-0">
+          <h3 class="font-extrabold text-on-background text-base">أدويتي المسجّلة</h3>
+          <button
+            type="button"
+            (click)="closeProfileMeds()"
+            class="w-8 h-8 rounded-full hover:bg-slate-100 flex items-center justify-center cursor-pointer"
+          >
+            <lucide-icon [img]="xIcon" class="w-5 h-5 text-outline"></lucide-icon>
+          </button>
+        </div>
+
+        <!-- Body -->
+        <div class="p-5 space-y-2 overflow-y-auto flex-1">
+          @if (profileMedsLoading()) {
+            <div class="text-center py-8">
+              <div
+                class="w-8 h-8 border-3 border-primary border-t-transparent rounded-full animate-spin mx-auto"
+              ></div>
+              <p class="text-xs text-outline mt-3">جارٍ تحميل أدويتك...</p>
+            </div>
+          }
+
+          @if (!profileMedsLoading() && profileMeds().length === 0) {
+            <div class="text-center py-8 space-y-2">
+              <lucide-icon [img]="pillIcon" class="w-10 h-10 text-outline/30 mx-auto"></lucide-icon>
+              <p class="text-sm font-bold text-on-background">لا توجد أدوية مسجلة</p>
+              <p class="text-xs text-outline">أضيفي أدويتك أولاً من صفحة العائلة</p>
+            </div>
+          }
+
+          @if (!profileMedsLoading()) {
+            @for (med of profileMeds(); track med.drugCatalogId) {
+              <label
+                class="flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all hover:border-primary/40"
+                [class.border-primary]="med.checked"
+                [class.bg-primary]="med.checked"
+                [class.bg-opacity-5]="med.checked"
+                [class.border-outline-variant]="!med.checked"
+              >
+                <input
+                  type="checkbox"
+                  [checked]="med.checked"
+                  (change)="toggleProfileMed(med)"
+                  class="w-5 h-5 accent-primary rounded shrink-0 cursor-pointer"
+                />
+                <span class="flex-1 text-sm font-bold text-on-background text-right">
+                  {{ med.name }}
+                </span>
+              </label>
+            }
+          }
+        </div>
+
+        <!-- Footer -->
+        <div class="p-5 border-t border-outline-variant/30 shrink-0">
+          <button
+            type="button"
+            (click)="closeProfileMeds()"
+            class="w-full h-12 bg-primary hover:bg-primary-dark text-white rounded-2xl font-bold text-sm transition-all cursor-pointer"
+          >
+            تم ({{ selectedMeds().length }} مختار)
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- ============ Camera Modal ============ -->
+  @if (showCamera()) {
+    <div class="fixed inset-0 bg-black z-50 flex flex-col items-center justify-center p-4">
+      <video id="cameraFeed" autoplay playsinline class="max-w-full max-h-[70vh] rounded-2xl"></video>
+      <div class="flex gap-4 mt-6">
+        <button
+          type="button"
+          (click)="capturePhoto()"
+          class="w-16 h-16 rounded-full bg-white flex items-center justify-center cursor-pointer"
+        >
+          <div class="w-12 h-12 rounded-full border-4 border-primary"></div>
+        </button>
+        <button
+          type="button"
+          (click)="closeCamera()"
+          class="absolute top-6 left-6 w-10 h-10 rounded-full bg-white/20 flex items-center justify-center cursor-pointer"
+        >
+          <lucide-icon [img]="xIcon" class="w-5 h-5 text-white"></lucide-icon>
+        </button>
+      </div>
+    </div>
+  }
 </section>

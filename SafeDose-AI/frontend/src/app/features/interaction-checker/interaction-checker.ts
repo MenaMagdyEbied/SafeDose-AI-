@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, DestroyRef, inject } from '@angular/core';
+import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -17,6 +17,13 @@ import {
 import { EMPTY, from } from 'rxjs';
 import { catchError, finalize } from 'rxjs/operators';
 import { Interaction } from '../../core/services/interaction';
+import { Medications } from '../../core/services/medications';
+import { PatientService } from '../../core/services/patient';
+import { DrugSearchResult } from '../../core/models';
+interface SelectedMed {
+  drugCatalogId: number;
+  name: string;
+}
 
 @Component({
   selector: 'app-interaction-checker',
@@ -27,15 +34,22 @@ import { Interaction } from '../../core/services/interaction';
 export class InteractionChecker {
   private readonly router = inject(Router);
   private readonly interaction = inject(Interaction);
-  private readonly cdr = inject(ChangeDetectorRef);
+  private readonly medicationsService = inject(Medications);
+  private readonly patientService = inject(PatientService);
   private readonly destroyRef = inject(DestroyRef);
-  scanned = false;
-  videoStream: MediaStream | null = null;
-  showCamera = false;
-  searchWord = '';
-  resultsOpen = false;
-  loading = false;
-  selectedMeds: string[] = [];
+
+  scanned = signal(false);
+  videoStream = signal<MediaStream | null>(null);
+  showCamera = signal(false);
+  searchWord = signal('');
+  resultsOpen = signal(false);
+  loading = signal(false);
+  selectedMeds = signal<SelectedMed[]>([]);
+
+  // قائمة "من ملف أدويتي"
+  showProfileMeds = signal(false);
+  profileMedsLoading = signal(false);
+  profileMeds = signal<{ drugCatalogId: number; name: string; checked: boolean }[]>([]);
 
   pillIcon = Pill;
   searchIcon = Search;
@@ -47,29 +61,111 @@ export class InteractionChecker {
   alertTriangleIcon = TriangleAlert;
   chevronRightIcon = ChevronRight;
 
-  get filteredDrugs(): string[] {
-    return this.interaction.searchDrugs(this.searchWord);
+  private currentPatientId: number | null = null;
+
+  readonly filteredDrugs = computed(() => this.interaction.searchResults());
+
+  ngOnInit(): void {
+    // نجيب الـ patientId الأساسي بمجرد ما الصفحة تفتح، هنحتاجه وقت الفحص والتحميل من البروفايل
+    this.patientService
+      .getMyPatients()
+      .then((patients) => {
+        this.currentPatientId = patients[0]?.patientId ?? patients[0]?.id ?? null;
+      })
+      .catch(() => {
+        this.currentPatientId = null;
+      });
   }
 
   onSearchChange(val: string): void {
-    this.searchWord = val;
-    this.resultsOpen = val.length > 0 || true;
+    this.searchWord.set(val);
+    this.resultsOpen.set(true);
+
+    if (!val.trim()) {
+      this.interaction.searchResults.set([]);
+      return;
+    }
+
+    from(this.interaction.searchDrugs(val))
+      .pipe(
+        catchError(() => EMPTY),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe();
   }
 
-  addMed(med: string): void {
-    const clean = med.split(' (')[0].trim();
-    if (this.selectedMeds.includes(clean) || this.selectedMeds.length >= 6) return;
-    this.selectedMeds = [...this.selectedMeds, clean];
-    this.searchWord = '';
-    this.resultsOpen = false;
+  addMed(drug: DrugSearchResult): void {
+    if (
+      this.selectedMeds().some((m) => m.drugCatalogId === drug.drugCatalogId) ||
+      this.selectedMeds().length >= 6
+    ) {
+      return;
+    }
+    this.selectedMeds.update((list) => [
+      ...list,
+      { drugCatalogId: drug.drugCatalogId, name: drug.commercialNameAr || drug.commercialNameEn },
+    ]);
+    this.searchWord.set('');
+    this.resultsOpen.set(false);
   }
 
   removeMed(index: number): void {
-    this.selectedMeds = this.selectedMeds.filter((_, i) => i !== index);
+    this.selectedMeds.update((list) => list.filter((_, i) => i !== index));
   }
 
+  /** فتح قائمة "من ملف أدويتي" مع checkbox لكل دواء */
   loadFromProfile(): void {
-    this.selectedMeds = ['ميتفورمين', 'وارفارين'];
+    this.showProfileMeds.set(true);
+
+    if (!this.currentPatientId) {
+      this.profileMeds.set([]);
+      return;
+    }
+
+    this.profileMedsLoading.set(true);
+
+    from(this.medicationsService.getByPatient(this.currentPatientId))
+      .pipe(
+        catchError(() => EMPTY),
+        finalize(() => this.profileMedsLoading.set(false)),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe((meds) => {
+        this.profileMeds.set(
+          meds.map((m) => ({
+            drugCatalogId: m.drugCatalogId,
+            name: m.drugName,
+            checked: this.selectedMeds().some((s) => s.drugCatalogId === m.drugCatalogId),
+          })),
+        );
+      });
+  }
+
+  closeProfileMeds(): void {
+    this.showProfileMeds.set(false);
+  }
+
+  /** بمجرد ما اليوزر يدوس على checkbox، الدوا يتضاف أو يتشال من selectedMeds على طول */
+  toggleProfileMed(med: { drugCatalogId: number; name: string; checked: boolean }): void {
+    const isCurrentlyChecked = this.selectedMeds().some(
+      (m) => m.drugCatalogId === med.drugCatalogId,
+    );
+
+    if (isCurrentlyChecked) {
+      this.selectedMeds.update((list) => list.filter((m) => m.drugCatalogId !== med.drugCatalogId));
+    } else {
+      if (this.selectedMeds().length >= 6) return;
+      this.selectedMeds.update((list) => [
+        ...list,
+        { drugCatalogId: med.drugCatalogId, name: med.name },
+      ]);
+    }
+
+    this.profileMeds.update((list) =>
+      list.map((m) =>
+        m.drugCatalogId === med.drugCatalogId ? { ...m, checked: !isCurrentlyChecked } : m,
+      ),
+    );
   }
 
   voiceInput(): void {
@@ -92,9 +188,7 @@ export class InteractionChecker {
 
     recognition.onresult = (event: any) => {
       const transcript = event.results[0][0].transcript;
-      this.searchWord = transcript;
-      this.resultsOpen = true;
-      this.cdr.detectChanges();
+      this.onSearchChange(transcript);
     };
     recognition.onerror = (event: any) => {
       console.error('خطأ في التسجيل:', event.error);
@@ -104,14 +198,19 @@ export class InteractionChecker {
   }
 
   runCheck(): void {
-    this.loading = true;
+    if (!this.currentPatientId) return;
 
-    from(this.interaction.checkInteractions(this.selectedMeds))
+    this.loading.set(true);
+
+    const payload = {
+      drugCatalogIds: this.selectedMeds().map((m) => m.drugCatalogId),
+      patientId: this.currentPatientId,
+    };
+
+    from(this.interaction.checkInteractions(payload))
       .pipe(
         catchError(() => EMPTY),
-        finalize(() => {
-          this.loading = false;
-        }),
+        finalize(() => this.loading.set(false)),
         takeUntilDestroyed(this.destroyRef),
       )
       .subscribe((result) => {
@@ -121,7 +220,7 @@ export class InteractionChecker {
   }
 
   scanBarcode(): void {
-    this.showCamera = true;
+    this.showCamera.set(true);
 
     from(
       navigator.mediaDevices.getUserMedia({
@@ -130,18 +229,18 @@ export class InteractionChecker {
     )
       .pipe(
         catchError(() => {
-          this.showCamera = false;
+          this.showCamera.set(false);
           return EMPTY;
         }),
         takeUntilDestroyed(this.destroyRef),
       )
       .subscribe((stream) => {
-        this.videoStream = stream;
+        this.videoStream.set(stream);
 
         setTimeout(() => {
           const video = document.getElementById('cameraFeed') as HTMLVideoElement;
           if (video) {
-            video.srcObject = this.videoStream;
+            video.srcObject = this.videoStream();
           }
         }, 100);
       });
@@ -165,9 +264,11 @@ export class InteractionChecker {
   }
 
   closeCamera(): void {
-    this.videoStream?.getTracks().forEach((t) => t.stop());
-    this.videoStream = null;
-    this.showCamera = false;
+    this.videoStream()
+      ?.getTracks()
+      .forEach((t) => t.stop());
+    this.videoStream.set(null);
+    this.showCamera.set(false);
   }
 
   openFilePicker(): void {
@@ -180,8 +281,8 @@ export class InteractionChecker {
     };
     input.click();
   }
+
   handleFile(file: File): void {
-    if (file) this.scanned = true;
-    this.cdr.detectChanges();
+    if (file) this.scanned.set(true);
   }
 }

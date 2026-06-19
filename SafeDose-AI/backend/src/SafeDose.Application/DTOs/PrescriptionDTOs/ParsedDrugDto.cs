@@ -1,9 +1,12 @@
+using Microsoft.AspNetCore.Mvc.ModelBinding;
+using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
 namespace SafeDose.Application.DTOs.PrescriptionDTOs;
 
 public class ParsedDrugDto
 {
+    [Required]
     [JsonPropertyName("drug_name_guess")]
     public string DrugName { get; set; } = string.Empty;
     

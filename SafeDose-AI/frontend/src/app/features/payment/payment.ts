@@ -1,16 +1,12 @@
-import { Component, inject } from '@angular/core';
+import { Component, DestroyRef, inject, OnInit } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
-import {
-  CircleCheck,
-  CreditCard,
-  Lock,
-  LucideAngularModule,
-  Shield,
-  Smartphone,
-} from 'lucide-angular';
-import { OnInit } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
+import { CircleCheck, Lock, LucideAngularModule, Shield } from 'lucide-angular';
+import { EMPTY, from } from 'rxjs';
+import { catchError, finalize, switchMap } from 'rxjs/operators';
+import { Billing } from '../../core/services/billing';
+import { Auth } from '../../core/auth/services/auth';
 
 @Component({
   selector: 'app-payment',
@@ -21,76 +17,48 @@ import { ActivatedRoute } from '@angular/router';
 export class Payment implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
-  creditCardIcon = CreditCard;
-  smartphoneIcon = Smartphone;
+  private readonly billingService = inject(Billing);
+  private readonly authService = inject(Auth);
+  private readonly destroyRef = inject(DestroyRef);
+
   lockIcon = Lock;
   checkCircleIcon = CircleCheck;
   shieldIcon = Shield;
 
-  method: 'card' | 'wallet' = 'card';
-  showSuccess = false;
-
-  card = { name: '', number: '', expiry: '', cvv: '' };
-  wallet = { type: 'vodafone', phone: '' };
-
-  wallets = [
-    { id: 'vodafone', name: 'فودافون كاش', icon: '🔴' },
-    { id: 'orange', name: 'اورنج كاش', icon: '🟠' },
-    { id: 'etisalat', name: 'اتصالات كاش', icon: '🟢' },
-  ];
-
-  formatCardNumber(event: Event) {
-    const input = event.target as HTMLInputElement;
-    let val = input.value.replace(/\D/g, '').substring(0, 16);
-    val = val.replace(/(.{4})/g, '$1 ').trim();
-    this.card.number = val;
-  }
-
-  formatExpiry(event: Event) {
-    const input = event.target as HTMLInputElement;
-    let val = input.value.replace(/\D/g, '').substring(0, 4);
-    if (val.length >= 2) val = val.substring(0, 2) + '/' + val.substring(2);
-    this.card.expiry = val;
-  }
-
-  isValid(): boolean {
-    if (this.method === 'card') {
-      return (
-        this.card.name.trim().length > 0 &&
-        this.card.number.replace(/\s/g, '').length === 16 &&
-        this.card.expiry.length === 5 &&
-        this.card.cvv.length === 3
-      );
-    }
-    return this.wallet.phone.length === 11 && this.wallet.phone.startsWith('01');
-  }
-
   loading = false;
+  showSuccess = false;
+  showError = false;
+  errorText = '';
   planId = 'pro';
+  verifying = false;
+
+  userForm = {
+    fullName: '',
+    email: '',
+    phoneNumber: '',
+  };
 
   plans: Record<string, { name: string; price: string; features: string[] }> = {
-    pro: {
-      name: 'SafeDose Pro ⭐',
-      price: '٤٩',
+    'premium-monthly': {
+      name: 'بريميوم شهري ⭐',
+      price: '٣٠',
       features: [
         'فحص تداخلات دوائية غير محدود',
         'مساعد ذكي متخصص',
-        'تتبع أدوية متعددة',
+        'تتبع حتى ٥ مرضى',
         'تذكيرات ذكية',
       ],
     },
-    family: {
-      name: 'خطة العيلة 👨‍👩‍👧‍👦',
-      price: '٩٩',
-      features: [
-        'كل مميزات Pro',
-        'إضافة أفراد العيلة',
-        'إدارة أدوية كل فرد',
-        'تنبيهات لكل الأفراد',
-      ],
+    'premium-annual': {
+      name: 'بريميوم سنوي 👑',
+      price: '٣٠٠',
+      features: ['كل مميزات البريميوم الشهري', 'توفير ٦٠ جنيه سنوياً', 'أولوية في الدعم'],
     },
   };
 
+  get tierCode() {
+    return this.plans[this.planId] ? this.planId : 'premium-monthly';
+  }
   get planName() {
     return this.plans[this.planId]?.name ?? '';
   }
@@ -101,29 +69,114 @@ export class Payment implements OnInit {
     return this.plans[this.planId]?.features ?? [];
   }
 
-  ngOnInit() {
-    this.route.queryParams.subscribe((params: any) => {
-      this.planId = params['plan'] ?? 'pro';
-      if (params['success'] === 'true') {
-        this.showSuccess = true;
-      }
-    });
+  ngOnInit(): void {
+    this.prefillUserData();
+
+    this.route.queryParams
+      .pipe(
+        switchMap((params: any) => {
+          this.planId = params['plan'] ?? 'pro';
+          const merchantOrderId = params['merchant_order_id'];
+
+          if (!merchantOrderId) {
+            return EMPTY;
+          }
+
+          this.verifying = true;
+          return from(this.billingService.getPaymentStatus(merchantOrderId)).pipe(
+            catchError(() => {
+              this.errorText = 'فشل التحقق من حالة الدفع.';
+              this.showError = true;
+              return EMPTY;
+            }),
+            finalize(() => {
+              this.verifying = false;
+            }),
+          );
+        }),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe((data: any) => {
+        if (data?.success) {
+          this.showSuccess = true;
+        } else if (data) {
+          this.errorText = 'لم يتم تأكيد الدفع. إذا تم خصم المبلغ، تواصل مع الدعم.';
+          this.showError = true;
+        }
+      });
   }
 
-  pay() {
+  private prefillUserData(): void {
+    const currentUser = this.authService.user;
+    if (currentUser) {
+      this.userForm.fullName = currentUser.name || currentUser.userName || '';
+      this.userForm.email = currentUser.email || '';
+      this.userForm.phoneNumber = currentUser.phone || '';
+    }
+  }
+
+  pay(): void {
+    if (
+      !this.userForm.fullName.trim() ||
+      !this.userForm.email.trim() ||
+      !this.userForm.phoneNumber.trim()
+    ) {
+      this.errorText = 'يرجى ملء جميع البيانات';
+      this.showError = true;
+      return;
+    }
+
     this.loading = true;
-    // TODO: POST /api/payment/create-order
-    // البـ backend بيرجع Paymob payment URL
-    // window.location.href = response.paymentUrl;
+    this.showError = false;
 
-    // Simulate للـ demo
-    setTimeout(() => {
-      this.loading = false;
-      this.showSuccess = true;
-    }, 2000);
+    from(
+      this.billingService.checkout({
+        tierCode: this.tierCode,
+        paymentMethod: 'paymob',
+        fullName: this.userForm.fullName,
+        email: this.userForm.email,
+        phoneNumber: this.userForm.phoneNumber,
+      }),
+    )
+      .pipe(
+        catchError((err: any) => {
+          this.errorText =
+            (typeof err?.error === 'string' ? err.error : err?.error?.message) ||
+            'حدث خطأ أثناء إنشاء طلب الدفع.';
+          this.showError = true;
+          return EMPTY;
+        }),
+        finalize(() => {
+          this.loading = false;
+        }),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe((data) => {
+        window.location.href = data.paymentUrl;
+      });
   }
 
-  goHome() {
+  verifyPayment(merchantOrderId: string): void {
+    from(this.billingService.getPaymentStatus(merchantOrderId))
+      .pipe(
+        catchError(() => {
+          this.errorText = 'فشل التحقق من حالة الدفع.';
+          this.showError = true;
+          return EMPTY;
+        }),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe((data) => {
+        if (data.success) {
+          this.showSuccess = true;
+        } else {
+          this.errorText = 'لم يتم تأكيد الدفع. إذا تم خصم المبلغ، تواصل مع الدعم.';
+          this.showError = true;
+        }
+      });
+  }
+
+  goHome(): void {
     this.showSuccess = false;
     this.router.navigate(['/home']);
   }

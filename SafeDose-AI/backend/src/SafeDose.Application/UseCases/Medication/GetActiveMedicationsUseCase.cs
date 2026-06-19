@@ -3,7 +3,6 @@ using SafeDose.Application.Interfaces;
 
 namespace SafeDose.Application.UseCases.Medication;
 
-// list active medications for a patient.
 public class GetActiveMedicationsUseCase
 {
     private readonly IPatientMedicationRepository _meds;

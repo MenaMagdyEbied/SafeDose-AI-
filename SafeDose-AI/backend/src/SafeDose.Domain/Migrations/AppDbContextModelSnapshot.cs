@@ -619,7 +619,8 @@ namespace SafeDose.Domain.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("InteractionCheckId"));
 
                     b.Property<string>("AccountId")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<DateTime?>("AcknowledgedAt")
                         .HasColumnType("datetime2");
@@ -711,6 +712,8 @@ namespace SafeDose.Domain.Migrations
                     b.HasIndex("ConsentRecordId");
 
                     b.HasIndex("PatientId");
+
+                    b.HasIndex("AccountId", "CheckedAt");
 
                     b.HasIndex("PatientId", "CheckedAt");
 
@@ -806,6 +809,9 @@ namespace SafeDose.Domain.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
                         .HasDefaultValue(true);
+
+                    b.Property<Guid>("MedicalCardToken")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("PatientId");
 
@@ -918,6 +924,10 @@ namespace SafeDose.Domain.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<string>("MerchantOrderId")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
                     b.Property<DateTime?>("PaidAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime2")
@@ -930,6 +940,10 @@ namespace SafeDose.Domain.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("PaymentId");
+
+                    b.HasIndex("MerchantOrderId")
+                        .IsUnique()
+                        .HasFilter("[MerchantOrderId] IS NOT NULL");
 
                     b.HasIndex("SubscriptionId");
 
@@ -1046,8 +1060,18 @@ namespace SafeDose.Domain.Migrations
                         .HasMaxLength(3)
                         .HasColumnType("nvarchar(3)");
 
+                    b.Property<int>("InteractionCheckLimitPerDay")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(3);
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
+
+                    b.Property<int>("MedicationLimitPerPatient")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(5);
 
                     b.Property<decimal>("MonthlyPrice")
                         .HasColumnType("decimal(10,2)");

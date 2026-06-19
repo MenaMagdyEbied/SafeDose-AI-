@@ -1,6 +1,5 @@
-import { Component, Input, inject } from '@angular/core';
+import { Component, Input } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
 import {
   Heart,
   LucideAngularModule,
@@ -13,7 +12,6 @@ import {
   Trash2,
   X,
 } from 'lucide-angular';
-import { Auth } from '../../../core/auth/services/auth';
 import { CardData } from '../../../core/models/card-data';
 
 @Component({

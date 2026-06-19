@@ -1,22 +1,21 @@
 import { Routes } from '@angular/router';
+import { adminGuard } from './core/auth/guards/admin-guard';
+import { authGuard } from './core/auth/guards/auth-guard';
+import { guestGuard } from './core/auth/guards/guest-guard';
+import { limitGuard } from './core/auth/guards/limit-guard';
+import { superAdminGuard } from './core/auth/guards/super-admin-guard';
+import { Login } from './features/auth/login/login';
+import { Register } from './features/auth/register/register';
 import { CaregiverReview } from './features/caregiver-review/caregiver-review';
 import { DigitalCard } from './features/digital-card/digital-card';
 import { Home } from './features/home/home';
-import { InteractionChecker } from './features/interaction-checker/interaction-checker';
-import { InteractionResults } from './features/interaction-results/interaction-results';
+import { PatientDetails } from './features/patient-details/patient-details';
 import { PatientHome } from './features/patient-home/patient-home';
 import { Pricing } from './features/pricing/pricing';
+import { PublicCard } from './features/public-card/public-card';
+import { AdminLayout } from './layouts/admin-layout/admin-layout';
 import { MainLayout } from './layouts/main-layout/main-layout';
 import { NotFound } from './shared/components/not-found/not-found';
-import { AdminLayout } from './layouts/admin-layout/admin-layout';
-import { Login } from './features/auth/login/login';
-import { Register } from './features/auth/register/register';
-import { Card } from './shared/components/card/card';
-import { PublicCard } from './features/public-card/public-card';
-import { authGuard } from './core/auth/guards/auth-guard';
-import { adminGuard } from './core/auth/guards/admin-guard';
-import { guestGuard } from './core/auth/guards/guest-guard';
-import { superAdminGuard } from './core/auth/guards/super-admin-guard';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'home', pathMatch: 'full' },
@@ -31,6 +30,12 @@ export const routes: Routes = [
         component: PatientHome,
         canActivate: [authGuard],
         title: 'بوابة المريض | SafeDose AI',
+      },
+      {
+        path: 'patient-details/:id',
+        component: PatientDetails,
+        canActivate: [authGuard],
+        title: 'تفاصيل المريض | SafeDose AI',
       },
       {
         path: 'interaction-checker',
@@ -53,7 +58,7 @@ export const routes: Routes = [
       {
         path: 'digital-card',
         component: DigitalCard,
-        canActivate: [authGuard],
+        canActivate: [authGuard, limitGuard],
         title: 'البطاقة الرقمية | SafeDose AI',
       },
       {
@@ -71,16 +76,17 @@ export const routes: Routes = [
       },
       {
         path: 'family-plan',
-        canActivate: [authGuard],
+        canActivate: [authGuard, limitGuard],
         loadComponent: () => import('./features/family-plan/family-plan').then((c) => c.FamilyPlan),
         title: 'خطة العيلة | SafeDose AI',
       },
+
       {
         path: 'payment',
-        canActivate: [authGuard],
-        loadComponent: () => import('./features/payment/payment').then((c) => c.Payment),
-        title: 'الدفع | SafeDose AI',
+        loadComponent: () => import('./features/payment/payment').then((m) => m.Payment),
       },
+      { path: 'payment/success', redirectTo: '/payment', pathMatch: 'full' },
+
       {
         path: 'notifications',
         canActivate: [authGuard],
@@ -128,7 +134,11 @@ export const routes: Routes = [
     ],
   },
 
-  { path: 'card/:id', component: PublicCard, title: 'البطاقة الرقمية | SafeDose AI' },
+  {
+    path: 'card/:token',
+    component: PublicCard,
+    title: 'البطاقة الرقمية | SafeDose AI',
+  },
 
   {
     path: 'login',

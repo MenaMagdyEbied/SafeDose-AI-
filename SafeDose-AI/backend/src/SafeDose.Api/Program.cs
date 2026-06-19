@@ -1,3 +1,4 @@
+using Hangfire;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
@@ -8,10 +9,11 @@ using Polly;
 using Polly.Extensions.Http;
 using SafeDose.Application.Auth.ServicesInterfaces;
 using SafeDose.Application.Interfaces;
+using SafeDose.Application.PushNotificaton.RepositoryInterface;
+using SafeDose.Application.PushNotificaton.ServicesInterface;
 using SafeDose.Application.UseCases;
 using SafeDose.Application.UseCases.Billing;
 using SafeDose.Application.UseCases.Medication;
-using SafeDose.Infrastructure.ExternalServices;
 using SafeDose.Application.UserProfile.RepositoryInterface;
 using SafeDose.Application.UserProfile.ServicesInterface;
 using SafeDose.Domain.ApplicationDbContext;
@@ -19,6 +21,9 @@ using SafeDose.Domain.Entities;
 using SafeDose.Domain.Services;
 using SafeDose.Infrastructure.Auth;
 using SafeDose.Infrastructure.ExternalServices;
+using SafeDose.Infrastructure.ExternalServices;
+using SafeDose.Infrastructure.PushNotificaton.RepositoryImplementation;
+using SafeDose.Infrastructure.PushNotificaton.ServicesImplementation;
 using SafeDose.Infrastructure.Repositories;
 using SafeDose.Infrastructure.Seeders;
 using SafeDose.Infrastructure.UserProfile.RepositoryImplementation;
@@ -32,6 +37,17 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddHttpContextAccessor();
+
+// hangfire
+builder.Services.AddHangfire(config =>
+{
+    config.UseSqlServerStorage(
+        builder.Configuration.GetConnectionString("DefaultConnection"));
+});
+
+builder.Services.AddHangfireServer();
+
+
 
 builder.Services.AddDbContext<AppDbContext>(opt =>
     opt.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -59,6 +75,9 @@ builder.Services.AddScoped<IUserGlobalServices, UserGlobalServices>();
 builder.Services.AddScoped<IEmailSender, EmailSernder>();
 builder.Services.AddScoped<IUserProfileRepository, UserProfileRepository>();
 builder.Services.AddScoped<IUserProfileServices, UserProfileServices>();
+builder.Services.AddScoped<IPushSubscriptionRepository, PushSubscriptionRepository>();
+builder.Services.AddScoped<IPushSubscriptionServices, PushSubscriptionServices>();
+builder.Services.AddScoped<INotificationServices, NotificationServices>();
 
 builder.Services.AddAuthentication(options =>
 {
@@ -250,6 +269,7 @@ app.UseHttpsRedirection();
 app.UseCors(CorsPolicy);
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseHangfireDashboard();
 app.MapControllers();
 
 app.Run();

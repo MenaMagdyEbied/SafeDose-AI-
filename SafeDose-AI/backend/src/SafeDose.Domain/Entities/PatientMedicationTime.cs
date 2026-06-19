@@ -1,4 +1,6 @@
-﻿namespace SafeDose.Domain.Entities
+﻿using Microsoft.Identity.Client;
+
+namespace SafeDose.Domain.Entities
 {
     public class PatientMedicationTime
     {
@@ -6,7 +8,7 @@
         public int PatientMedicationId { get; set; }
         public TimeOnly Time { get; set; }
 
-
+        public DateOnly LastReminderDate { get; set; }  
         public string AccountId { get; set; }  
         public PatientMedication PatientMedication { get; set; } = null!;
     }

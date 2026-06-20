@@ -73,6 +73,12 @@ public class SqlPatientMedicationRepository
     public Task<int> CountActiveForPatientAsync(int patientId)
         => _db.PatientMedications.CountAsync(pm => pm.PatientId == patientId && pm.Status == ActiveStatus);
 
+    public Task<int> CountActiveManualForPatientAsync(int patientId)
+        => _db.PatientMedications.CountAsync(pm =>
+            pm.PatientId == patientId
+            && pm.Status == ActiveStatus
+            && pm.PrescriptionId == null);
+
     public async Task<int> CreateAsync(PatientMedication med)
     {
         await _db.PatientMedications.AddAsync(med);

@@ -6,7 +6,7 @@ import { Auth } from '../../../core/auth/services/auth';
 
 @Component({
   selector: 'app-email-confirmation',
-  imports: [LucideAngularModule, FormsModule, RouterLink],
+  imports: [LucideAngularModule, FormsModule],
   templateUrl: './email-confirmation.html',
   styleUrl: './email-confirmation.css',
 })

@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import {
   Camera,
@@ -39,8 +39,8 @@ export class Profile {
   editIcon = SquarePen;
   trashIcon = Trash2;
   xIcon = X;
-  editMode = false;
-  loading = true;
+  editMode = signal(false);
+  loading = signal(true);
 
   allConditions = ['السكري', 'ارتفاع ضغط الدم', 'الربو', 'أمراض القلب', 'الحساسية', 'أخرى'];
   bloodTypes = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
@@ -145,9 +145,9 @@ export class Profile {
   }
 
   fetchProfile(): void {
-    this.loading = true;
+    this.loading.set(true);
     this.profile = { ...this.mockApiResponse };
-    this.loading = false;
+    this.loading.set(false);
   }
 
   toggleCondition(cond: string): void {
@@ -159,7 +159,7 @@ export class Profile {
   save(): void {
     // TODO: PUT /api/user/profile
     console.log('Saving profile:', this.profile);
-    this.editMode = false;
+    this.editMode.set(false);
   }
 
   get planLabel(): string {
@@ -180,8 +180,8 @@ export class Profile {
     return colors[this.profile.subscriptionPlan] ?? '';
   }
 
-  newConditionInput = '';
-  customConditions: string[] = [];
+  newConditionInput = signal('');
+  customConditions = signal<string[]>([]);
 
   addMedication() {
     this.profile.medications.push({
@@ -197,16 +197,16 @@ export class Profile {
   }
 
   addCustomCondition() {
-    const val = this.newConditionInput.trim();
-    if (val && !this.customConditions.includes(val) && !this.profile.conditions.includes(val)) {
-      this.customConditions.push(val);
+    const val = this.newConditionInput().trim();
+    if (val && !this.customConditions().includes(val) && !this.profile.conditions.includes(val)) {
+      this.customConditions.update((conds) => [...conds, val]);
       this.profile.conditions.push(val);
     }
-    this.newConditionInput = '';
+    this.newConditionInput.set('');
   }
 
   removeCustomCondition(cond: string) {
-    this.customConditions = this.customConditions.filter((c) => c !== cond);
+    this.customConditions.update((conds) => conds.filter((c) => c !== cond));
     this.profile.conditions = this.profile.conditions.filter((c: any) => c !== cond);
   }
 }

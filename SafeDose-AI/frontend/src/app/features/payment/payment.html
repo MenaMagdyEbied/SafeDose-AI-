@@ -198,3 +198,41 @@
     </div>
   </div>
 }
+
+<!-- Failure Modal -->
+@if (showFailure) {
+  <div
+    class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in"
+    dir="rtl"
+  >
+    <div class="bg-white rounded-3xl p-8 shadow-2xl max-w-sm w-full text-center space-y-4">
+      <div class="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto">
+        <span class="text-4xl text-red-500">✕</span>
+      </div>
+      <div class="space-y-1">
+        <h3 class="text-xl font-extrabold text-on-background">فشل الدفع</h3>
+        <p class="text-sm text-outline leading-relaxed">
+          {{ errorText || 'حدث خطأ أثناء إتمام الدفع.' }}
+        </p>
+      </div>
+      <div class="bg-red-50 rounded-2xl p-3 flex items-center gap-2 text-right">
+        <span class="text-red-500 text-base shrink-0">⚠️</span>
+        <p class="text-xs font-bold text-red-700">يمكنك المحاولة مرة أخرى أو العودة للرئيسية</p>
+      </div>
+      <div class="grid grid-cols-2 gap-2">
+        <button
+          (click)="closeFailureModal()"
+          class="h-12 bg-outline-variant text-on-surface rounded-2xl font-bold text-sm cursor-pointer hover:bg-outline transition-all"
+        >
+          إغلاق
+        </button>
+        <button
+          (click)="goHome()"
+          class="h-12 bg-primary text-white rounded-2xl font-bold text-sm cursor-pointer hover:bg-primary-dark transition-all shadow-md"
+        >
+          الصفحة الرئيسية
+        </button>
+      </div>
+    </div>
+  </div>
+}

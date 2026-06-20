@@ -3,6 +3,8 @@ import { inject, Injectable } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { ParsePrescriptionResponse, SavePrescriptionPayload } from '../models/prescription-api';
+import { PrescriptionListItem } from '../models/prescription-list';
+import { PrescriptionDetail } from '../../features/prescription-detail/prescription-detail';
 
 @Injectable({
   providedIn: 'root',
@@ -25,5 +27,18 @@ export class Prescription {
     return firstValueFrom(
       this.http.post<{ prescriptionId: number }>(`${this.baseUrl}/save`, payload),
     );
+  } 
+  getByPatient(patientId: number): Promise<PrescriptionListItem[]> {
+    return firstValueFrom(
+      this.http.get<PrescriptionListItem[]>(`${this.baseUrl}/patient/${patientId}`),
+    );
+  }
+
+  getById(id: number): Promise<PrescriptionDetail> {
+    return firstValueFrom(this.http.get<PrescriptionDetail>(`${this.baseUrl}/${id}`));
+  }
+
+  delete(id: number): Promise<void> {
+    return firstValueFrom(this.http.delete<void>(`${this.baseUrl}/${id}`));
   }
 }

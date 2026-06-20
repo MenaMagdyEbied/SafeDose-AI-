@@ -6,7 +6,6 @@ import { limitGuard } from './core/auth/guards/limit-guard';
 import { superAdminGuard } from './core/auth/guards/super-admin-guard';
 import { Login } from './features/auth/login/login';
 import { Register } from './features/auth/register/register';
-import { CaregiverReview } from './features/caregiver-review/caregiver-review';
 import { DigitalCard } from './features/digital-card/digital-card';
 import { Home } from './features/home/home';
 import { PatientDetails } from './features/patient-details/patient-details';
@@ -16,6 +15,7 @@ import { PublicCard } from './features/public-card/public-card';
 import { AdminLayout } from './layouts/admin-layout/admin-layout';
 import { MainLayout } from './layouts/main-layout/main-layout';
 import { NotFound } from './shared/components/not-found/not-found';
+import { ScanPrescription } from './features/scan-prescription/scan-prescription';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'home', pathMatch: 'full' },
@@ -58,14 +58,14 @@ export const routes: Routes = [
       {
         path: 'digital-card',
         component: DigitalCard,
-        canActivate: [authGuard],// limitGuard],
+        canActivate: [authGuard], // limitGuard],
         title: 'البطاقة الرقمية | SafeDose AI',
       },
       {
-        path: 'caregiver-review',
-        component: CaregiverReview,
+        path: 'scan-prescription',
+        component: ScanPrescription,
         canActivate: [authGuard],
-        title: 'مراجعة الطاقم | SafeDose AI',
+        title: '  مسح وصفاتي الطبية | SafeDose AI',
       },
       { path: 'pricing', component: Pricing, title: 'الأسعار | SafeDose AI' },
       {
@@ -76,7 +76,7 @@ export const routes: Routes = [
       },
       {
         path: 'family-plan',
-        canActivate: [authGuard],// limitGuard],
+        canActivate: [authGuard], // limitGuard],
         loadComponent: () => import('./features/family-plan/family-plan').then((c) => c.FamilyPlan),
         title: 'خطة العيلة | SafeDose AI',
       },
@@ -86,6 +86,7 @@ export const routes: Routes = [
         loadComponent: () => import('./features/payment/payment').then((m) => m.Payment),
       },
       { path: 'payment/success', redirectTo: '/payment', pathMatch: 'full' },
+      { path: 'payment/fail', redirectTo: '/payment', pathMatch: 'full' },
 
       {
         path: 'notifications',
@@ -95,13 +96,20 @@ export const routes: Routes = [
         title: 'الإشعارات | SafeDose AI',
       },
       {
+        path: 'prescriptions',
+        canActivate: [authGuard],
+        loadComponent: () =>
+          import('./features/prescription-list/prescription-list').then((c) => c.PrescriptionList),
+        title: 'وصفاتي الطبية  | SafeDose AI',
+      },
+      {
         path: 'prescription-detail/:id',
         canActivate: [authGuard],
         loadComponent: () =>
           import('./features/prescription-detail/prescription-detail').then(
             (c) => c.PrescriptionDetail,
           ),
-        title: 'تفاصيل الروشتة | SafeDose AI',
+        title: 'تفاصيل الوصفه | SafeDose AI',
       },
     ],
   },

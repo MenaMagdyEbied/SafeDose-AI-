@@ -27,6 +27,7 @@ export class Payment implements OnInit {
 
   loading = false;
   showSuccess = false;
+  showFailure = false;
   showError = false;
   errorText = '';
   planId = 'pro';
@@ -87,6 +88,7 @@ export class Payment implements OnInit {
             catchError(() => {
               this.errorText = 'فشل التحقق من حالة الدفع.';
               this.showError = true;
+              this.showFailure = true;
               return EMPTY;
             }),
             finalize(() => {
@@ -99,9 +101,11 @@ export class Payment implements OnInit {
       .subscribe((data: any) => {
         if (data?.success) {
           this.showSuccess = true;
+          this.showFailure = false;
         } else if (data) {
           this.errorText = 'لم يتم تأكيد الدفع. إذا تم خصم المبلغ، تواصل مع الدعم.';
           this.showError = true;
+          this.showFailure = true;
         }
       });
   }
@@ -128,6 +132,7 @@ export class Payment implements OnInit {
 
     this.loading = true;
     this.showError = false;
+    this.showFailure = false;
 
     from(
       this.billingService.checkout({
@@ -144,6 +149,7 @@ export class Payment implements OnInit {
             (typeof err?.error === 'string' ? err.error : err?.error?.message) ||
             'حدث خطأ أثناء إنشاء طلب الدفع.';
           this.showError = true;
+          this.showFailure = true;
           return EMPTY;
         }),
         finalize(() => {
@@ -162,6 +168,7 @@ export class Payment implements OnInit {
         catchError(() => {
           this.errorText = 'فشل التحقق من حالة الدفع.';
           this.showError = true;
+          this.showFailure = true;
           return EMPTY;
         }),
         takeUntilDestroyed(this.destroyRef),
@@ -169,11 +176,17 @@ export class Payment implements OnInit {
       .subscribe((data) => {
         if (data.success) {
           this.showSuccess = true;
+          this.showFailure = false;
         } else {
           this.errorText = 'لم يتم تأكيد الدفع. إذا تم خصم المبلغ، تواصل مع الدعم.';
           this.showError = true;
+          this.showFailure = true;
         }
       });
+  }
+
+  closeFailureModal(): void {
+    this.showFailure = false;
   }
 
   goHome(): void {

@@ -37,8 +37,14 @@ export class PatientHome implements OnInit {
   taken = signal(false);
   loading = signal(false);
   errorText = signal('');
-  defaultConditions = ['السكري', 'الضغط', 'القلب'];
+  successText = signal('');
 
+  showEditModal = signal(false);
+
+  medications = signal<{ name: string; dose: string; frequency: string }[]>([]);
+  currentPatientId = signal<number | null>(null);
+
+  // Icons
   pillIcon = Pill;
   activityIcon = Activity;
   cameraIcon = Camera;
@@ -46,68 +52,12 @@ export class PatientHome implements OnInit {
   checkCircleIcon = CircleCheck;
   alertTriangleIcon = TriangleAlert;
   calendarIcon = Calendar;
-  showEditModal = signal(false);
-
   heartIcon = Heart;
   printerIcon = Printer;
   shieldIcon = Shield;
-
-  editIcon = SquarePen;
   trashIcon = Trash2;
   plusIcon = Plus;
   xIcon = X;
-
-  editMeds = signal<{ name: string; dose: string; frequency: string }[]>([]);
-
-  commonMeds = [
-    'بنادول اكسترا',
-    'بنادول كولد',
-    'بروفين',
-    'أسبرين',
-    'أموكسيسيلين',
-    'أزيثروميسين',
-    'ميتفورمين',
-    'إنسولين',
-    'أتورفاستاتين',
-    'أملوديبين',
-    'ليزينوبريل',
-    'أوميبرازول',
-    'فلوكستين',
-    'باراسيتامول',
-    'ديكلوفيناك',
-    'كلاريتين',
-    'سيتريزين',
-    'فيتامين د',
-    'كالسيوم',
-  ];
-
-  currentSuggestionsMap = new Map<object, string[]>();
-
-  onMedInput(med: any, event: Event) {
-    const val = (event.target as HTMLInputElement).value.trim();
-    if (val.length < 1) {
-      this.currentSuggestionsMap.delete(med);
-      return;
-    }
-    const filtered = this.commonMeds.filter((m) => m.includes(val));
-    this.currentSuggestionsMap.set(med, filtered);
-  }
-
-  activeSuggestions(med: any): string[] {
-    return this.currentSuggestionsMap.get(med) ?? [];
-  }
-
-  selectSuggestion(med: any, name: string) {
-    med.name = name;
-    this.currentSuggestionsMap.delete(med);
-  }
-
-  clearSuggestions() {
-    setTimeout(() => this.currentSuggestionsMap.clear(), 150);
-  }
-
-  medications = signal<{ name: string; dose: string; frequency: string }[]>([]);
-  currentPatientId = signal<number | null>(null);
 
   get user() {
     return {
@@ -119,7 +69,6 @@ export class PatientHome implements OnInit {
       doctorName: 'د. مجدي يعقوب',
       subscriptionPlan: 'free',
     };
-
     // return this.auth.user;
   }
 
@@ -163,33 +112,24 @@ export class PatientHome implements OnInit {
   showSymptomsReport(): void {
     window.alert('تم فتح تقرير الأعراض.');
   }
-  openEditModal() {
-    this.editMeds.set(this.medications().map((m) => ({ ...m })));
+
+  openEditModal(): void {
     this.showEditModal.set(true);
     document.body.style.overflow = 'hidden';
   }
-  closeEditModal() {
+
+  closeEditModal(): void {
     this.showEditModal.set(false);
     document.body.style.overflow = '';
   }
 
-  addMed() {
-    this.editMeds.update((meds) => [...meds, { name: '', dose: '', frequency: '' }]);
-  }
-
-  removeMed(index: number) {
-    this.editMeds.update((meds) => meds.filter((_, i) => i !== index));
-  }
-
-  updateEditMed(index: number, field: 'name' | 'dose' | 'frequency', value: string) {
-    this.editMeds.update((meds) =>
-      meds.map((med, i) => (i === index ? { ...med, [field]: value } : med)),
-    );
-  }
-
-  saveMeds() {
-    this.medications.set(this.editMeds().filter((m) => m.name.trim()));
+  onMedicationSaved(): void {
     this.closeEditModal();
-    // TODO: PUT /api/user/medications
+    this.successText.set('تمت إضافة الدواء بنجاح ✅');
+    this.loadPatientData();
+  }
+
+  onMedicationCancelled(): void {
+    this.closeEditModal();
   }
 }

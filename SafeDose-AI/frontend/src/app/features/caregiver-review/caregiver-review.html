@@ -24,6 +24,14 @@
       </div>
     </div>
   }
+  @if (successText()) {
+    <div
+      class="bg-emerald-50 text-emerald-800 p-4 rounded-xl flex items-center gap-2 border border-emerald-200"
+    >
+      <lucide-icon [img]="checkCircleIcon" class="w-5 h-5 shrink-0"></lucide-icon>
+      <p class="text-sm font-bold">{{ successText() }}</p>
+    </div>
+  }
 
   <!-- Upload Area -->
   @if (!scanned() && !loading()) {
@@ -186,7 +194,10 @@
         </button>
       </div>
       <div class="overflow-y-auto p-2 sm:p-3">
-        <app-add-medication></app-add-medication>
+        <app-add-medication
+          (saved)="onMedicationSaved()"
+          (cancelled)="onMedicationCancelled()"
+        ></app-add-medication>
       </div>
     </div>
   </div>

@@ -2,7 +2,9 @@ import {
   ChangeDetectorRef,
   Component,
   DestroyRef,
+  EventEmitter,
   OnInit,
+  Output,
   computed,
   inject,
   signal,
@@ -36,31 +38,15 @@ import { catchError, finalize } from 'rxjs/operators';
 import { Medications } from '../../../core/services/medications';
 import { Interaction } from '../../../core/services/interaction';
 import { PatientService } from '../../../core/services/patient';
-import { AddMedicationPayload, DrugSearchResult, MAX_FREQUENCY, MEAL_TIMING_OPTIONS } from '../../../core/models';
-
-// Cross-field validator: number of time controls must equal the chosen frequency.
-function timesMatchFrequency(): ValidatorFn {
-  return (group: AbstractControl): ValidationErrors | null => {
-    const frequency = group.get('frequency')?.value;
-    const times = group.get('times') as FormArray | null;
-    if (!frequency || !times) return null;
-    if (times.length !== Number(frequency)) {
-      return { timesFrequencyMismatch: true };
-    }
-    const hasEmptyTime = times.controls.some((c) => !c.value);
-    if (hasEmptyTime) return { timesIncomplete: true };
-    return null;
-  };
-}
-
-function dateRangeValid(): ValidatorFn {
-  return (group: AbstractControl): ValidationErrors | null => {
-    const start = group.get('startDate')?.value;
-    const end = group.get('endDate')?.value;
-    if (!start || !end) return null;
-    return new Date(end) < new Date(start) ? { dateRangeInvalid: true } : null;
-  };
-}
+import {
+  AddMedicationPayload,
+  DrugSearchResult,
+  MAX_FREQUENCY,
+  MEAL_TIMING_OPTIONS,
+  MedicationResponse,
+} from '../../../core/models';
+import { timesMatchFrequency } from '../../validators/times-match-frequency';
+import { dateRangeValid } from '../../validators/date-range-valid';
 
 @Component({
   selector: 'app-add-medication',
@@ -78,6 +64,8 @@ export class AddMedication implements OnInit {
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly destroyRef = inject(DestroyRef);
 
+  @Output() saved = new EventEmitter<MedicationResponse>();
+  @Output() cancelled = new EventEmitter<void>();
   // Icons
   pillIcon = Pill;
   searchIcon = Search;
@@ -195,8 +183,6 @@ export class AddMedication implements OnInit {
     setTimeout(() => this.resultsOpen.set(false), 150);
   }
 
-  // ===== Submit =====
-
   save(): void {
     this.errorText.set('');
     this.successText.set('');
@@ -222,7 +208,9 @@ export class AddMedication implements OnInit {
       startDate: raw.startDate || null,
       endDate: raw.endDate || null,
       mealTiming: (raw.mealTiming as any) ?? null,
-      times: raw.frequency ? (raw.times as string[]) : null,
+      times: raw.frequency
+        ? (raw.times as string[]).map((t) => (t.length === 5 ? `${t}:00` : t))
+        : null,
     };
 
     this.saving.set(true);
@@ -257,9 +245,10 @@ export class AddMedication implements OnInit {
         }),
         takeUntilDestroyed(this.destroyRef),
       )
-      .subscribe(() => {
+      .subscribe((result) => {
         this.successText.set('تم حفظ الدواء بنجاح');
-        setTimeout(() => this.router.navigate(['/medications']), 800);
+        // ✅ بدل router.navigate، نطلق event للـ parent بعد نص ثانية (يدي وقت يشوف رسالة النجاح)
+        setTimeout(() => this.saved.emit(result), 600);
       });
   }
 
@@ -297,6 +286,6 @@ export class AddMedication implements OnInit {
   }
 
   cancel(): void {
-    this.router.navigate(['/medications']);
+    this.cancelled.emit();
   }
 }

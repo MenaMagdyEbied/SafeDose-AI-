@@ -34,6 +34,7 @@ export class CaregiverReview implements OnInit {
   errorText = signal('');
   scannedMeds: ScannedMed[] = [];
   prescriptions = signal<any[]>([]);
+  successText = signal('');
 
   cameraIcon = Camera;
   uploadIcon = Upload;
@@ -368,5 +369,13 @@ export class CaregiverReview implements OnInit {
     //     this.scanned.set(false);
     //   }
     // }
+  }
+  onMedicationSaved(): void {
+    this.closeManualModal();
+    this.successText.set('تمت إضافة الدواء بنجاح ✅');
+  }
+
+  onMedicationCancelled(): void {
+    this.closeManualModal();
   }
 }

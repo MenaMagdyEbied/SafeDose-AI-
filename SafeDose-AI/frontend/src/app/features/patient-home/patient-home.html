@@ -1,5 +1,13 @@
 <section class="space-y-6 container-app pt-16 pb-24">
   <!-- Interaction Checker Button -->
+  @if (successText()) {
+    <div
+      class="bg-emerald-50 text-emerald-800 p-4 rounded-xl flex items-center gap-2 border border-emerald-200"
+    >
+      <lucide-icon [img]="checkCircleIcon" class="w-5 h-5 shrink-0"></lucide-icon>
+      <p class="text-sm font-bold">{{ successText() }}</p>
+    </div>
+  }
   <section>
     <button
       routerLink="/interaction-checker"
@@ -67,16 +75,16 @@
           >مسح وصفة</span
         >
       </button>
-      <button
-        (click)="openEditModal()"
-        class="flex flex-col items-center justify-center gap-2 bg-white border border-outline-variant/30 rounded-2xl p-3 sm:p-4 min-h-25 hover:bg-slate-50 transition-colors cursor-pointer"
-      >
-        <lucide-icon [img]="editIcon" class="w-7 h-7 sm:w-8 sm:h-8 text-primary"></lucide-icon>
-
-        <span class="text-[11px] sm:text-xs font-bold text-on-background text-center">
-          تعديل الأدوية
-        </span>
-      </button>
+    <button
+  (click)="openEditModal()"
+  class="flex flex-col items-center justify-center gap-2 bg-white border border-outline-variant/30 rounded-2xl p-3 sm:p-4 min-h-25 hover:bg-slate-50 transition-colors cursor-pointer"
+>
+  <lucide-icon [img]="plusIcon" class="w-7 h-7 sm:w-8 sm:h-8 text-primary"></lucide-icon>
+  <span class="text-[11px] sm:text-xs font-bold text-on-background text-center">
+    إضافة دواء
+  </span>
+</button>
+  
       <button
         routerLink="/digital-card"
         class="flex flex-col items-center justify-center gap-2 bg-white border border-outline-variant/30 rounded-2xl p-3 sm:p-4 min-h-25 hover:bg-slate-50 transition-colors cursor-pointer"
@@ -172,7 +180,10 @@
         </button>
       </div>
       <div class="overflow-y-auto p-2 sm:p-3">
-        <app-add-medication></app-add-medication>
+        <app-add-medication
+          (saved)="onMedicationSaved()"
+          (cancelled)="onMedicationCancelled()"
+        ></app-add-medication>
       </div>
     </div>
   </div>

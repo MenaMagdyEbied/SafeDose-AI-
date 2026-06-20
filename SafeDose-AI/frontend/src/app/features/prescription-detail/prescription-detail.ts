@@ -4,7 +4,24 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { LucideAngularModule, Plus, Save, Trash2, TriangleAlert } from 'lucide-angular';
 import { Prescription } from '../../core/services/prescription';
+interface PrescriptionMed {
+  name: string;
+  dose: string;
+  frequency: string;
+  duration: string;
+  chemicalName?: string;
+  registryCode?: string;
+  warning?: string | null;
+}
 
+interface PrescriptionDetailData {
+  id: number;
+  name: string;
+  date: string;
+  source: 'scan' | 'manual';
+  doctorName?: string | null;
+  meds: PrescriptionMed[];
+}
 @Component({
   selector: 'app-prescription-detail',
   imports: [LucideAngularModule, FormsModule],
@@ -12,64 +29,59 @@ import { Prescription } from '../../core/services/prescription';
   styleUrl: './prescription-detail.css',
 })
 export class PrescriptionDetail implements OnInit {
-  private readonly route = inject(ActivatedRoute);
-  private readonly router = inject(Router);
+ private readonly router = inject(Router);
   private readonly location = inject(Location);
-  private readonly prescriptionService = inject(Prescription);
 
   trashIcon = Trash2;
   alertTriangleIcon = TriangleAlert;
   plusIcon = Plus;
   saveIcon = Save;
 
-  selectedPrescription: any = null;
+  selectedPrescription: PrescriptionDetailData | null = null;
   editMode = false;
   showDeleteConfirm = false;
 
-  ngOnInit() {
-    // const id = Number(this.route.snapshot.paramMap.get('id'));
-    // const found = this.prescriptionService.getById(id);
-    // if (found) {
-    //   this.selectedPrescription = JSON.parse(JSON.stringify(found));
-    // }
+  ngOnInit(): void {
+    const state = this.router.getCurrentNavigation()?.extras?.state ?? history.state;
+
+    if (state?.prescription) {
+      this.selectedPrescription = state.prescription;
+    }
   }
 
   get warningsCount(): number {
-    return this.selectedPrescription?.meds?.filter((m: any) => m.warning)?.length ?? 0;
+    return this.selectedPrescription?.meds?.filter((m) => m.warning)?.length ?? 0;
   }
 
-  addMed() {
-    this.selectedPrescription.meds.push({
+  addMed(): void {
+    this.selectedPrescription?.meds.push({
       name: '',
       dose: '',
       frequency: '',
       duration: '',
-      warning: '',
-      chemicalName: '',
-      registryCode: '',
     });
   }
 
-  removeMed(index: number) {
-    this.selectedPrescription.meds.splice(index, 1);
+  removeMed(index: number): void {
+    this.selectedPrescription?.meds.splice(index, 1);
   }
 
-  save() {
-    // this.prescriptionService.update(this.selectedPrescription);
-    // this.editMode = false;
+  save(): void {
+    // مفيش endpoint تحديث وصفة حاليًا، نقفل وضع التعديل محليًا فقط
+    this.editMode = false;
   }
 
-  deletePrescription() {
+  deletePrescription(): void {
     this.showDeleteConfirm = true;
   }
 
-  confirmDelete() {
-    // this.prescriptionService.delete(this.selectedPrescription.id);
-    // this.showDeleteConfirm = false;
-    // this.goBack();
+  confirmDelete(): void {
+    // مفيش endpoint حذف وصفة حاليًا
+    this.showDeleteConfirm = false;
+    this.goBack();
   }
 
-  goBack() {
+  goBack(): void {
     this.location.back();
   }
 }

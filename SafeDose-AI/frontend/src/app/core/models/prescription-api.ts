@@ -1,34 +1,49 @@
-export interface ParsedDrug {
-  drugName: string;
-  dose: string | null;
-  doctorName: string | null;
-  route: number | null;
-  frequency: number | null;
-  startDate: string | null;
-  endDate: string | null;
-  mealTiming: number | null;
+
+export interface ParsedMedication {
+  drug_name_guess: string;
+  dose_guess: string | null;
+  frequency_guess: string | null;
+  duration_guess: string | null;
+  needsReview: boolean;
 }
 
 export interface ParsePrescriptionResponse {
-  prescriptionId?: number;
-  imageUrl?: string;
-  drugs: ParsedDrug[];
+  doctor_name: string | null;
+  image_url: string | null;
+  medications: ParsedMedication[];
 }
 
-export interface SaveDrugPayload {
+export enum DrugRoute {
+  Oral = 0,
+}
+
+export enum DrugFrequency {
+  Daily = 1,
+}
+
+export enum MealTiming {
+  None = 0,
+  // ضبطيها حسب enum الباك إند الفعلي
+}
+
+export interface SavePrescriptionDrug {
   drugName: string;
-  dose: string | null;
-  doctorName: string | null;
-  route: number | null;
-  frequency: number | null;
-  startDate: string | null;
-  endDate: string | null;
-  mealTiming: number | null;
+  dose: string;
+  doctorName: string;
+  route: number;
+  frequency: number;
+  startDate: string;
+  endDate: string;
+  mealTiming: number;
 }
 
 export interface SavePrescriptionPayload {
   patientId: number;
   prescriptionName: string;
   imageUrl: string;
-  drugs: SaveDrugPayload[];
+  drugs: SavePrescriptionDrug[];
+}
+
+export interface SavePrescriptionResult {
+  prescriptionId: number;
 }

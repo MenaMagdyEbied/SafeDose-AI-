@@ -24,17 +24,16 @@
       </div>
     </div>
   }
-  @if (successText()) {
-    <div
-      class="bg-emerald-50 text-emerald-800 p-4 rounded-xl flex items-center gap-2 border border-emerald-200"
-    >
-      <lucide-icon [img]="checkCircleIcon" class="w-5 h-5 shrink-0"></lucide-icon>
-      <p class="text-sm font-bold">{{ successText() }}</p>
+
+  @if (errorText()) {
+    <div class="bg-danger-container p-4 rounded-xl flex items-center gap-2 text-right">
+      <lucide-icon [img]="alertTriangleIcon" class="w-5 h-5 text-danger shrink-0"></lucide-icon>
+      <p class="text-sm font-bold text-on-danger-container">{{ errorText() }}</p>
     </div>
   }
 
-  <!-- Upload Area -->
-  @if (!scanned() && !loading()) {
+  <!-- ===== Stage 1: Upload ===== -->
+  @if (stage() === 'upload' && !loading()) {
     <div
       class="bg-white border-2 border-dashed border-primary/30 rounded-3xl p-6 sm:p-12 text-center hover:border-primary/60 transition-all"
     >
@@ -62,7 +61,7 @@
           رفع صورة
         </button>
         <button
-          (click)="openManualModal()"
+          (click)="addManually()"
           class="border border-primary text-primary hover:bg-primary/5 px-6 py-3 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 cursor-pointer"
         >
           <lucide-icon [img]="plusIcon" class="w-5 h-5"></lucide-icon>
@@ -72,7 +71,7 @@
     </div>
   }
 
-  <!-- Loading State -->
+  <!-- Loading -->
   @if (loading()) {
     <div
       class="bg-white rounded-3xl border border-outline-variant p-8 sm:p-12 text-center space-y-4"
@@ -85,73 +84,80 @@
     </div>
   }
 
-  <!-- Error -->
-  @if (errorText()) {
-    <div class="bg-danger-container p-4 rounded-xl flex items-center gap-2 text-right">
-      <lucide-icon [img]="alertTriangleIcon" class="w-5 h-5 text-danger shrink-0"></lucide-icon>
-      <p class="text-sm font-bold text-on-danger-container">{{ errorText() }}</p>
-    </div>
-  }
-
-  <!-- Scan Results -->
-  @if (scanned() && !loading()) {
+  <!-- ===== Stage 2: Review (تعديل قبل الحفظ) ===== -->
+  @if (stage() === 'review' && !loading()) {
     <div class="space-y-4">
-      <!-- Success Banner -->
       <div
         class="flex items-center gap-3 bg-emerald-50 text-emerald-800 p-4 rounded-xl border border-emerald-200"
       >
         <lucide-icon [img]="checkCircleIcon" class="w-6 h-6 shrink-0"></lucide-icon>
         <div class="text-right">
-          <p class="font-bold text-sm">وصفاتك المحفوظة</p>
-          <p class="text-xs text-emerald-600">{{ prescriptions().length }} وصفة مسجلة</p>
+          @if (doctorName()) {
+            <p class="font-bold text-sm">تم استخراج {{ parsedMeds().length }} دواء</p>
+            <p class="text-xs text-emerald-600">د. {{ doctorName() }}</p>
+          } @else {
+            <p class="font-bold text-sm">إضافة وصفة يدويًا</p>
+            <p class="text-xs text-emerald-600">أدخل بيانات الأدوية بنفسك</p>
+          }
         </div>
       </div>
 
-      <!-- Prescriptions Cards -->
+      <p class="text-xs text-outline text-center">راجع الأدوية وعدّل أي بيانات قبل الحفظ</p>
+
       <div class="space-y-3">
-        @for (prescription of prescriptions(); track prescription.id) {
-          <div class="bg-white rounded-2xl border border-outline-variant shadow-sm p-4 text-right">
-            <!-- Card Header -->
-            <div class="flex items-center justify-between mb-3">
-              <div class="flex items-center gap-2">
-                <button
-                  (click)="confirmDeletePrescription(prescription)"
-                  class="w-8 h-8 rounded-xl border border-danger/20 text-danger hover:bg-danger-container flex items-center justify-center transition-all cursor-pointer"
-                >
-                  <lucide-icon [img]="trashIcon" class="w-3.5 h-3.5"></lucide-icon>
-                </button>
-                <button
-                  (click)="viewPrescription(prescription)"
-                  class="px-3 py-1.5 bg-primary text-white rounded-xl text-xs font-bold hover:bg-primary-dark transition-all cursor-pointer flex items-center gap-1.5"
-                >
-                  <lucide-icon [img]="eyeIcon" class="w-3.5 h-3.5"></lucide-icon>
-                  عرض التفاصيل
-                </button>
-              </div>
-              <div>
-                <h3 class="font-extrabold text-on-background text-sm">{{ prescription.name }}</h3>
-                <p class="text-xs text-outline">
-                  {{ prescription.date }} · {{ prescription.meds.length }} أدوية ·
-                  <span [class]="prescription.source === 'scan' ? 'text-primary' : 'text-tertiary'">
-                    {{ prescription.source === 'scan' ? '📷 مسح' : '✍️ يدوي' }}
-                  </span>
-                </p>
-              </div>
+        @for (med of parsedMeds(); track $index) {
+          <div
+            class="bg-white rounded-2xl border border-outline-variant shadow-sm p-4 space-y-3 text-right"
+          >
+            <div class="flex items-center justify-between">
+              <button
+                (click)="removeMed($index)"
+                class="w-7 h-7 rounded-lg bg-danger/10 text-danger flex items-center justify-center hover:bg-danger/20 transition-all cursor-pointer"
+              >
+                <lucide-icon [img]="trashIcon" class="w-3.5 h-3.5"></lucide-icon>
+              </button>
+              <span class="text-xs font-bold text-outline">دواء {{ $index + 1 }}</span>
             </div>
 
-            <!-- Med Names Only -->
-            <div class="flex flex-wrap gap-2 justify-end">
-              @for (med of prescription.meds; track med.name) {
-                <span class="px-2.5 py-1 bg-primary/10 text-primary rounded-full text-xs font-bold">
-                  {{ med.name }}
-                </span>
-              }
+            <div class="space-y-1">
+              <label class="text-[10px] font-bold text-outline">اسم الدواء</label>
+              <input
+                [value]="med.drug_name_guess"
+                (input)="updateMed($index, 'drug_name_guess', $any($event.target).value)"
+                class="w-full h-10 px-3 bg-surface-container-low border border-outline-variant rounded-xl text-sm font-bold outline-none focus:border-primary"
+              />
+            </div>
+
+            <div class="grid grid-cols-2 gap-2">
+              <div class="space-y-1">
+                <label class="text-[10px] font-bold text-outline">الجرعة</label>
+                <input
+                  [value]="med.dose_guess"
+                  (input)="updateMed($index, 'dose_guess', $any($event.target).value)"
+                  class="w-full h-9 px-2 bg-surface-container-low border border-outline-variant rounded-xl text-xs font-bold outline-none focus:border-primary"
+                />
+              </div>
+              <div class="space-y-1">
+                <label class="text-[10px] font-bold text-outline">التكرار</label>
+                <input
+                  [value]="med.frequency_guess"
+                  (input)="updateMed($index, 'frequency_guess', $any($event.target).value)"
+                  class="w-full h-9 px-2 bg-surface-container-low border border-outline-variant rounded-xl text-xs font-bold outline-none focus:border-primary"
+                />
+              </div>
             </div>
           </div>
         }
       </div>
 
-      <!-- Actions -->
+      <button
+        (click)="addEmptyMed()"
+        class="w-full py-3 rounded-xl border-2 border-dashed border-primary/30 text-primary text-sm font-bold hover:bg-primary/5 transition-all cursor-pointer flex items-center justify-center gap-2"
+      >
+        <lucide-icon [img]="plusIcon" class="w-4 h-4"></lucide-icon>
+        إضافة دواء يدويًا
+      </button>
+
       <div class="flex flex-col sm:flex-row gap-3 pt-2">
         <button
           (click)="reset()"
@@ -161,7 +167,78 @@
           مسح وصفة أخرى
         </button>
         <button
-          routerLink="/patient"
+          (click)="confirmAndSave()"
+          [disabled]="saving()"
+          class="flex-1 bg-primary hover:bg-primary-dark disabled:bg-slate-300 text-white py-3 rounded-xl font-bold text-sm transition-all cursor-pointer flex items-center justify-center gap-2"
+        >
+          @if (saving()) {
+            <div
+              class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"
+            ></div>
+            <span>جاري الحفظ...</span>
+          } @else {
+            <span>تأكيد وحفظ الوصفة</span>
+          }
+        </button>
+      </div>
+    </div>
+  }
+
+  <!-- ===== Stage 3: Summary (بعد الحفظ — زي الصورة) ===== -->
+  @if (stage() === 'summary' && lastSavedPrescription()) {
+    <div class="space-y-4">
+      <div
+        class="flex items-center gap-3 bg-emerald-50 text-emerald-800 p-4 rounded-xl border border-emerald-200"
+      >
+        <lucide-icon [img]="checkCircleIcon" class="w-6 h-6 shrink-0"></lucide-icon>
+        <div class="text-right">
+          <p class="font-bold text-sm">تم التعرف على الوصفة بنجاح</p>
+          <p class="text-xs text-emerald-600">
+            تم استخراج {{ lastSavedPrescription()!.meds.length }} دواء
+          </p>
+        </div>
+      </div>
+
+      <div
+        class="bg-white rounded-2xl border border-outline-variant shadow-sm p-4 text-right space-y-3"
+      >
+        <div class="flex items-center justify-between">
+          <button
+            (click)="viewPrescriptionDetail()"
+            class="px-3 py-1.5 bg-primary text-white rounded-xl text-xs font-bold hover:bg-primary-dark transition-all cursor-pointer flex items-center gap-1.5"
+          >
+            <lucide-icon [img]="eyeIcon" class="w-3.5 h-3.5"></lucide-icon>
+            عرض التفاصيل
+          </button>
+          <div>
+            <h3 class="font-extrabold text-on-background text-sm">
+              {{ lastSavedPrescription()!.name }}
+            </h3>
+            <p class="text-xs text-outline">
+              {{ lastSavedPrescription()!.date }} · {{ lastSavedPrescription()!.meds.length }} أدوية
+            </p>
+          </div>
+        </div>
+
+        <div class="flex flex-wrap gap-2 justify-end">
+          @for (med of lastSavedPrescription()!.meds; track med.name) {
+            <span class="px-2.5 py-1 bg-primary/10 text-primary rounded-full text-xs font-bold">
+              {{ med.name }}
+            </span>
+          }
+        </div>
+      </div>
+
+      <div class="flex flex-col sm:flex-row gap-3 pt-2">
+        <button
+          (click)="reset()"
+          class="flex-1 border border-outline-variant text-on-surface-variant hover:bg-slate-50 py-3 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 cursor-pointer"
+        >
+          <lucide-icon [img]="rotateCcwIcon" class="w-5 h-5"></lucide-icon>
+          مسح وصفة أخرى
+        </button>
+        <button
+          (click)="goHome()"
           class="flex-1 bg-primary hover:bg-primary-dark text-white py-3 rounded-xl font-bold text-sm transition-all cursor-pointer"
         >
           العودة للرئيسية
@@ -170,71 +247,3 @@
     </div>
   }
 </section>
-
-<!-- Manual Entry Modal -->
-@if (showManualModal()) {
-  <div
-    class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 overflow-hidden"
-    dir="rtl"
-    (click)="closeManualModal()"
-  >
-    <div
-      class="bg-white rounded-3xl shadow-xl w-full max-w-3xl max-h-[88vh] flex flex-col overflow-hidden"
-      (click)="$event.stopPropagation()"
-    >
-      <div
-        class="flex items-center justify-between px-4 pt-3 pb-2 border-b border-outline-variant/30 shrink-0"
-      >
-        <h3 class="font-extrabold text-on-background text-lg">إضافة دواء جديد</h3>
-        <button
-          (click)="closeManualModal()"
-          class="w-8 h-8 rounded-full hover:bg-slate-100 flex items-center justify-center cursor-pointer"
-        >
-          <lucide-icon [img]="xIcon" class="w-5 h-5 text-outline"></lucide-icon>
-        </button>
-      </div>
-      <div class="overflow-y-auto p-2 sm:p-3">
-        <app-add-medication
-          (saved)="onMedicationSaved()"
-          (cancelled)="onMedicationCancelled()"
-        ></app-add-medication>
-      </div>
-    </div>
-  </div>
-}
-
-<!-- Delete Confirm Modal -->
-@if (showDeleteConfirm()) {
-  <div
-    class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in"
-    dir="rtl"
-  >
-    <div class="bg-white rounded-3xl p-6 shadow-2xl max-w-sm w-full text-center space-y-4">
-      <div
-        class="w-14 h-14 bg-danger-container rounded-full flex items-center justify-center mx-auto"
-      >
-        <lucide-icon [img]="trashIcon" class="w-7 h-7 text-danger"></lucide-icon>
-      </div>
-      <div class="space-y-1">
-        <h3 class="text-lg font-extrabold text-on-background">حذف الوصفة؟</h3>
-        <p class="text-sm text-outline">
-          هيتم حذف "{{ prescriptionToDelete()?.name }}" ومش هترجع تاني
-        </p>
-      </div>
-      <div class="grid grid-cols-2 gap-3">
-        <button
-          (click)="deleteConfirmed()"
-          class="w-full h-12 bg-danger hover:bg-red-700 text-white rounded-2xl font-bold text-sm cursor-pointer transition-all"
-        >
-          حذف
-        </button>
-        <button
-          (click)="showDeleteConfirm.set(false); prescriptionToDelete.set(null)"
-          class="w-full h-12 bg-slate-100 hover:bg-slate-200 text-on-surface-variant rounded-2xl font-bold text-sm cursor-pointer transition-all"
-        >
-          إلغاء
-        </button>
-      </div>
-    </div>
-  </div>
-}

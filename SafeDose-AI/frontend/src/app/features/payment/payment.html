@@ -96,28 +96,32 @@
         </div>
       </div>
 
-      <!-- Payment Methods Info -->
+      <!-- Payment Method Selection -->
       <div class="bg-white rounded-2xl border border-outline-variant shadow-sm p-5 space-y-3">
-        <h4 class="font-extrabold text-sm text-on-background text-right">
-          طرق الدفع المتاحة عبر Paymob
-        </h4>
-        <div class="flex flex-wrap gap-2 justify-end">
-          <span
-            class="px-3 py-1.5 bg-surface-container-low rounded-xl text-xs font-bold text-outline flex items-center gap-1.5"
-            >💳 فيزا / ماستركارد</span
+        <h4 class="font-extrabold text-sm text-on-background text-right">اختر طريقة الدفع</h4>
+        <div class="grid grid-cols-2 gap-3">
+          <button
+            type="button"
+            (click)="method = 'card'"
+            [class]="
+              method === 'card'
+                ? 'h-14 rounded-xl border-2 border-primary bg-primary/5 flex items-center justify-center gap-2 font-bold text-sm text-primary cursor-pointer'
+                : 'h-14 rounded-xl border-2 border-outline-variant flex items-center justify-center gap-2 font-bold text-sm text-outline cursor-pointer'
+            "
           >
-          <span
-            class="px-3 py-1.5 bg-surface-container-low rounded-xl text-xs font-bold text-outline flex items-center gap-1.5"
-            >🔴 فودافون كاش</span
+            💳 فيزا / ماستركارد
+          </button>
+          <button
+            type="button"
+            (click)="method = 'wallet'"
+            [class]="
+              method === 'wallet'
+                ? 'h-14 rounded-xl border-2 border-primary bg-primary/5 flex items-center justify-center gap-2 font-bold text-sm text-primary cursor-pointer'
+                : 'h-14 rounded-xl border-2 border-outline-variant flex items-center justify-center gap-2 font-bold text-sm text-outline cursor-pointer'
+            "
           >
-          <span
-            class="px-3 py-1.5 bg-surface-container-low rounded-xl text-xs font-bold text-outline flex items-center gap-1.5"
-            >🟠 اورنج كاش</span
-          >
-          <span
-            class="px-3 py-1.5 bg-surface-container-low rounded-xl text-xs font-bold text-outline flex items-center gap-1.5"
-            >🟢 اتصالات كاش</span
-          >
+            🔴 فودافون كاش
+          </button>
         </div>
       </div>
 
@@ -160,7 +164,7 @@
           جاري التحضير...
         } @else {
           <lucide-icon [img]="lockIcon" class="w-5 h-5"></lucide-icon>
-          ادفع {{ planPrice }} ج.م عبر Paymob
+          ادفع {{ planPrice }} ج.م عبر {{ method === 'card' ? 'الكارت' : 'فودافون كاش' }}
         }
       </button>
 

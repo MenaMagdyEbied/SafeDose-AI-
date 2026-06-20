@@ -32,6 +32,7 @@ export class Payment implements OnInit {
   errorText = '';
   planId = 'pro';
   verifying = false;
+  method: 'card' | 'wallet' = 'card';
 
   userForm = {
     fullName: '',
@@ -69,7 +70,9 @@ export class Payment implements OnInit {
   get planFeatures() {
     return this.plans[this.planId]?.features ?? [];
   }
-
+  get paymentMethodValue(): string {
+    return this.method === 'card' ? 'card' : 'wallet';
+  }
   ngOnInit(): void {
     this.prefillUserData();
 
@@ -137,7 +140,7 @@ export class Payment implements OnInit {
     from(
       this.billingService.checkout({
         tierCode: this.tierCode,
-        paymentMethod: 'paymob',
+        paymentMethod: this.paymentMethodValue,
         fullName: this.userForm.fullName,
         email: this.userForm.email,
         phoneNumber: this.userForm.phoneNumber,
@@ -161,7 +164,6 @@ export class Payment implements OnInit {
         window.location.href = data.paymentUrl;
       });
   }
-
   verifyPayment(merchantOrderId: string): void {
     from(this.billingService.getPaymentStatus(merchantOrderId))
       .pipe(

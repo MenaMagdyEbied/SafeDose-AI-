@@ -4,8 +4,6 @@ using SafeDose.Domain.Entities;
 
 namespace SafeDose.Application.UseCases.Medication;
 
-// Handles pause / resume / stop status transitions.
-// Active(1) <-> Paused(2) freely. Any -> Stopped(3) is one-way.
 public class ChangeMedicationStatusUseCase
 {
     private readonly IPatientMedicationRepository _meds;
@@ -80,7 +78,6 @@ public class ChangeMedicationStatusUseCase
         }
         catch
         {
-            // Resuming medication should not be blocked by an unavailable AI pipeline.
         }
     }
 }

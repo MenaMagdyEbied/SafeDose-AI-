@@ -101,6 +101,64 @@ public class ProcessPaymobWebhookUseCase
 
         return WebhookProcessResult.PaymentFailed;
     }
+
+    public async Task<WebhookProcessResult> ActivateFromBrowserReturnAsync(
+        string? merchantOrderId,
+        string? transactionId,
+        bool success,
+        decimal amountCents,
+        CancellationToken cancellationToken = default)
+    {
+        Payment? existing = null;
+        if (!string.IsNullOrWhiteSpace(merchantOrderId))
+            existing = await _payments.GetByMerchantOrderIdAsync(merchantOrderId);
+        if (existing == null && !string.IsNullOrWhiteSpace(transactionId))
+            existing = await _payments.GetByGatewayReferenceAsync("Paymob", transactionId);
+        if (existing == null)
+            return WebhookProcessResult.PaymentNotFound;
+
+        if (existing.Status == (byte)PaymentStatus.Success)
+            return WebhookProcessResult.AlreadyProcessed;
+
+        if (!success)
+        {
+            existing.Status = (byte)PaymentStatus.Failed;
+            await _payments.UpdateAsync(existing);
+            return WebhookProcessResult.PaymentFailed;
+        }
+
+        var paidAmount = amountCents / 100m;
+        if (Math.Abs(paidAmount - existing.Amount) > 0.01m)
+            return WebhookProcessResult.AmountMismatch;
+
+        existing.Status = (byte)PaymentStatus.Success;
+        existing.PaidAt = DateTime.UtcNow;
+        if (!string.IsNullOrWhiteSpace(transactionId))
+            existing.GateWayReference = transactionId;
+        await _payments.UpdateAsync(existing);
+
+        var sub = await _subs.GetByIdAsync(existing.SubscriptionId);
+        if (sub == null)
+            return WebhookProcessResult.PaymentNotFound;
+        if (sub.Status == (byte)SubscriptionStatus.Cancelled)
+            return WebhookProcessResult.SubscriptionAlreadyCancelled;
+
+        var cycleDays = sub.PricingTier?.BillingCycleDays ?? 30;
+        sub.Status = (byte)SubscriptionStatus.Active;
+        sub.StartAt = DateTime.UtcNow;
+        sub.EndAt = DateTime.UtcNow.AddDays(cycleDays);
+        await _subs.UpdateAsync(sub);
+
+        await _audit.WriteAsync(new AuditLogEntry(
+            AccountId: sub.AccountId,
+            EntityName: nameof(Subscription),
+            EntityRowId: sub.SubscriptionId,
+            ActionType: 2,
+            AccessReason: $"Subscription activated by browser return (txn {transactionId})"
+        ), cancellationToken);
+
+        return WebhookProcessResult.SubscriptionActivated;
+    }
 }
 
 public enum WebhookProcessResult

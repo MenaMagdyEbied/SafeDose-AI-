@@ -51,6 +51,7 @@ public class CheckCatalogInteractionsUseCase
         await EnforceDailyInteractionLimitAsync(accountId, tier);
 
         var catalogEntries = new List<LangflowDrugInput>();
+        var nameLookup = new Dictionary<int, (string En, string? Ar)>();
         foreach (var id in request.DrugCatalogIds.Distinct())
         {
             var entry = await _drugs.GetCatalogByIdAsync(id);
@@ -63,6 +64,7 @@ public class CheckCatalogInteractionsUseCase
                 ScientificName: entry.ScientificName,
                 DrugClass: entry.DrugClass
             ));
+            nameLookup[entry.DrugCatalogId] = (entry.CommercialNameEn, entry.CommercialNameAr);
         }
 
         LangflowPatientContext? patientContext = null;
@@ -118,6 +120,20 @@ public class CheckCatalogInteractionsUseCase
             return fallback with { InteractionCheckId = savedFallbackId };
         }
 
+        var analyzedFromLangflow = result.AnalyzedDrugs?.ToDictionary(d => d.DrugId) ?? new();
+        var analyzedDrugs = catalogEntries.Select(c =>
+        {
+            analyzedFromLangflow.TryGetValue(c.DrugId, out var fromLf);
+            var (en, ar) = nameLookup[c.DrugId];
+            return new AnalyzedDrugDto(
+                DrugId: c.DrugId,
+                ArabicName: !string.IsNullOrWhiteSpace(fromLf?.ArabicName) ? fromLf.ArabicName : ar ?? en,
+                EnglishName: !string.IsNullOrWhiteSpace(fromLf?.EnglishName) ? fromLf.EnglishName : en,
+                DosageNote: fromLf?.DosageNote,
+                Role: !string.IsNullOrWhiteSpace(fromLf?.Role) ? fromLf.Role : "primary"
+            );
+        }).ToArray();
+
         var response = new CheckInteractionsResponseDto(
             InteractionCheckId: 0,
             Level: result.Level,
@@ -126,9 +142,7 @@ public class CheckCatalogInteractionsUseCase
             TitleArabic: result.TitleArabic,
             ExplanationArabic: result.ExplanationArabic,
             RecommendedActionArabic: result.RecommendedActionArabic,
-            AnalyzedDrugs: result.AnalyzedDrugs
-                .Select(d => new AnalyzedDrugDto(d.DrugId, d.ArabicName, d.EnglishName, d.DosageNote, d.Role))
-                .ToArray(),
+            AnalyzedDrugs: analyzedDrugs,
             ConflictingPairs: result.ConflictingPairs
                 .Select(p => new ConflictingPairDto(p.DrugA, p.DrugB, p.ReasonArabic, p.Severity))
                 .ToArray(),
@@ -195,11 +209,26 @@ public class CheckCatalogInteractionsUseCase
         if (tier.InteractionCheckLimitPerDay == int.MaxValue)
             return;
 
-        var todayUtc = DateTime.UtcNow.Date;
-        var usedToday = await _interactions.CountForAccountSinceAsync(accountId, todayUtc);
+        var startOfTodayUtc = StartOfCairoDayAsUtc(DateTime.UtcNow);
+        var usedToday = await _interactions.CountForAccountSinceAsync(accountId, startOfTodayUtc);
         if (usedToday >= tier.InteractionCheckLimitPerDay)
-            throw new ArgumentException(
+            throw new Exceptions.QuotaExceededException(
+                $"وصلت إلى الحد الأقصى للفحوصات اليومية ({tier.InteractionCheckLimitPerDay} يومياً). اشترك في الباقة المدفوعة للحصول على عدد غير محدود.",
                 $"Daily interaction check limit reached for your plan ({tier.InteractionCheckLimitPerDay} per day).");
+    }
+
+    private static DateTime StartOfCairoDayAsUtc(DateTime nowUtc)
+    {
+        var cairoTz = TryGetCairoTz();
+        var cairoNow = TimeZoneInfo.ConvertTimeFromUtc(nowUtc, cairoTz);
+        var cairoMidnight = new DateTime(cairoNow.Year, cairoNow.Month, cairoNow.Day, 0, 0, 0, DateTimeKind.Unspecified);
+        return TimeZoneInfo.ConvertTimeToUtc(cairoMidnight, cairoTz);
+    }
+
+    private static TimeZoneInfo TryGetCairoTz()
+    {
+        try { return TimeZoneInfo.FindSystemTimeZoneById("Egypt Standard Time"); }
+        catch (TimeZoneNotFoundException) { return TimeZoneInfo.FindSystemTimeZoneById("Africa/Cairo"); }
     }
 
     private static int CalcAge(DateOnly? dob)

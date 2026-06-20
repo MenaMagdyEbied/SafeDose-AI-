@@ -52,6 +52,11 @@ public class InteractionsController : ControllerBase
             return StatusCode(403, new ErrorResponse(
                 ErrorCodes.Forbidden, ArabicMessages.Forbidden));
         }
+        catch (SafeDose.Application.Exceptions.QuotaExceededException ex)
+        {
+            return BadRequest(new ErrorResponse(
+                "QUOTA_EXCEEDED", ex.MessageArabic, ex.MessageEnglish));
+        }
         catch (ArgumentException ex)
         {
             return BadRequest(new ErrorResponse(

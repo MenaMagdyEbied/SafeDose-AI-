@@ -12,6 +12,7 @@ public interface IPatientMedicationRepository : IPatientMedicationProvider
     Task<IReadOnlyList<PatientMedication>> GetByStatusAsync(int patientId, byte status);
     Task<bool> ExistsAsync(int patientMedicationId);
     Task<int> CountActiveForPatientAsync(int patientId);
+    Task<int> CountActiveManualForPatientAsync(int patientId);
 
     Task<int> CreateAsync(PatientMedication med);
     Task CreateManyAsync(IEnumerable<PatientMedication> meds);

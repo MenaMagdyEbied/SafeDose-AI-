@@ -325,9 +325,18 @@ internal sealed class PaymobCallbackFields
     public static PaymobCallbackFields FromQuery(IQueryCollection query)
     {
         var fields = new PaymobCallbackFields();
-        foreach (var (key, value) in query)
-            fields._values[key] = value.ToString();
+        fields.MergeQuery(query);
         return fields;
+    }
+
+    public void MergeQuery(IQueryCollection query)
+    {
+        foreach (var (key, value) in query)
+        {
+            var v = value.ToString();
+            if (string.IsNullOrWhiteSpace(v)) continue;
+            _values[key] = v;
+        }
     }
 
     public static PaymobCallbackFields FromJson(JsonElement root)
@@ -363,9 +372,14 @@ internal sealed class PaymobCallbackFields
                 continue;
             }
 
-            _values[key] = property.Value.ValueKind == JsonValueKind.String
-                ? property.Value.GetString() ?? string.Empty
-                : property.Value.ToString();
+            _values[key] = property.Value.ValueKind switch
+            {
+                JsonValueKind.String => property.Value.GetString() ?? string.Empty,
+                JsonValueKind.True => "true",
+                JsonValueKind.False => "false",
+                JsonValueKind.Null => string.Empty,
+                _ => property.Value.ToString()
+            };
         }
     }
 

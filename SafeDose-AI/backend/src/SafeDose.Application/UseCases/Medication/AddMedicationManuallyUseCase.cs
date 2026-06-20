@@ -175,9 +175,10 @@ public class AddMedicationManuallyUseCase
         if (tier.MedicationLimitPerPatient == int.MaxValue)
             return;
 
-        var activeCount = await _meds.CountActiveForPatientAsync(patientId);
-        if (activeCount + medicationsToAdd > tier.MedicationLimitPerPatient)
-            throw new ArgumentException(
-                $"Medication limit reached for your plan ({tier.MedicationLimitPerPatient} active medications per patient).");
+        var activeManualCount = await _meds.CountActiveManualForPatientAsync(patientId);
+        if (activeManualCount + medicationsToAdd > tier.MedicationLimitPerPatient)
+            throw new Application.Exceptions.QuotaExceededException(
+                $"وصلت إلى الحد الأقصى للأدوية اليدوية ({tier.MedicationLimitPerPatient} لكل مريض). اشترك في الباقة المدفوعة لإضافة عدد غير محدود. الأدوية الممسوحة من الوصفة لا تُحسب من هذا الحد.",
+                $"Manual medication limit reached for your plan ({tier.MedicationLimitPerPatient} per patient). Prescription-scanned medications do not count.");
     }
 }

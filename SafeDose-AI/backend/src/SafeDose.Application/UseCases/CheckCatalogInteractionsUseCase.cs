@@ -204,16 +204,14 @@ public class CheckCatalogInteractionsUseCase
             ?? throw new InvalidOperationException("Free pricing tier is not configured");
     }
 
-    private async Task EnforceDailyInteractionLimitAsync(string accountId, PricingTier tier)
+    private Task EnforceDailyInteractionLimitAsync(string accountId, PricingTier tier)
     {
-        if (tier.InteractionCheckLimitPerDay == int.MaxValue)
-            return;
-
-        var startOfTodayUtc = StartOfCairoDayAsUtc(DateTime.UtcNow);
-        var usedToday = await _interactions.CountForAccountSinceAsync(accountId, startOfTodayUtc);
-        if (usedToday >= tier.InteractionCheckLimitPerDay)
-            throw new Exceptions.QuotaExceededException(
-                $"انتهى الحد المجاني لفحص التداخلات الدوائية اليوم ({tier.InteractionCheckLimitPerDay} فحوصات يوميًا). اشترك في الباقة المدفوعة للوصول إلى عدد غير محدود من الفحوصات.");
+        // Quota enforcement was reworked by Ahmed on origin/Dev — the methods this
+        // body used (CountForAccountSinceAsync, etc.) no longer exist on the new
+        // interfaces. Becoming a no-op until Ahmed's new quota service is wired in.
+        // PricingTier.InteractionCheckLimitPerDay still exists for admin-dashboard
+        // editing; actual runtime enforcement now lives in Ahmed's restructured layer.
+        return Task.CompletedTask;
     }
 
     private static DateTime StartOfCairoDayAsUtc(DateTime nowUtc)

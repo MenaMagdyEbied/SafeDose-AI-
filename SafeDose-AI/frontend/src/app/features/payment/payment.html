@@ -1,19 +1,26 @@
-<div class="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 py-12 pb-24" dir="rtl">
+<div
+  class="min-h-screen bg-linear-to-br from-primary/5 via-background to-secondary/5 py-12 pb-24"
+  dir="rtl"
+>
   <div class="container-app max-w-md mx-auto space-y-5">
-
     <!-- Verifying State -->
     @if (verifying) {
-      <div class="bg-white rounded-2xl border border-outline-variant shadow-sm p-8 text-center space-y-4">
-        <div class="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto"></div>
+      <div
+        class="bg-white rounded-2xl border border-outline-variant shadow-sm p-8 text-center space-y-4"
+      >
+        <div
+          class="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto"
+        ></div>
         <p class="font-bold text-on-background">جاري التحقق من حالة الدفع...</p>
       </div>
     }
 
     @if (!verifying) {
-
       <!-- Header -->
       <div class="text-center space-y-1">
-        <div class="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg">
+        <div
+          class="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg"
+        >
           <lucide-icon [img]="lockIcon" class="w-6 h-6 text-white"></lucide-icon>
         </div>
         <h2 class="text-2xl font-extrabold text-on-background">إتمام الدفع</h2>
@@ -21,7 +28,7 @@
       </div>
 
       <!-- Order Summary -->
-      <div class="bg-gradient-to-l from-primary to-primary-dark rounded-2xl p-5 text-white shadow-lg">
+      <div class="bg-linear-to-l from-primary to-primary-dark rounded-2xl p-5 text-white shadow-lg">
         <div class="flex items-center justify-between">
           <div class="text-right">
             <p class="text-xs text-white/60 mb-1">الباقة المختارة</p>
@@ -42,7 +49,10 @@
         <div class="space-y-2">
           @for (feature of planFeatures; track feature) {
             <div class="flex items-center gap-2 text-right">
-              <lucide-icon [img]="checkCircleIcon" class="w-4 h-4 text-green-500 shrink-0"></lucide-icon>
+              <lucide-icon
+                [img]="checkCircleIcon"
+                class="w-4 h-4 text-green-500 shrink-0"
+              ></lucide-icon>
               <span class="text-sm text-on-surface-variant">{{ feature }}</span>
             </div>
           }
@@ -50,7 +60,9 @@
       </div>
 
       <!-- User Info Form -->
-      <div class="bg-white rounded-2xl border border-outline-variant shadow-sm p-5 space-y-4 text-right">
+      <div
+        class="bg-white rounded-2xl border border-outline-variant shadow-sm p-5 space-y-4 text-right"
+      >
         <h4 class="font-extrabold text-sm text-on-background">بياناتك</h4>
 
         <div class="space-y-1">
@@ -84,14 +96,32 @@
         </div>
       </div>
 
-      <!-- Payment Methods Info -->
+      <!-- Payment Method Selection -->
       <div class="bg-white rounded-2xl border border-outline-variant shadow-sm p-5 space-y-3">
-        <h4 class="font-extrabold text-sm text-on-background text-right">طرق الدفع المتاحة عبر Paymob</h4>
-        <div class="flex flex-wrap gap-2 justify-end">
-          <span class="px-3 py-1.5 bg-surface-container-low rounded-xl text-xs font-bold text-outline flex items-center gap-1.5">💳 فيزا / ماستركارد</span>
-          <span class="px-3 py-1.5 bg-surface-container-low rounded-xl text-xs font-bold text-outline flex items-center gap-1.5">🔴 فودافون كاش</span>
-          <span class="px-3 py-1.5 bg-surface-container-low rounded-xl text-xs font-bold text-outline flex items-center gap-1.5">🟠 اورنج كاش</span>
-          <span class="px-3 py-1.5 bg-surface-container-low rounded-xl text-xs font-bold text-outline flex items-center gap-1.5">🟢 اتصالات كاش</span>
+        <h4 class="font-extrabold text-sm text-on-background text-right">اختر طريقة الدفع</h4>
+        <div class="grid grid-cols-2 gap-3">
+          <button
+            type="button"
+            (click)="method = 'card'"
+            [class]="
+              method === 'card'
+                ? 'h-14 rounded-xl border-2 border-primary bg-primary/5 flex items-center justify-center gap-2 font-bold text-sm text-primary cursor-pointer'
+                : 'h-14 rounded-xl border-2 border-outline-variant flex items-center justify-center gap-2 font-bold text-sm text-outline cursor-pointer'
+            "
+          >
+            💳 فيزا / ماستركارد
+          </button>
+          <button
+            type="button"
+            (click)="method = 'wallet'"
+            [class]="
+              method === 'wallet'
+                ? 'h-14 rounded-xl border-2 border-primary bg-primary/5 flex items-center justify-center gap-2 font-bold text-sm text-primary cursor-pointer'
+                : 'h-14 rounded-xl border-2 border-outline-variant flex items-center justify-center gap-2 font-bold text-sm text-outline cursor-pointer'
+            "
+          >
+            🔴 فودافون كاش
+          </button>
         </div>
       </div>
 
@@ -128,25 +158,29 @@
         class="w-full h-14 bg-primary hover:bg-primary-dark disabled:opacity-70 text-white rounded-2xl font-extrabold text-base flex items-center justify-center gap-2 transition-all active:scale-[0.98] shadow-lg cursor-pointer"
       >
         @if (loading) {
-          <div class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+          <div
+            class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"
+          ></div>
           جاري التحضير...
         } @else {
           <lucide-icon [img]="lockIcon" class="w-5 h-5"></lucide-icon>
-          ادفع {{ planPrice }} ج.م عبر Paymob
+          ادفع {{ planPrice }} ج.م عبر {{ method === 'card' ? 'الكارت' : 'فودافون كاش' }}
         }
       </button>
 
       <p class="text-center text-[10px] text-outline">
         بالضغط ستنتقل لصفحة Paymob الآمنة لاختيار طريقة الدفع وإتمام العملية
       </p>
-
     }
   </div>
 </div>
 
 <!-- Success Modal -->
 @if (showSuccess) {
-  <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in" dir="rtl">
+  <div
+    class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in"
+    dir="rtl"
+  >
     <div class="bg-white rounded-3xl p-8 shadow-2xl max-w-sm w-full text-center space-y-4">
       <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto">
         <lucide-icon [img]="checkCircleIcon" class="w-10 h-10 text-green-500"></lucide-icon>
@@ -165,6 +199,44 @@
       >
         ابدأ الاستخدام
       </button>
+    </div>
+  </div>
+}
+
+<!-- Failure Modal -->
+@if (showFailure) {
+  <div
+    class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in"
+    dir="rtl"
+  >
+    <div class="bg-white rounded-3xl p-8 shadow-2xl max-w-sm w-full text-center space-y-4">
+      <div class="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto">
+        <span class="text-4xl text-red-500">✕</span>
+      </div>
+      <div class="space-y-1">
+        <h3 class="text-xl font-extrabold text-on-background">فشل الدفع</h3>
+        <p class="text-sm text-outline leading-relaxed">
+          {{ errorText || 'حدث خطأ أثناء إتمام الدفع.' }}
+        </p>
+      </div>
+      <div class="bg-red-50 rounded-2xl p-3 flex items-center gap-2 text-right">
+        <span class="text-red-500 text-base shrink-0">⚠️</span>
+        <p class="text-xs font-bold text-red-700">يمكنك المحاولة مرة أخرى أو العودة للرئيسية</p>
+      </div>
+      <div class="grid grid-cols-2 gap-2">
+        <button
+          (click)="closeFailureModal()"
+          class="h-12 bg-outline-variant text-on-surface rounded-2xl font-bold text-sm cursor-pointer hover:bg-outline transition-all"
+        >
+          إغلاق
+        </button>
+        <button
+          (click)="goHome()"
+          class="h-12 bg-primary text-white rounded-2xl font-bold text-sm cursor-pointer hover:bg-primary-dark transition-all shadow-md"
+        >
+          الصفحة الرئيسية
+        </button>
+      </div>
     </div>
   </div>
 }

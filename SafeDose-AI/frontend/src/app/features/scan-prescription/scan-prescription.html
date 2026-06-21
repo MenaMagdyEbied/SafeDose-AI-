@@ -1,0 +1,339 @@
+<section class="container-app space-y-6 pt-16 pb-24" style="max-width: 640px">
+  <div class="text-center mb-4">
+    <h2 class="text-2xl font-extrabold text-primary">مسح الوصفة الطبية 🩺</h2>
+    <p class="text-sm text-outline">ارفع صورة الوصفة ليتم تحليلها بالذكاء الاصطناعي</p>
+  </div>
+
+  <!-- Camera Modal -->
+  @if (showCamera()) {
+    <div class="fixed inset-0 bg-black/80 z-50 flex flex-col items-center justify-center gap-4 p-4">
+      <video id="cameraFeed" autoplay playsinline class="w-full max-w-lg rounded-xl"></video>
+      <div class="flex flex-col sm:flex-row gap-3 w-full max-w-lg">
+        <button
+          (click)="capturePhoto()"
+          class="flex-1 bg-primary text-white px-6 py-3 rounded-xl font-bold cursor-pointer"
+        >
+          📸 التقط الصورة
+        </button>
+        <button
+          (click)="closeCamera()"
+          class="flex-1 bg-gray-500 text-white px-6 py-3 rounded-xl font-bold cursor-pointer"
+        >
+          إلغاء
+        </button>
+      </div>
+    </div>
+  }
+
+  @if (errorText()) {
+    <div class="bg-danger-container p-4 rounded-xl flex items-center gap-2 text-right">
+      <lucide-icon [img]="alertTriangleIcon" class="w-5 h-5 text-danger shrink-0"></lucide-icon>
+      <p class="text-sm font-bold text-on-danger-container">{{ errorText() }}</p>
+    </div>
+  }
+
+  <!-- ===== Stage 1: Upload ===== -->
+  @if (stage() === 'upload' && !loading()) {
+    <div
+      class="bg-white border-2 border-dashed border-primary/30 rounded-3xl p-6 sm:p-12 text-center hover:border-primary/60 transition-all"
+    >
+      <lucide-icon
+        [img]="uploadIcon"
+        class="w-12 h-12 sm:w-16 sm:h-16 text-primary/30 mx-auto mb-4"
+      ></lucide-icon>
+      <h3 class="text-base sm:text-lg font-bold text-on-background mb-2">
+        اسحب وأفلت صورة الوصفة هنا
+      </h3>
+      <p class="text-sm text-outline mb-4">أو اضغط لاختيار صورة من جهازك</p>
+      <div class="flex flex-col sm:flex-row justify-center gap-3">
+        <button
+          (click)="openCamera()"
+          class="bg-primary hover:bg-primary-dark text-white px-6 py-3 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 cursor-pointer"
+        >
+          <lucide-icon [img]="cameraIcon" class="w-5 h-5"></lucide-icon>
+          تصوير وصفة
+        </button>
+        <button
+          (click)="openFilePicker()"
+          class="border border-outline-variant text-on-surface-variant hover:bg-slate-50 px-6 py-3 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 cursor-pointer"
+        >
+          <lucide-icon [img]="uploadIcon" class="w-5 h-5"></lucide-icon>
+          رفع صورة
+        </button>
+        <button
+          (click)="addManually()"
+          class="border border-primary text-primary hover:bg-primary/5 px-6 py-3 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 cursor-pointer"
+        >
+          <lucide-icon [img]="plusIcon" class="w-5 h-5"></lucide-icon>
+          أضف يدوياً
+        </button>
+      </div>
+    </div>
+  }
+
+  <!-- Loading -->
+  @if (loading()) {
+    <div
+      class="bg-white rounded-3xl border border-outline-variant p-8 sm:p-12 text-center space-y-4"
+    >
+      <div
+        class="w-14 h-14 sm:w-16 sm:h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto"
+      ></div>
+      <p class="font-bold text-on-background">جاري تحليل الوصفة بالذكاء الاصطناعي...</p>
+      <p class="text-sm text-outline">يتم التعرف على الأدوية والجرعات</p>
+    </div>
+  }
+
+  <!-- ===== Stage 2: Review (تعديل قبل الحفظ) ===== -->
+  @if (stage() === 'review' && !loading()) {
+    <div class="space-y-4">
+      <div
+        class="flex items-center gap-3 bg-emerald-50 text-emerald-800 p-4 rounded-xl border border-emerald-200"
+      >
+        <lucide-icon [img]="checkCircleIcon" class="w-6 h-6 shrink-0"></lucide-icon>
+        <div class="text-right">
+          @if (doctorName()) {
+            <p class="font-bold text-sm">تم استخراج {{ reviewMeds().length }} دواء</p>
+            <p class="text-xs text-emerald-600">د. {{ doctorName() }}</p>
+          } @else {
+            <p class="font-bold text-sm">إضافة وصفة يدويًا</p>
+            <p class="text-xs text-emerald-600">أدخل بيانات الأدوية بنفسك</p>
+          }
+        </div>
+      </div>
+
+      <p class="text-xs text-outline text-center">راجع كل دواء وأكّد اسمه ومواعيده قبل الحفظ</p>
+
+      <div class="space-y-3">
+        @for (med of reviewMeds(); track $index) {
+          <div
+            class="bg-white rounded-2xl border border-outline-variant shadow-sm p-4 space-y-3 text-right"
+          >
+            <div class="flex items-center justify-between">
+              <button
+                (click)="removeMed($index)"
+                class="w-7 h-7 rounded-lg bg-danger/10 text-danger flex items-center justify-center hover:bg-danger/20 transition-all cursor-pointer"
+              >
+                <lucide-icon [img]="trashIcon" class="w-3.5 h-3.5"></lucide-icon>
+              </button>
+              <span class="text-xs font-bold text-outline">دواء {{ $index + 1 }}</span>
+            </div>
+
+            <!-- Verification banner لو موجود -->
+            @if (med.verification?.ui_message_arabic) {
+              <div
+                class="p-2.5 rounded-xl text-xs font-bold"
+                [class.bg-emerald-50]="med.verification?.status === 'EXACT_MATCH'"
+                [class.text-emerald-700]="med.verification?.status === 'EXACT_MATCH'"
+                [class.bg-amber-50]="med.verification?.status !== 'EXACT_MATCH'"
+                [class.text-amber-700]="med.verification?.status !== 'EXACT_MATCH'"
+              >
+                {{ med.verification?.ui_message_arabic }}
+              </div>
+            }
+
+            <!-- اسم الدواء + بحث في الكتالوج -->
+            <div class="space-y-1 relative">
+              <label class="text-[10px] font-bold text-outline">اسم الدواء (من الكتالوج)</label>
+              <input
+                [value]="med.resolvedName"
+                (input)="onDrugNameInput($index, $any($event.target).value)"
+                placeholder="ابحث عن اسم الدواء..."
+                class="w-full h-10 px-3 bg-surface-container-low border border-outline-variant rounded-xl text-sm font-bold outline-none focus:border-primary"
+              />
+              @if (med.searchSuggestions.length > 0) {
+                <div
+                  class="absolute top-full right-0 left-0 z-30 bg-white border border-outline-variant rounded-xl shadow-lg overflow-hidden mt-1 max-h-48 overflow-y-auto"
+                >
+                  @for (s of med.searchSuggestions; track s) {
+                    <div
+                      (mousedown)="selectSuggestion($index, s)"
+                      class="px-3 py-2 text-sm font-bold text-right hover:bg-surface-container-low transition-colors cursor-pointer border-b border-outline-variant/20"
+                    >
+                      {{ s }}
+                    </div>
+                  }
+                </div>
+              }
+              @if (med.searchSuggestions.length === 0 && med.resolvedName) {
+                <p class="text-[10px] text-outline">
+                  لم يتم العثور على تطابق في قاعدة البيانات، تأكد من الإملاء أو اكتب اسمًا آخر
+                </p>
+              }
+            </div>
+
+            <!-- جرعة + طبيب -->
+            <div class="grid grid-cols-2 gap-2">
+              <div class="space-y-1">
+                <label class="text-[10px] font-bold text-outline">الجرعة</label>
+                <input
+                  [value]="med.dose"
+                  (input)="updateMedField($index, 'dose', $any($event.target).value)"
+                  class="w-full h-9 px-2 bg-surface-container-low border border-outline-variant rounded-xl text-xs font-bold outline-none focus:border-primary"
+                />
+              </div>
+              <div class="space-y-1">
+                <label class="text-[10px] font-bold text-outline">اسم الطبيب</label>
+                <input
+                  [value]="med.doctorName"
+                  (input)="updateMedField($index, 'doctorName', $any($event.target).value)"
+                  class="w-full h-9 px-2 bg-surface-container-low border border-outline-variant rounded-xl text-xs font-bold outline-none focus:border-primary"
+                />
+              </div>
+            </div>
+
+            <!-- عدد المرات يوميًا -->
+            <div class="space-y-1">
+              <label class="text-[10px] font-bold text-outline">عدد مرات الدواء يومياً</label>
+              <select
+                [value]="med.frequencyNumber"
+                (change)="updateMedField($index, 'frequencyNumber', +$any($event.target).value)"
+                class="w-full h-9 px-2 bg-surface-container-low border border-outline-variant rounded-xl text-xs font-bold outline-none focus:border-primary appearance-none"
+              >
+                @for (n of frequencyOptions; track n) {
+                  <option [value]="n">{{ n }} {{ n === 1 ? 'مرة' : 'مرات' }} يومياً</option>
+                }
+              </select>
+            </div>
+
+            <!-- توقيت الأكل -->
+            <div class="space-y-1">
+              <label class="text-[10px] font-bold text-outline">توقيت الدواء بالنسبة للأكل</label>
+              <div class="grid grid-cols-4 gap-1.5">
+                @for (opt of mealTimingOptions; track opt.value) {
+                  <button
+                    type="button"
+                    (click)="updateMedField($index, 'mealTiming', opt.value)"
+                    [class]="
+                      med.mealTiming === opt.value
+                        ? 'p-2 rounded-lg border-2 border-primary bg-primary text-white text-[10px] font-bold cursor-pointer'
+                        : 'p-2 rounded-lg border border-outline-variant text-[10px] font-bold text-outline cursor-pointer'
+                    "
+                  >
+                    {{ opt.label }}
+                  </button>
+                }
+              </div>
+            </div>
+
+            <!-- تواريخ -->
+            <div class="grid grid-cols-2 gap-2">
+              <div class="space-y-1">
+                <label class="text-[10px] font-bold text-outline">تاريخ البداية</label>
+                <input
+                  type="date"
+                  [value]="med.startDate"
+                  (change)="updateMedField($index, 'startDate', $any($event.target).value)"
+                  class="w-full h-9 px-2 bg-surface-container-low border border-outline-variant rounded-xl text-xs font-bold outline-none focus:border-primary"
+                />
+              </div>
+              <div class="space-y-1">
+                <label class="text-[10px] font-bold text-outline">تاريخ النهاية</label>
+                <input
+                  type="date"
+                  [value]="med.endDate"
+                  (change)="updateMedField($index, 'endDate', $any($event.target).value)"
+                  class="w-full h-9 px-2 bg-surface-container-low border border-outline-variant rounded-xl text-xs font-bold outline-none focus:border-primary"
+                />
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+
+      <button
+        (click)="addEmptyMed()"
+        class="w-full py-3 rounded-xl border-2 border-dashed border-primary/30 text-primary text-sm font-bold hover:bg-primary/5 transition-all cursor-pointer flex items-center justify-center gap-2"
+      >
+        <lucide-icon [img]="plusIcon" class="w-4 h-4"></lucide-icon>
+        إضافة دواء يدويًا
+      </button>
+
+      <div class="flex flex-col sm:flex-row gap-3 pt-2">
+        <button
+          (click)="reset()"
+          class="flex-1 border border-outline-variant text-on-surface-variant hover:bg-slate-50 py-3 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 cursor-pointer"
+        >
+          <lucide-icon [img]="rotateCcwIcon" class="w-5 h-5"></lucide-icon>
+          مسح وصفة أخرى
+        </button>
+        <button
+          (click)="confirmAndSave()"
+          [disabled]="saving()"
+          class="flex-1 bg-primary hover:bg-primary-dark disabled:bg-slate-300 text-white py-3 rounded-xl font-bold text-sm transition-all cursor-pointer flex items-center justify-center gap-2"
+        >
+          @if (saving()) {
+            <div
+              class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"
+            ></div>
+            <span>جاري الحفظ...</span>
+          } @else {
+            <span>تأكيد وحفظ الوصفة</span>
+          }
+        </button>
+      </div>
+    </div>
+  }
+  <!-- ===== Stage 3: Summary (بعد الحفظ — زي الصورة) ===== -->
+  @if (stage() === 'summary' && lastSavedPrescription()) {
+    <div class="space-y-4">
+      <div
+        class="flex items-center gap-3 bg-emerald-50 text-emerald-800 p-4 rounded-xl border border-emerald-200"
+      >
+        <lucide-icon [img]="checkCircleIcon" class="w-6 h-6 shrink-0"></lucide-icon>
+        <div class="text-right">
+          <p class="font-bold text-sm">تم التعرف على الوصفة بنجاح</p>
+          <p class="text-xs text-emerald-600">
+            تم استخراج {{ lastSavedPrescription()!.meds.length }} دواء
+          </p>
+        </div>
+      </div>
+
+      <div
+        class="bg-white rounded-2xl border border-outline-variant shadow-sm p-4 text-right space-y-3"
+      >
+        <div class="flex items-center justify-between">
+          <button
+            (click)="viewPrescriptionDetail()"
+            class="px-3 py-1.5 bg-primary text-white rounded-xl text-xs font-bold hover:bg-primary-dark transition-all cursor-pointer flex items-center gap-1.5"
+          >
+            <lucide-icon [img]="eyeIcon" class="w-3.5 h-3.5"></lucide-icon>
+            عرض التفاصيل
+          </button>
+          <div>
+            <h3 class="font-extrabold text-on-background text-sm">
+              {{ lastSavedPrescription()!.name }}
+            </h3>
+            <p class="text-xs text-outline">
+              {{ lastSavedPrescription()!.date }} · {{ lastSavedPrescription()!.meds.length }} أدوية
+            </p>
+          </div>
+        </div>
+
+        <div class="flex flex-wrap gap-2 justify-end">
+          @for (med of lastSavedPrescription()!.meds; track med.name) {
+            <span class="px-2.5 py-1 bg-primary/10 text-primary rounded-full text-xs font-bold">
+              {{ med.name }}
+            </span>
+          }
+        </div>
+      </div>
+
+      <div class="flex flex-col sm:flex-row gap-3 pt-2">
+        <button
+          (click)="reset()"
+          class="flex-1 border border-outline-variant text-on-surface-variant hover:bg-slate-50 py-3 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 cursor-pointer"
+        >
+          <lucide-icon [img]="rotateCcwIcon" class="w-5 h-5"></lucide-icon>
+          مسح وصفة أخرى
+        </button>
+        <button
+          (click)="goHome()"
+          class="flex-1 bg-primary hover:bg-primary-dark text-white py-3 rounded-xl font-bold text-sm transition-all cursor-pointer"
+        >
+          العودة للرئيسية
+        </button>
+      </div>
+    </div>
+  }
+</section>

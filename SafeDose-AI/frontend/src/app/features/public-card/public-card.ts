@@ -1,4 +1,4 @@
-import { Component, DestroyRef, inject, OnInit } from '@angular/core';
+import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -21,10 +21,9 @@ export class PublicCard implements OnInit {
   private readonly medicalCardService = inject(MedicalCardService);
   private readonly destroyRef = inject(DestroyRef);
 
-  loading = false;
-  error = '';
-
-  private _cardData: CardData = {
+  loading = signal(false);
+  error = signal('');
+  cardData = signal<CardData>({
     id: '',
     name: '',
     age: 0,
@@ -32,31 +31,29 @@ export class PublicCard implements OnInit {
     allergies: [],
     doctorName: '',
     qrUrl: '',
-  };
-  cardLoaded = false;
+  });
+  cardLoaded = signal(false);
 
   loadCardData(token: string): void {
-    this.loading = true;
-    this.error = '';
+    this.loading.set(true);
+    this.error.set('');
+    this.cardLoaded.set(false);
 
     from(this.medicalCardService.getPublicCard(token))
       .pipe(
         catchError(() => {
-          this.error = 'تعذر تحميل البطاقة الطبية.';
+          this.error.set('تعذر تحميل البطاقة الطبية.');
           return EMPTY;
         }),
         finalize(() => {
-          this.loading = false;
+          this.loading.set(false);
         }),
         takeUntilDestroyed(this.destroyRef),
       )
       .subscribe((cardData) => {
-        this._cardData = cardData;
-        this.cardLoaded = true;
+        this.cardData.set(cardData);
+        this.cardLoaded.set(true);
       });
-  }
-  get cardData(): CardData {
-    return this._cardData;
   }
 
   ngOnInit() {

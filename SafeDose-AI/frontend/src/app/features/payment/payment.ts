@@ -27,10 +27,12 @@ export class Payment implements OnInit {
 
   loading = false;
   showSuccess = false;
+  showFailure = false;
   showError = false;
   errorText = '';
   planId = 'pro';
   verifying = false;
+  method: 'card' | 'wallet' = 'card';
 
   userForm = {
     fullName: '',
@@ -68,7 +70,9 @@ export class Payment implements OnInit {
   get planFeatures() {
     return this.plans[this.planId]?.features ?? [];
   }
-
+  get paymentMethodValue(): string {
+    return this.method === 'card' ? 'card' : 'wallet';
+  }
   ngOnInit(): void {
     this.prefillUserData();
 
@@ -87,6 +91,7 @@ export class Payment implements OnInit {
             catchError(() => {
               this.errorText = 'فشل التحقق من حالة الدفع.';
               this.showError = true;
+              this.showFailure = true;
               return EMPTY;
             }),
             finalize(() => {
@@ -99,9 +104,11 @@ export class Payment implements OnInit {
       .subscribe((data: any) => {
         if (data?.success) {
           this.showSuccess = true;
+          this.showFailure = false;
         } else if (data) {
           this.errorText = 'لم يتم تأكيد الدفع. إذا تم خصم المبلغ، تواصل مع الدعم.';
           this.showError = true;
+          this.showFailure = true;
         }
       });
   }
@@ -128,11 +135,12 @@ export class Payment implements OnInit {
 
     this.loading = true;
     this.showError = false;
+    this.showFailure = false;
 
     from(
       this.billingService.checkout({
         tierCode: this.tierCode,
-        paymentMethod: 'paymob',
+        paymentMethod: this.paymentMethodValue,
         fullName: this.userForm.fullName,
         email: this.userForm.email,
         phoneNumber: this.userForm.phoneNumber,
@@ -144,6 +152,7 @@ export class Payment implements OnInit {
             (typeof err?.error === 'string' ? err.error : err?.error?.message) ||
             'حدث خطأ أثناء إنشاء طلب الدفع.';
           this.showError = true;
+          this.showFailure = true;
           return EMPTY;
         }),
         finalize(() => {
@@ -155,13 +164,13 @@ export class Payment implements OnInit {
         window.location.href = data.paymentUrl;
       });
   }
-
   verifyPayment(merchantOrderId: string): void {
     from(this.billingService.getPaymentStatus(merchantOrderId))
       .pipe(
         catchError(() => {
           this.errorText = 'فشل التحقق من حالة الدفع.';
           this.showError = true;
+          this.showFailure = true;
           return EMPTY;
         }),
         takeUntilDestroyed(this.destroyRef),
@@ -169,11 +178,17 @@ export class Payment implements OnInit {
       .subscribe((data) => {
         if (data.success) {
           this.showSuccess = true;
+          this.showFailure = false;
         } else {
           this.errorText = 'لم يتم تأكيد الدفع. إذا تم خصم المبلغ، تواصل مع الدعم.';
           this.showError = true;
+          this.showFailure = true;
         }
       });
+  }
+
+  closeFailureModal(): void {
+    this.showFailure = false;
   }
 
   goHome(): void {

@@ -1,131 +1,75 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { firstValueFrom } from 'rxjs';
+import { environment } from '../../../environments/environment';
+import {
+  ParsePrescriptionResponse,
+  SavePrescriptionPayload,
+  SavePrescriptionResult,
+} from '../models/prescription-api';
+import { PrescriptionDetail, PrescriptionListItem } from '../models/prescription-list';
 
+interface ApiEnvelope<T> {
+  success: boolean;
+  data: T;
+}
 @Injectable({
   providedIn: 'root',
 })
 export class Prescription {
-  prescriptions: any[] = [
-    {
-      id: 1,
-      name: 'وصفة د. محمد السيد',
-      date: '١٥/٠٥/٢٠٢٥',
-      source: 'scan',
-      meds: [
-        {
-          name: 'بانادول اكسترا',
-          dose: '٥٠٠ ملغ - قرص واحد',
-          frequency: '٣ مرات يومياً',
-          duration: 'لمدة ٥ أيام',
-          warning: 'تعارض محتمل مع دواء وارفارين. راجع الطبيب.',
-          chemicalName: 'Paracetamol + Caffeine',
-          registryCode: 'EDA-REG-109283-PAN-01',
-        },
-        {
-          name: 'ميتفورمين',
-          dose: '٥٠٠ ملغ',
-          frequency: 'مرتين يومياً',
-          duration: 'مستمر',
-          warning: '',
-          chemicalName: 'Metformin Hydrochloride',
-          registryCode: 'EDA-REG-204811-MET-02',
-        },
-        {
-          name: 'أملوديبين',
-          dose: '٥ ملغ',
-          frequency: 'مرة يومياً',
-          duration: 'مستمر',
-          warning: '',
-          chemicalName: 'Amlodipine Besylate',
-          registryCode: 'EDA-REG-334521-AML-01',
-        },
-      ],
-    },
-    {
-      id: 2,
-      name: 'وصفة د. سارة أحمد',
-      date: '٢٠/٠٤/٢٠٢٥',
-      source: 'scan',
-      meds: [
-        {
-          name: 'أموكسيسيلين',
-          dose: '٥٠٠ ملغ',
-          frequency: '٣ مرات يومياً',
-          duration: 'لمدة ٧ أيام',
-          warning: '',
-          chemicalName: 'Amoxicillin Trihydrate',
-          registryCode: 'EDA-REG-112233-AMX-03',
-        },
-        {
-          name: 'بروفين',
-          dose: '٤٠٠ ملغ',
-          frequency: 'مرتين يومياً',
-          duration: 'لمدة ٣ أيام',
-          warning: 'تجنب تناوله على معدة فارغة',
-          chemicalName: 'Ibuprofen',
-          registryCode: 'EDA-REG-445566-IBU-02',
-        },
-      ],
-    },
-    {
-      id: 3,
-      name: 'وصفة يدوية - السكري',
-      date: '١٠/٠٣/٢٠٢٥',
-      source: 'manual',
-      meds: [
-        {
-          name: 'إنسولين',
-          dose: '١٠ وحدات',
-          frequency: 'مرة يومياً',
-          duration: 'مستمر',
-          warning: '',
-          chemicalName: '',
-          registryCode: '',
-        },
-        {
-          name: 'ميتفورمين',
-          dose: '١٠٠٠ ملغ',
-          frequency: 'مرتين يومياً',
-          duration: 'مستمر',
-          warning: '',
-          chemicalName: 'Metformin Hydrochloride',
-          registryCode: 'EDA-REG-204811-MET-02',
-        },
-        {
-          name: 'أتورفاستاتين',
-          dose: '٢٠ ملغ',
-          frequency: 'مرة يومياً قبل النوم',
-          duration: 'مستمر',
-          warning: '',
-          chemicalName: 'Atorvastatin Calcium',
-          registryCode: 'EDA-REG-667788-ATV-01',
-        },
-        {
-          name: 'أسبرين',
-          dose: '٨١ ملغ',
-          frequency: 'مرة يومياً',
-          duration: 'مستمر',
-          warning: 'تعارض محتمل مع وارفارين',
-          chemicalName: 'Acetylsalicylic Acid',
-          registryCode: 'EDA-REG-998877-ASP-04',
-        },
-      ],
-    },
-  ];
+  private readonly baseUrl = environment.apiUrl + '/Prescriptions';
+  private readonly http = inject(HttpClient);
 
-  getById(id: number) {
-    return this.prescriptions.find((p) => p.id === id);
+  /** POST /api/Prescriptions/parse — يحلل صورة الوصفة بالذكاء الاصطناعي */
+  async parse(file: File): Promise<ParsePrescriptionResponse> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return firstValueFrom(
+      this.http.post<ParsePrescriptionResponse>(`${this.baseUrl}/parse`, formData),
+    );
   }
 
-  delete(id: number) {
-    this.prescriptions = this.prescriptions.filter((p) => p.id !== id);
+  /** POST /api/Prescriptions/save */
+  async save(payload: SavePrescriptionPayload): Promise<SavePrescriptionResult> {
+    return firstValueFrom(this.http.post<SavePrescriptionResult>(`${this.baseUrl}/save`, payload));
   }
 
-  update(updated: any) {
-    const idx = this.prescriptions.findIndex((p) => p.id === updated.id);
-    if (idx !== -1) this.prescriptions[idx] = updated;
+  /** GET /api/Prescriptions/Patient/{patientId}/Summary */
+  async getByPatient(patientId: number): Promise<PrescriptionListItem[]> {
+    const res = await firstValueFrom(
+      this.http.get<ApiEnvelope<any[]>>(`${this.baseUrl}/Patient/${patientId}/Summary`),
+    );
+    return res.data.map((item) => ({
+      id: item.prescriptionId,
+      name: item.prescriptionName,
+      date: item.date,
+      drugCount: item.drugCount,
+      drugNames: item.drugNames ?? [],
+    }));
   }
 
-  add(prescription: any) {
-    this.prescriptions.push(prescription);
+  /** GET /api/Prescriptions/{prescriptionId}/Details */
+  async getById(prescriptionId: number): Promise<PrescriptionDetail> {
+    const res = await firstValueFrom(
+      this.http.get<ApiEnvelope<any>>(`${this.baseUrl}/${prescriptionId}/Details`),
+    );
+    const d = res.data;
+    return {
+      id: d.prescriptionId,
+      name: d.prescriptionName,
+      date: d.date,
+      drugCount: d.drugCount,
+      meds: (d.medications ?? []).map((m: any) => ({
+        name: m.drugName,
+        dose: m.dose,
+        frequency: m.frequency,
+        duration: m.duration,
+      })),
+    };
+  }
+
+  // مفيش delete endpoint ظاهر في Swagger لسه، سيبتها زي ما هي مؤقتًا
+  async delete(id: number): Promise<void> {
+    await firstValueFrom(this.http.delete(`${this.baseUrl}/${id}`));
   }
 }

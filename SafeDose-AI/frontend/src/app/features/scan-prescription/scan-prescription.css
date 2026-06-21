@@ -4,8 +4,9 @@
 .scrollbar-hide {
   -ms-overflow-style: none;
   scrollbar-width: none;
-}.scrollbar-custom::-webkit-scrollbar {
-  height: 5px; 
+}
+.scrollbar-custom::-webkit-scrollbar {
+  height: 5px;
 }
 
 .scrollbar-custom::-webkit-scrollbar-track {

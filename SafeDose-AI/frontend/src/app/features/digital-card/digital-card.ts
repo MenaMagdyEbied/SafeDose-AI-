@@ -5,6 +5,7 @@ import {
   Component,
   DestroyRef,
   inject,
+  signal,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
@@ -52,11 +53,11 @@ export class DigitalCard implements AfterViewInit {
   xIcon = X;
   arrowRightIcon = ArrowRight;
 
-  loading = false;
-  error = '';
-  qrImage = '';
-
-  private _cardData: CardData = {
+  loading = signal(false);
+  error = signal('');
+  qrImage = signal('');
+  cardLoaded = signal(false);
+  cardData = signal<CardData>({
     id: '',
     name: '',
     age: 0,
@@ -64,12 +65,7 @@ export class DigitalCard implements AfterViewInit {
     allergies: [],
     doctorName: '',
     qrUrl: '',
-  };
-
-  get cardData(): CardData {
-    return this._cardData;
-  }
-  cardLoaded = false;
+  });
 
   private resolvePatientId() {
     const fallback = 'd5b564aa-4a5b-4752-ba90-a0c822e71d9e';
@@ -83,15 +79,15 @@ export class DigitalCard implements AfterViewInit {
   }
 
   loadCard(): void {
-    this.error = '';
-    this.loading = true;
+    this.error.set('');
+    this.loading.set(true);
     this.cdr.markForCheck();
 
     this.resolvePatientId()
       .pipe(
         switchMap((patientId) => {
           if (!patientId) {
-            this.error = 'لم يتم العثور على معرف المريض.';
+            this.error.set('لم يتم العثور على معرف المريض.');
             this.cdr.markForCheck();
             return EMPTY;
           }
@@ -104,19 +100,19 @@ export class DigitalCard implements AfterViewInit {
           );
         }),
         catchError(() => {
-          this.error = 'تعذر تحميل البطاقة الطبية الخاصة.';
+          this.error.set('تعذر تحميل البطاقة الطبية الخاصة.');
           return EMPTY;
         }),
         finalize(() => {
-          this.loading = false;
+          this.loading.set(false);
           this.cdr.markForCheck();
         }),
         takeUntilDestroyed(this.destroyRef),
       )
       .subscribe(([card, qr]) => {
-        this._cardData = card;
-        this.qrImage = qr;
-        this.cardLoaded = true;
+        this.cardData.set(card);
+        this.qrImage.set(qr);
+        this.cardLoaded.set(true);
         this.cdr.markForCheck();
       });
   }
@@ -136,14 +132,14 @@ export class DigitalCard implements AfterViewInit {
       .pipe(
         switchMap((patientId) => {
           if (!patientId) {
-            this.error = 'لم يتم العثور على معرف المريض لتحميل الملف.';
+            this.error.set('لم يتم العثور على معرف المريض لتحميل الملف.');
             return EMPTY;
           }
 
           return from(this.medicalCardService.downloadPrivatePdf(patientId));
         }),
         catchError(() => {
-          this.error = 'تعذر تحميل ملف PDF للبطاقة.';
+          this.error.set('تعذر تحميل ملف PDF للبطاقة.');
           return EMPTY;
         }),
         takeUntilDestroyed(this.destroyRef),
@@ -156,20 +152,20 @@ export class DigitalCard implements AfterViewInit {
       .pipe(
         switchMap((patientId) => {
           if (!patientId) {
-            this.error = 'لم يتم العثور على معرف المريض لإنشاء الـ QR.';
+            this.error.set('لم يتم العثور على معرف المريض لإنشاء الـ QR.');
             return EMPTY;
           }
 
           return from(this.medicalCardService.getPrivateQrCode(patientId));
         }),
         catchError(() => {
-          this.error = 'تعذر تحميل رمز الـ QR.';
+          this.error.set('تعذر تحميل رمز الـ QR.');
           return EMPTY;
         }),
         takeUntilDestroyed(this.destroyRef),
       )
       .subscribe((qrImage) => {
-        this.qrImage = qrImage;
+        this.qrImage.set(qrImage);
       });
   }
 }

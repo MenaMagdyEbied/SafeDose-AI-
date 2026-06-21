@@ -87,7 +87,7 @@ export class FamilyPlan implements OnInit {
     const payload = {
       fullName: this.form.value.fullName?.trim() ?? '',
       dateOfBirth: this.form.value.dateOfBirth ?? '',
-      gender: Number(this.form.value.gender ?? 0),
+      gender: Number(this.form.value.gender ?? 1),
       bloodType: this.form.value.bloodType?.trim() ?? '',
       chronicConditions: this.parseList(this.form.value.chronicConditions ?? ''),
       allergies: this.parseList(this.form.value.allergies ?? ''),

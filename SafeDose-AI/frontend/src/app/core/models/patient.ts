@@ -7,4 +7,6 @@ export interface Patient {
   bloodType: string;
   chronicConditions: string[];
   allergies: string[];
+  isActive?: boolean;
+  createdAt?: string;
 }

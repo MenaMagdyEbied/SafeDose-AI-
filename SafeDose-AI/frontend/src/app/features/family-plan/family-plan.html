@@ -116,7 +116,7 @@
       (click)="closeModal()"
     >
       <div
-        class="bg-white rounded-3xl shadow-xl w-full sm:max-w-lg flex flex-col max-h-[85vh]"
+        class="bg-white rounded-3xl shadow-xl w-full sm:max-w-lg flex flex-col max-h-screen"
         (click)="$event.stopPropagation()"
       >
         <div
@@ -263,7 +263,7 @@
           <button
             type="button"
             (click)="saveMember()"
-            class="flex-[2] h-12 bg-primary hover:bg-primary-dark text-white rounded-2xl font-bold text-sm transition-all cursor-pointer"
+            class="flex-2 h-12 bg-primary hover:bg-primary-dark text-white rounded-2xl font-bold text-sm transition-all cursor-pointer"
           >
             {{ saveButtonText() }}
           </button>

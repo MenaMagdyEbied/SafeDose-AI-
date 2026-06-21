@@ -121,6 +121,8 @@ public class PricingTierConfiguration : IEntityTypeConfiguration<PricingTier>
         b.Property(x => x.InteractionCheckLimitPerDay).HasDefaultValue(3);
         b.Property(x => x.MedicationLimitPerPatient).HasDefaultValue(5);
         b.Property(x => x.BillingCycleDays).HasDefaultValue(0);
+        b.Property(x => x.InteractionCheckLimitPerDay).HasDefaultValue(int.MaxValue);
+        b.Property(x => x.MedicationLimitPerPatient).HasDefaultValue(int.MaxValue);
         b.Property(x => x.CreatedAt).HasDefaultValueSql("GETDATE()");
 
         b.HasIndex(x => x.TierCode).IsUnique();

@@ -8,4 +8,7 @@ export * from './family-member';
 export * from './subscription-plan';
 export * from './admin-stats';
 export * from './chat-action';
+export * from './medication';
 export * from './chat-message';
+export * from './patient-medication';
+export * from './drug-search-result';

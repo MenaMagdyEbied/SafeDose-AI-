@@ -26,7 +26,7 @@
   <!-- Chat Panel -->
   @if (isOpen) {
     <div
-      class="fixed bottom-24 right-6 sm:right-6 w-[calc(100vw-32px)] sm:w-[420px] h-[calc(100vh-120px)] max-h-[640px] bg-white rounded-3xl shadow-3xl border border-outline-variant overflow-hidden flex flex-col z-40 animate-slide-in-top"
+      class="fixed bottom-24 right-6 sm:right-6 w-[calc(100vw-32px)] sm:w-105 h-[calc(100vh-120px)] max-h-160 bg-white rounded-3xl shadow-3xl border border-outline-variant overflow-hidden flex flex-col z-40 animate-slide-in-top"
     >
       <!-- Header -->
       <div
@@ -53,7 +53,7 @@
         </div>
         <button
           (click)="isOpen = false"
-          class="w-8 h-8 rounded-full hover:bg-white/15 flex items-center justify-center transition-colors min-h-[44px] min-w-[44px] cursor-pointer"
+          class="w-8 h-8 rounded-full hover:bg-white/15 flex items-center justify-center transition-colors min-h-11 min-w-11 cursor-pointer"
         >
           <lucide-icon [img]="xIcon" class="w-5 h-5 text-white"></lucide-icon>
         </button>
@@ -147,7 +147,7 @@
             @for (chip of quickChips; track chip) {
               <button
                 (click)="sendChip(chip)"
-                class="bg-white hover:bg-primary/5 border border-outline-variant text-right px-3 py-2.5 text-xs font-bold rounded-2xl text-on-surface-variant hover:text-primary hover:border-primary/50 transition-all cursor-pointer shadow-xs min-h-[44px]"
+                class="bg-white hover:bg-primary/5 border border-outline-variant text-right px-3 py-2.5 text-xs font-bold rounded-2xl text-on-surface-variant hover:text-primary hover:border-primary/50 transition-all cursor-pointer shadow-xs min-h-11"
               >
                 {{ chip }}
               </button>
@@ -166,7 +166,7 @@
           [(ngModel)]="inputText"
           name="chatInput"
           [placeholder]="'اسأل عن تعارض أدويتك...'"
-          class="flex-1 h-[44px] px-4 rounded-xl border border-outline-variant outline-none focus:border-primary text-on-background bg-surface-container-low focus:bg-white text-right"
+          class="flex-1 h-11 px-4 rounded-xl border border-outline-variant outline-none focus:border-primary text-on-background bg-surface-container-low focus:bg-white text-right"
         />
         <button
           type="submit"

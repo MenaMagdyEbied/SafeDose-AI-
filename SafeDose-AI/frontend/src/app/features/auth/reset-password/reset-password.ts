@@ -1,5 +1,11 @@
-import { Component, OnInit, inject } from '@angular/core';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Component, OnInit, inject, signal } from '@angular/core';
+import {
+  AbstractControl,
+  FormBuilder,
+  FormGroup,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Check, Eye, EyeOff, Lock, LucideAngularModule, TriangleAlert } from 'lucide-angular';
 import { Auth } from '../../../core/auth/services/auth';
@@ -23,11 +29,11 @@ export class ResetPassword implements OnInit {
   eyeIcon = Eye;
   eyeOffIcon = EyeOff;
 
-  loading = false;
-  resetDone = false;
-  errorText = '';
-  showPassword = false;
-  showConfirm = false;
+  loading = signal(false);
+  resetDone = signal(false);
+  errorText = signal('');
+  showPassword = signal(false);
+  showConfirm = signal(false);
 
   form: FormGroup = this.fb.group(
     {
@@ -46,17 +52,17 @@ export class ResetPassword implements OnInit {
     { validators: passwordsMatchValidator },
   );
 
-  get email() {
-    return this.form.get('email');
+  get email(): AbstractControl {
+    return this.form.get('email')!;
   }
-  get code() {
-    return this.form.get('code');
+  get code(): AbstractControl {
+    return this.form.get('code')!;
   }
-  get newPassword() {
-    return this.form.get('newPassword');
+  get newPassword(): AbstractControl {
+    return this.form.get('newPassword')!;
   }
-  get confirmPassword() {
-    return this.form.get('confirmPassword');
+  get confirmPassword(): AbstractControl {
+    return this.form.get('confirmPassword')!;
   }
 
   ngOnInit(): void {
@@ -71,8 +77,8 @@ export class ResetPassword implements OnInit {
     this.form.markAllAsTouched();
     if (this.form.invalid) return;
 
-    this.loading = true;
-    this.errorText = '';
+    this.loading.set(true);
+    this.errorText.set('');
 
     this.authService
       .resetPassword({
@@ -83,17 +89,18 @@ export class ResetPassword implements OnInit {
       })
       .subscribe({
         next: () => {
-          this.loading = false;
-          this.resetDone = true;
+          this.loading.set(false);
+          this.resetDone.set(true);
           this.router.navigate(['/login'], {
-            queryParams: { email: this.email },
+            queryParams: { email: this.email?.value },
           });
         },
         error: (err) => {
-          this.loading = false;
-          this.errorText =
+          this.loading.set(false);
+          this.errorText.set(
             (typeof err?.error === 'string' ? err.error : err?.error?.message) ||
-            'الكود غير صحيح أو منتهي الصلاحية.';
+              'الكود غير صحيح أو منتهي الصلاحية.',
+          );
         },
       });
   }

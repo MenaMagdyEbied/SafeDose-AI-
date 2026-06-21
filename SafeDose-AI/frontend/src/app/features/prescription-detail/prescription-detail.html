@@ -34,6 +34,9 @@
           <span [class]="selectedPrescription.source === 'scan' ? 'text-primary' : 'text-tertiary'">
             {{ selectedPrescription.source === 'scan' ? '📷 مسح ضوئي' : '✍️ يدوي' }}
           </span>
+          @if (selectedPrescription.doctorName) {
+            · د. {{ selectedPrescription.doctorName }}
+          }
         </p>
       </div>
     </div>
@@ -70,7 +73,6 @@
             إضافة دواء
           </button>
         }
-
         <h3 class="font-extrabold text-on-background text-sm">الأدوية</h3>
       </div>
 

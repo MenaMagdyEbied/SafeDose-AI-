@@ -4,13 +4,25 @@
     <p class="text-sm text-outline">بطاقة طبية إلكترونية آمنة لمشاركتها مع طبيبك</p>
   </div>
 
-  <!-- Card -->
+  @if (loading()) {
+    <div class="rounded-2xl bg-white p-6 text-center text-sm text-outline">
+      جاري تحميل البطاقة...
+    </div>
+  } @else if (error()) {
+    <div
+      class="rounded-2xl bg-danger-container p-4 text-center text-sm font-bold text-on-danger-container"
+    >
+      {{ error() }}
+    </div>
+  } @else if (cardLoaded()) {
+    <app-card [cardData]="cardData()" />
+    @if (qrImage()) {
+      <div class="rounded-2xl bg-white p-4 text-center mt-4">
+        <img [src]="qrImage()" alt="QR Code" class="mx-auto h-40 w-40 object-contain" />
+      </div>
+    }
+  }
 
-  <div>
-    <app-card [cardData]="cardData" />
-  </div>
-
-  <!-- Actions -->
   <div class="flex flex-col sm:flex-row gap-3">
     <button
       (click)="printCard()"
@@ -20,10 +32,10 @@
       طباعة البطاقة
     </button>
     <button
-      routerLink="/patient"
+      (click)="downloadPdf()"
       class="flex-1 border border-outline-variant text-on-surface-variant hover:bg-slate-50 py-3 rounded-xl font-bold text-sm transition-all cursor-pointer"
     >
-      العودة للرئيسية
+      تحميل PDF
     </button>
     <button
       (click)="generateQR()"

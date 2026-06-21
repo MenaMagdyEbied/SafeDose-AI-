@@ -37,6 +37,10 @@
   --color-danger-container: #ffdad6;
   --color-on-danger-container: #93000a;
 
+  --color-warning: #b67a00;
+  --color-warning-container: #fff3bf;
+  --color-on-warning-container: #5a3f00;
+
   --color-background: #f8f9ff;
   --color-on-background: #0b1c30;
   --color-surface: #ffffff;

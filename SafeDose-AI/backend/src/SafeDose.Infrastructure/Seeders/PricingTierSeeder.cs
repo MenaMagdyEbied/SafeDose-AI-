@@ -36,6 +36,8 @@ public class PricingTierSeeder : IPricingTierSeeder
                 MonthlyPrice = 0m,
                 Currency = "EGP",
                 PatientLimit = 1,
+                InteractionCheckLimitPerDay = 3,
+                MedicationLimitPerPatient = 5,
                 BillingCycleDays = 0,         // no expiry
                 IsActive = true,
             },
@@ -46,6 +48,8 @@ public class PricingTierSeeder : IPricingTierSeeder
                 MonthlyPrice = 30m,
                 Currency = "EGP",
                 PatientLimit = 5,
+                InteractionCheckLimitPerDay = int.MaxValue,
+                MedicationLimitPerPatient = int.MaxValue,
                 BillingCycleDays = 30,
                 IsActive = true,
             },
@@ -56,6 +60,8 @@ public class PricingTierSeeder : IPricingTierSeeder
                 MonthlyPrice = 300m,          // 2 months free vs monthly
                 Currency = "EGP",
                 PatientLimit = 5,
+                InteractionCheckLimitPerDay = int.MaxValue,
+                MedicationLimitPerPatient = int.MaxValue,
                 BillingCycleDays = 365,
                 IsActive = true,
             },

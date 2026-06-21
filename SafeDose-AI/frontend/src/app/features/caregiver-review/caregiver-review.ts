@@ -1,4 +1,5 @@
-import { ChangeDetectorRef, Component, inject, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router, RouterLink } from '@angular/router';
 import {
   Camera,
@@ -13,130 +14,99 @@ import {
   X,
 } from 'lucide-angular';
 import { ScannedMed } from '../../core/models/scanned-med';
-import { FormsModule } from '@angular/forms';
+import { EMPTY, from } from 'rxjs';
+import { catchError, finalize, map, switchMap } from 'rxjs/operators';
+import { AddMedication } from '../../shared/components/add-medication/add-medication';
+import { ParsedMedication, SavePrescriptionPayload } from '../../core/models/prescription-api';
 import { Prescription } from '../../core/services/prescription';
+import { PatientService } from '../../core/services/patient';
+type ViewStage = 'upload' | 'review' | 'summary';
 
 @Component({
   selector: 'app-caregiver-review',
-  imports: [LucideAngularModule, RouterLink, FormsModule],
+  imports: [LucideAngularModule, RouterLink, AddMedication],
   templateUrl: './caregiver-review.html',
   styleUrl: './caregiver-review.css',
 })
 export class CaregiverReview implements OnInit {
   private readonly router = inject(Router);
   private readonly cdr = inject(ChangeDetectorRef);
+  private readonly destroyRef = inject(DestroyRef);
   private readonly prescriptionService = inject(Prescription);
+  private readonly patientService = inject(PatientService);
 
-  scanned = false;
-  loading = false;
-  errorText = '';
-  scannedMeds: ScannedMed[] = [];
+  stage = signal<ViewStage>('upload');
+  loading = signal(false);
+  saving = signal(false);
+  errorText = signal('');
+  successText = signal('');
 
   cameraIcon = Camera;
   uploadIcon = Upload;
   rotateCcwIcon = RotateCcw;
   alertTriangleIcon = TriangleAlert;
   checkCircleIcon = CircleCheck;
-  videoStream: MediaStream | null = null;
-  showCamera = false;
+  videoStream = signal<MediaStream | null>(null);
+  showCamera = signal(false);
   plusIcon = Plus;
   trashIcon = Trash2;
   xIcon = X;
   eyeIcon = Eye;
 
-  // Delete
-  showDeleteConfirm = false;
-  prescriptionToDelete: any = null;
+  private currentPatientId: number | null = null;
 
-  // Manual Modal
-  showManualModal = false;
-  manualForm: {
+  doctorName = signal<string | null>(null);
+  parsedMeds = signal<ParsedMedication[]>([]);
+
+  // آخر وصفة محفوظة فعليًا، تُعرض في شاشة الملخص بعد الحفظ
+  lastSavedPrescription = signal<{
+    id: number;
     name: string;
-    meds: { name: string; dose: string; frequency: string; duration: string }[];
-  } = {
-    name: '',
-    meds: [{ name: '', dose: '', frequency: '', duration: '' }],
-  };
+    date: string;
+    source: 'scan' | 'manual';
+    meds: { name: string }[];
+  } | null>(null);
 
-  commonMeds = [
-    'بنادول اكسترا',
-    'بنادول كولد',
-    'بروفين',
-    'أسبرين',
-    'أموكسيسيلين',
-    'أزيثروميسين',
-    'ميتفورمين',
-    'إنسولين',
-    'أتورفاستاتين',
-    'أملوديبين',
-    'ليزينوبريل',
-    'أوميبرازول',
-    'فلوكستين',
-    'باراسيتامول',
-    'ديكلوفيناك',
-    'كلاريتين',
-    'سيتريزين',
-    'فيتامين د',
-    'كالسيوم',
-  ];
-
-  currentSuggestionsMap = new Map<object, string[]>();
-
-  onMedInput(med: any, event: Event) {
-    const val = (event.target as HTMLInputElement).value.trim();
-    if (val.length < 1) {
-      this.currentSuggestionsMap.delete(med);
-      return;
-    }
-    const filtered = this.commonMeds.filter((m) => m.includes(val));
-    this.currentSuggestionsMap.set(med, filtered);
-  }
-
-  activeSuggestions(med: any): string[] {
-    return this.currentSuggestionsMap.get(med) ?? [];
-  }
-
-  selectSuggestion(med: any, name: string) {
-    med.name = name;
-    this.currentSuggestionsMap.delete(med);
-  }
-
-  clearSuggestions() {
-    setTimeout(() => this.currentSuggestionsMap.clear(), 150);
-  }
-
-  ngOnInit() {
-    if (this.prescriptions.length > 0) {
-      this.scanned = true;
-    }
-  }
-
-  get prescriptions() {
-    return this.prescriptionService.prescriptions;
-  }
-
-  async openCamera(): Promise<void> {
-    try {
-      this.showCamera = true;
-      this.lockBodyScroll(); // ← أضيفي السطر ده
-      this.videoStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment' },
+  ngOnInit(): void {
+    this.patientService
+      .getMyPatients()
+      .then((patients) => {
+        this.currentPatientId = patients[0]?.patientId ?? patients[0]?.id ?? null;
+      })
+      .catch(() => {
+        this.currentPatientId = null;
       });
-      setTimeout(() => {
-        const video = document.getElementById('cameraFeed') as HTMLVideoElement;
-        if (video) video.srcObject = this.videoStream;
-      }, 100);
-    } catch (err) {
-      this.showCamera = false;
-      this.unlockBodyScroll(); // ← وده لو فشل الفتح
-    }
+  }
+
+  openCamera(): void {
+    this.showCamera.set(true);
+    this.lockBodyScroll();
+
+    from(navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } }))
+      .pipe(
+        catchError(() => {
+          this.showCamera.set(false);
+          this.unlockBodyScroll();
+          return EMPTY;
+        }),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe((stream) => {
+        this.videoStream.set(stream);
+        setTimeout(() => {
+          const video = document.getElementById('cameraFeed') as HTMLVideoElement;
+          if (video) video.srcObject = this.videoStream();
+        }, 100);
+      });
   }
 
   closeCamera(): void {
-    this.videoStream?.getTracks().forEach((t) => t.stop());
-    this.videoStream = null;
-    this.showCamera = false;
-    this.unlockBodyScroll(); // ← أضيفي السطر ده
+    this.videoStream()
+      ?.getTracks()
+      .forEach((t) => t.stop());
+    this.videoStream.set(null);
+    this.showCamera.set(false);
+    this.unlockBodyScroll();
   }
 
   capturePhoto(): void {
@@ -165,119 +135,172 @@ export class CaregiverReview implements OnInit {
     input.click();
   }
 
-  async handleFile(file: File): Promise<void> {
-    this.loading = true;
-    this.errorText = '';
+  handleFile(file: File): void {
+    this.loading.set(true);
+    this.errorText.set('');
     this.cdr.detectChanges();
 
-    try {
-      const base64 = await this.fileToBase64(file);
-      const meds = await this.extractMedsFromImage(base64, file.type);
-      this.openReviewModal(meds);
-    } catch (err) {
-      this.errorText = 'حدث خطأ أثناء تحليل الوصفة. حاول مرة أخرى.';
-      this.openReviewModal(this.getMockMeds());
-    } finally {
-      this.loading = false;
-      this.cdr.detectChanges();
-    }
+    from(this.prescriptionService.parse(file))
+      .pipe(
+        catchError(() => {
+          this.errorText.set('حدث خطأ أثناء تحليل الوصفة. حاول مرة أخرى أو أضف الأدوية يدويًا.');
+          return EMPTY;
+        }),
+        finalize(() => {
+          this.loading.set(false);
+          this.cdr.detectChanges();
+        }),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe((res) => {
+        this.doctorName.set(res.doctor_name);
+        this.parsedMeds.set(res.medications);
+        this.stage.set('review');
+      });
   }
-  openReviewModal(meds: ScannedMed[]): void {
-    this.manualForm = {
-      name: 'وصفة مسح ضوئي - ' + new Date().toLocaleDateString('ar-EG'),
-      meds: meds.map((m) => ({
-        name: m.name ?? '',
-        dose: m.dose ?? '',
-        frequency: m.frequency ?? '',
-        duration: m.duration ?? '',
+
+  addManually(): void {
+    this.doctorName.set(null);
+    this.parsedMeds.set([
+      {
+        drug_name_guess: '',
+        dose_guess: '',
+        frequency_guess: '',
+        duration_guess: null,
+        needsReview: true,
+      },
+    ]);
+    this.stage.set('review');
+  }
+
+  updateMed(index: number, field: keyof ParsedMedication, value: string): void {
+    this.parsedMeds.update((list) =>
+      list.map((m, i) => (i === index ? { ...m, [field]: value } : m)),
+    );
+  }
+
+  removeMed(index: number): void {
+    this.parsedMeds.update((list) => list.filter((_, i) => i !== index));
+  }
+
+  addEmptyMed(): void {
+    this.parsedMeds.update((list) => [
+      ...list,
+      {
+        drug_name_guess: '',
+        dose_guess: '',
+        frequency_guess: '',
+        duration_guess: null,
+        needsReview: true,
+      },
+    ]);
+  }
+
+  /** ينقل من شاشة المراجعة لشاشة الحفظ الفعلي */
+  confirmAndSave(): void {
+    if (!this.currentPatientId) {
+      this.errorText.set('تعذر تحديد المريض. حاول مرة أخرى.');
+      return;
+    }
+
+    const validMeds = this.parsedMeds().filter((m) => m.drug_name_guess.trim());
+    if (validMeds.length === 0) {
+      this.errorText.set('أضف دواء واحد على الأقل قبل الحفظ.');
+      return;
+    }
+
+    const today = new Date().toISOString().slice(0, 10);
+    const prescriptionName = 'وصفة بتاريخ ' + new Date().toLocaleDateString('ar-EG');
+
+    const payload: SavePrescriptionPayload = {
+      patientId: this.currentPatientId,
+      prescriptionName,
+      imageUrl: '',
+      drugs: validMeds.map((m) => ({
+        drugName: m.drug_name_guess.trim(),
+        dose: m.dose_guess ?? '',
+        doctorName: this.doctorName() ?? '',
+        route: 0,
+        frequency: this.parseFrequencyNumber(m.frequency_guess),
+        startDate: today,
+        endDate: today,
+        mealTiming: 0,
       })),
     };
-    this.showManualModal = true;
-    this.lockBodyScroll(); // ← أضيفي السطر ده
-  }
-  private async extractMedsFromImage(base64: string, mediaType: string): Promise<ScannedMed[]> {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 1000,
-        messages: [
-          {
-            role: 'user',
-            content: [
-              {
-                type: 'image',
-                source: { type: 'base64', media_type: mediaType, data: base64 },
-              },
-              {
-                type: 'text',
-                text: `أنت نظام OCR طبي متخصص. استخرج كل الأدوية من هذه الوصفة الطبية.
-أعد الرد فقط كـ JSON بهذا الشكل بدون أي نص إضافي أو markdown:
-[
-  {
-    "name": "اسم الدواء التجاري",
-    "dose": "الجرعة",
-    "frequency": "التكرار",
-    "duration": "المدة",
-    "chemicalName": "الاسم الكيميائي",
-    "registryCode": "رمز التسجيل إن وجد",
-    "warning": "أي تحذير أو تعارض محتمل أو null"
-  }
-]
-إذا لم تجد وصفة طبية واضحة، أعد مصفوفة فارغة [].`,
-              },
-            ],
-          },
-        ],
-      }),
-    });
 
-    const data = await response.json();
-    const text = data.content?.find((b: any) => b.type === 'text')?.text ?? '[]';
-    const clean = text.replace(/```json|```/g, '').trim();
-    return JSON.parse(clean) as ScannedMed[];
+    this.saving.set(true);
+    this.errorText.set('');
+
+    from(this.prescriptionService.save(payload))
+      .pipe(
+        catchError((err) => {
+          this.errorText.set(err?.error?.message || 'حدث خطأ أثناء حفظ الوصفة. حاول مرة أخرى.');
+          return EMPTY;
+        }),
+        finalize(() => {
+          this.saving.set(false);
+          this.cdr.detectChanges();
+        }),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe((result) => {
+        // ✅ بعد الحفظ، نروح لشاشة الملخص (مش لصفحة التفاصيل مباشرة)
+        this.lastSavedPrescription.set({
+          id: result.prescriptionId,
+          name: prescriptionName,
+          date: new Date().toLocaleDateString('ar-EG'),
+          source: this.doctorName() ? 'scan' : 'manual',
+          meds: validMeds.map((m) => ({ name: m.drug_name_guess })),
+        });
+        this.stage.set('summary');
+      });
   }
 
-  private fileToBase64(file: File): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => {
-        const result = reader.result as string;
-        resolve(result.split(',')[1]);
-      };
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
+  /** يفتح صفحة التفاصيل الكاملة لوصفة معينة من شاشة الملخص */
+  viewPrescriptionDetail(): void {
+    const saved = this.lastSavedPrescription();
+    if (!saved) return;
+
+    this.router.navigate(['/prescription-detail', saved.id], {
+      state: {
+        prescription: {
+          id: saved.id,
+          name: saved.name,
+          date: saved.date,
+          source: saved.source,
+          doctorName: this.doctorName(),
+          meds: this.parsedMeds()
+            .filter((m) => m.drug_name_guess.trim())
+            .map((m) => ({
+              name: m.drug_name_guess,
+              dose: m.dose_guess ?? '',
+              frequency: m.frequency_guess ?? '',
+              duration: m.duration_guess ?? '',
+            })),
+        },
+      },
     });
   }
 
-  private getMockMeds(): ScannedMed[] {
-    return [
-      {
-        name: 'بانادول اكسترا',
-        dose: '٥٠٠ ملغ - قرص واحد',
-        frequency: '٣ مرات يومياً',
-        duration: 'لمدة ٥ أيام',
-        chemicalName: 'Paracetamol + Caffeine',
-        registryCode: 'EDA-REG-109283-PAN-01',
-        warning: undefined,
-      },
-      {
-        name: 'ميتفورمين',
-        dose: '٥٠٠ ملغ',
-        frequency: 'مرتين يومياً',
-        duration: 'مستمر',
-        chemicalName: 'Metformin Hydrochloride',
-        registryCode: 'EDA-REG-204811-MET-02',
-        warning: 'تعارض محتمل مع وارفارين. راجع الطبيب.',
-      },
-    ];
+  private parseFrequencyNumber(text: string | null): number {
+    if (!text) return 1;
+    if (text.includes('مرتين') || text.toLowerCase().includes('twice')) return 2;
+    if (text.includes('ثلاث') || text.includes('٣')) return 3;
+    if (text.includes('أربع') || text.includes('٤')) return 4;
+    return 1;
+  }
+
+  goHome(): void {
+    this.router.navigate(['/patient']);
   }
 
   reset(): void {
-    this.scanned = false;
-    this.scannedMeds = [];
-    this.errorText = '';
+    this.stage.set('upload');
+    this.parsedMeds.set([]);
+    this.doctorName.set(null);
+    this.lastSavedPrescription.set(null);
+    this.errorText.set('');
+    this.successText.set('');
   }
 
   private originalBodyOverflow: string | null = null;
@@ -292,61 +315,5 @@ export class CaregiverReview implements OnInit {
   private unlockBodyScroll(): void {
     document.body.style.overflow = this.originalBodyOverflow ?? '';
     this.originalBodyOverflow = null;
-  }
-
-  // Manual Modal
-  openManualModal() {
-    this.manualForm = { name: '', meds: [{ name: '', dose: '', frequency: '', duration: '' }] };
-    this.showManualModal = true;
-    this.lockBodyScroll();
-  }
-
-  closeManualModal() {
-    this.showManualModal = false;
-    this.unlockBodyScroll();
-  }
-
-  addManualMed() {
-    this.manualForm.meds.push({ name: '', dose: '', frequency: '', duration: '' });
-  }
-
-  removeManualMed(index: number) {
-    this.manualForm.meds.splice(index, 1);
-  }
-
-  saveManualPrescription() {
-    const prescription = {
-      id: Date.now(),
-      name: this.manualForm.name || 'وصفة يدوية',
-      date: new Date().toLocaleDateString('ar-EG'),
-      source: 'manual',
-      meds: this.manualForm.meds.filter((m) => m.name.trim()),
-    };
-    this.prescriptionService.add(prescription);
-    this.scanned = true;
-    this.closeManualModal();
-    this.manualForm = { name: '', meds: [{ name: '', dose: '', frequency: '', duration: '' }] };
-  }
-
-  viewPrescription(prescription: any) {
-    this.router.navigate(['/prescription-detail', prescription.id]);
-  }
-
-  confirmDeletePrescription(prescription: any) {
-    this.prescriptionToDelete = prescription;
-    this.showDeleteConfirm = true;
-    this.lockBodyScroll();
-  }
-
-  deleteConfirmed() {
-    if (this.prescriptionToDelete) {
-      this.prescriptionService.delete(this.prescriptionToDelete.id);
-      this.prescriptionToDelete = null;
-      this.showDeleteConfirm = false;
-      this.unlockBodyScroll();
-      if (this.prescriptions.length === 0) {
-        this.scanned = false;
-      }
-    }
   }
 }

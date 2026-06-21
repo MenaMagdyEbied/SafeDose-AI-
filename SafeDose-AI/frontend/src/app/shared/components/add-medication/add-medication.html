@@ -1,0 +1,224 @@
+<section class="container-app space-y-6 py-5" style="max-width: 640px" dir="rtl">
+  <div class="text-center mb-4">
+    <h2 class="text-2xl font-extrabold text-primary">
+      {{ isEditMode() ? 'تعديل الدواء ✏️' : 'إضافة دواء جديد 💊' }}
+    </h2>
+    <p class="text-sm text-outline">سجّل بيانات الدواء والمواعيد عشان نقدر نفكّرك في الوقت الصح</p>
+  </div>
+
+  @if (errorText()) {
+    <div class="bg-danger-container p-4 rounded-xl flex items-center gap-2">
+      <lucide-icon [img]="alertTriangleIcon" class="w-5 h-5 text-danger shrink-0"></lucide-icon>
+      <p class="text-sm font-bold text-on-danger-container">{{ errorText() }}</p>
+    </div>
+  }
+
+  @if (successText()) {
+    <div
+      class="bg-emerald-50 text-emerald-800 p-4 rounded-xl flex items-center gap-2 border border-emerald-200"
+    >
+      <lucide-icon [img]="checkCircleIcon" class="w-5 h-5 shrink-0"></lucide-icon>
+      <p class="text-sm font-bold">{{ successText() }}</p>
+    </div>
+  }
+
+  <form [formGroup]="form" (ngSubmit)="save()" class="space-y-5">
+    <!-- Drug name + autocomplete -->
+    <div class="bg-white p-4 sm:p-6 rounded-2xl border border-outline-variant shadow-sm relative">
+      <label class="block text-sm font-bold text-primary mb-2">اسم الدواء *</label>
+      <div class="relative flex items-center">
+        <input
+          type="text"
+          formControlName="drugName"
+          (input)="onDrugNameInput($any($event.target).value)"
+          (focus)="resultsOpen.set(true)"
+          (blur)="closeResults()"
+          placeholder="ابحث عن اسم الدواء..."
+          class="w-full h-[52px] pr-12 pl-4 rounded-xl border-2 outline-none text-right"
+          [class.border-danger]="form.get('drugName')?.invalid && form.get('drugName')?.touched"
+          [class.border-outline-variant]="
+            !(form.get('drugName')?.invalid && form.get('drugName')?.touched)
+          "
+        />
+        <lucide-icon [img]="searchIcon" class="absolute right-4 text-outline w-5 h-5"></lucide-icon>
+      </div>
+
+      @if (form.get('drugName')?.invalid && form.get('drugName')?.touched) {
+        <p class="text-xs text-danger mt-1 font-semibold">اسم الدواء مطلوب</p>
+      }
+
+      @if (selectedCatalogDrug()) {
+        <p class="text-xs text-emerald-600 font-bold mt-2 flex items-center gap-1">
+          <lucide-icon [img]="checkCircleIcon" class="w-3.5 h-3.5"></lucide-icon>
+          متطابق مع قاعدة بيانات الأدوية الموثقة
+        </p>
+      }
+
+      @if (resultsOpen() && filteredDrugs().length > 0) {
+        <div
+          class="absolute top-[95%] right-4 left-4 sm:right-6 sm:left-6 mt-1 bg-white border border-outline-variant rounded-xl shadow-lg z-30 overflow-hidden max-h-64 overflow-y-auto"
+        >
+          @for (drug of filteredDrugs(); track drug.drugCatalogId) {
+            <div
+              (mousedown)="selectDrug(drug)"
+              class="px-4 py-3 hover:bg-surface-container-low transition-colors cursor-pointer border-b border-outline-variant/20 text-right text-sm"
+            >
+              <p class="font-bold">{{ drug.commercialNameAr || drug.commercialNameEn }}</p>
+              <p class="text-xs text-outline">{{ drug.scientificName }}</p>
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- Dose + Doctor name -->
+    <div
+      class="bg-white p-4 sm:p-6 rounded-2xl border border-outline-variant shadow-sm grid grid-cols-1 sm:grid-cols-2 gap-4"
+    >
+      <div>
+        <label class="block text-sm font-bold text-primary mb-2">الجرعة</label>
+        <input
+          type="text"
+          formControlName="dose"
+          placeholder="مثلاً: ٥٠٠ ملغ - قرص واحد"
+          class="w-full h-11 px-3 rounded-xl border border-outline-variant outline-none focus:border-primary text-right"
+        />
+      </div>
+      <div>
+        <label class="block text-sm font-bold text-primary mb-2">اسم الطبيب</label>
+        <input
+          type="text"
+          formControlName="doctorName"
+          placeholder="اختياري"
+          class="w-full h-11 px-3 rounded-xl border border-outline-variant outline-none focus:border-primary text-right"
+        />
+      </div>
+    </div>
+
+    <!-- Frequency -> dynamic Times -->
+    <div class="bg-white p-4 sm:p-6 rounded-2xl border border-outline-variant shadow-sm space-y-4">
+      <div>
+        <label class="block text-sm font-bold text-primary mb-2">عدد مرات الدواء يومياً</label>
+        <div class="relative">
+          <select
+            formControlName="frequency"
+            class="w-full h-11 px-3 rounded-xl border border-outline-variant outline-none focus:border-primary text-right appearance-none bg-white"
+          >
+            <option [ngValue]="null">اختر عدد المرات</option>
+            @for (n of frequencyOptions; track n) {
+              <option [ngValue]="n">{{ n }} {{ n === 1 ? 'مرة' : 'مرات' }} يومياً</option>
+            }
+          </select>
+          <lucide-icon
+            [img]="chevronDownIcon"
+            class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-outline pointer-events-none"
+          ></lucide-icon>
+        </div>
+      </div>
+
+      @if (timesArray.length > 0) {
+        <div class="space-y-2">
+          <label class="block text-sm font-bold text-primary">حدد وقت كل جرعة *</label>
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            @for (timeCtrl of timesArray.controls; track $index) {
+              <div class="relative">
+                <lucide-icon
+                  [img]="alarmClockIcon"
+                  class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-outline"
+                ></lucide-icon>
+                <input
+                  type="time"
+                  [formControl]="$any(timeCtrl)"
+                  class="w-full h-11 pr-9 pl-3 rounded-xl border outline-none focus:border-primary text-right"
+                  [class.border-danger]="timeCtrl.invalid && timeCtrl.touched"
+                  [class.border-outline-variant]="!(timeCtrl.invalid && timeCtrl.touched)"
+                />
+              </div>
+            }
+          </div>
+          @if (form.errors?.['timesIncomplete'] && form.touched) {
+            <p class="text-xs text-danger font-semibold">من فضلك حدد كل المواعيد</p>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- Meal timing -->
+    <div class="bg-white p-4 sm:p-6 rounded-2xl border border-outline-variant shadow-sm">
+      <label class="block text-sm font-bold text-primary mb-3">توقيت الدواء بالنسبة للأكل</label>
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+        @for (opt of mealTimingOptions; track opt.value) {
+          <label
+            class="flex items-center justify-center gap-2 p-3 rounded-xl border cursor-pointer transition-all text-xs font-bold"
+            [class.border-primary]="form.get('mealTiming')?.value === opt.value"
+            [class.bg-primary]="form.get('mealTiming')?.value === opt.value"
+            [class.text-white]="form.get('mealTiming')?.value === opt.value"
+            [class.border-outline-variant]="form.get('mealTiming')?.value !== opt.value"
+          >
+            <input type="radio" formControlName="mealTiming" [value]="opt.value" class="hidden" />
+            {{ opt.label }}
+          </label>
+        }
+      </div>
+    </div>
+
+    <!-- Dates -->
+    <div
+      class="bg-white p-4 sm:p-6 rounded-2xl border border-outline-variant shadow-sm grid grid-cols-1 sm:grid-cols-2 gap-4"
+    >
+      <div>
+        <label class="block text-sm font-bold text-primary mb-2 flex items-center gap-1">
+          <lucide-icon [img]="calendarIcon" class="w-4 h-4"></lucide-icon>
+          تاريخ البداية
+        </label>
+        <input
+          type="date"
+          formControlName="startDate"
+          class="w-full h-11 px-3 rounded-xl border border-outline-variant outline-none focus:border-primary text-right"
+        />
+      </div>
+      <div>
+        <label class="block text-sm font-bold text-primary mb-2 flex items-center gap-1">
+          <lucide-icon [img]="calendarIcon" class="w-4 h-4"></lucide-icon>
+          تاريخ النهاية (اختياري)
+        </label>
+        <input
+          type="date"
+          formControlName="endDate"
+          class="w-full h-11 px-3 rounded-xl border border-outline-variant outline-none focus:border-primary text-right"
+        />
+      </div>
+      @if (form.errors?.['dateRangeInvalid']) {
+        <p class="text-xs text-danger font-semibold sm:col-span-2">
+          تاريخ النهاية لازم يكون بعد تاريخ البداية
+        </p>
+      }
+    </div>
+
+    <!-- Actions -->
+    <div class="flex flex-col sm:flex-row gap-3 pt-2">
+      <button
+        type="button"
+        (click)="cancel()"
+        class="flex-1 border border-outline-variant text-on-surface-variant hover:bg-slate-50 py-3 rounded-xl font-bold text-sm transition-all cursor-pointer"
+      >
+        إلغاء
+      </button>
+      <button
+        type="submit"
+        [disabled]="saving()"
+        class="flex-1 bg-primary hover:bg-primary-dark disabled:bg-slate-300 text-white py-3 rounded-xl font-bold text-sm transition-all cursor-pointer flex items-center justify-center gap-2"
+      >
+        @if (saving()) {
+          <div
+            class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"
+          ></div>
+          <span>جاري الحفظ...</span>
+        } @else {
+          <lucide-icon [img]="pillIcon" class="w-5 h-5"></lucide-icon>
+          <span>{{ isEditMode() ? 'حفظ التعديلات' : 'حفظ الدواء' }}</span>
+        }
+      </button>
+    </div>
+  </form>
+</section>

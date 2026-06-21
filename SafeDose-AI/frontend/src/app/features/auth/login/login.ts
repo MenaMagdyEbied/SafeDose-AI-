@@ -1,12 +1,26 @@
-import { Component, inject } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Component, inject, signal } from '@angular/core';
+import {
+  AbstractControl,
+  FormBuilder,
+  FormGroup,
+  FormsModule,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { ArrowLeft, Eye, EyeOff, LucideAngularModule, ShieldCheck, TriangleAlert } from 'lucide-angular';
+import {
+  ArrowLeft,
+  Eye,
+  EyeOff,
+  LucideAngularModule,
+  ShieldCheck,
+  TriangleAlert,
+} from 'lucide-angular';
 import { Auth } from '../../../core/auth/services/auth';
 
 @Component({
   selector: 'app-login',
-  imports: [FormsModule, LucideAngularModule, RouterLink,ReactiveFormsModule],
+  imports: [FormsModule, LucideAngularModule, RouterLink, ReactiveFormsModule],
 
   templateUrl: './login.html',
   styleUrl: './login.css',
@@ -22,32 +36,32 @@ export class Login {
   eyeIcon = Eye;
   eyeOffIcon = EyeOff;
 
-  showPassword = false;
-  loading = false;
-  errorText = '';
+  showPassword = signal(false);
+  loading = signal(false);
+  errorText = signal('');
 
   loginForm: FormGroup = this.fb.group({
     userName: ['', [Validators.required, Validators.minLength(3)]],
     password: ['', [Validators.required, Validators.minLength(8)]],
   });
 
-  get userName() {
-    return this.loginForm.get('userName');
+  get userName(): AbstractControl {
+    return this.loginForm.get('userName')!;
   }
-  get password() {
-    return this.loginForm.get('password');
+  get password(): AbstractControl {
+    return this.loginForm.get('password')!;
   }
 
   submit(): void {
     this.loginForm.markAllAsTouched();
     if (this.loginForm.invalid) return;
 
-    this.loading = true;
-    this.errorText = '';
+    this.loading.set(true);
+    this.errorText.set('');
 
     this.authService.login(this.loginForm.value).subscribe({
       next: () => {
-        this.loading = false;
+        this.loading.set(false);
         if (this.authService.isAdmin) {
           this.router.navigate(['/admin']);
         } else {
@@ -55,8 +69,8 @@ export class Login {
         }
       },
       error: (err) => {
-        this.loading = false;
-        this.errorText = err?.error?.message || 'بيانات الدخول غير صحيحة.';
+        this.loading.set(false);
+        this.errorText.set(err?.error?.message || 'بيانات الدخول غير صحيحة.');
       },
     });
   }

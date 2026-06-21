@@ -3,6 +3,8 @@ using SafeDose.Domain.Enums;
 
 namespace SafeDose.Application.UseCases.Billing;
 
+// "Cancel" here means: stop auto-renewal (if it was on) and mark as cancelled,
+// but the patient keeps access until EndAt. No refund logic.
 public class CancelSubscriptionUseCase
 {
 

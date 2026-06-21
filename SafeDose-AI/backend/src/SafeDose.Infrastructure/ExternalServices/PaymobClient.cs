@@ -1,7 +1,6 @@
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using SafeDose.Application.Interfaces;
@@ -9,6 +8,13 @@ using SafeDose.Domain.Enums;
 
 namespace SafeDose.Infrastructure.ExternalServices;
 
+// Paymob hosted checkout flow:
+//   1. POST /api/auth/tokens          { api_key }            -> auth_token
+//   2. POST /api/ecommerce/orders     { ..., merchant_order_id } -> { id }
+//   3. POST /api/acceptance/payment_keys { ..., order_id }    -> { token }
+//   4. Iframe URL: /api/acceptance/iframes/{iframe_id}?payment_token={token}
+//
+// All credentials live in appsettings:Paymob.
 public class PaymobClient : IPaymobClient
 {
     private readonly HttpClient _http;
@@ -39,22 +45,24 @@ public class PaymobClient : IPaymobClient
             throw new InvalidOperationException(
                 $"Paymob:{request.Method}IntegrationId not configured for payment method {request.Method}");
 
+        // 1. Auth
         var authToken = await GetAuthTokenAsync(cancellationToken);
 
+        // 2. Register order
         var amountCents = (int)Math.Round(request.AmountEgp * 100m);
         var orderId = await RegisterOrderAsync(authToken, amountCents, request.MerchantOrderId, cancellationToken);
 
+        // 3. Payment key
         var paymentKey = await RequestPaymentKeyAsync(
             authToken, orderId, amountCents, integrationId!, request, cancellationToken);
 
-        var checkoutUrl = request.Method == PaymentMethod.Wallet
-            ? await RequestWalletRedirectUrlAsync(paymentKey, request.PhoneNumber, cancellationToken)
-            : $"https://accept.paymob.com/api/acceptance/iframes/{_options.IframeId}?payment_token={paymentKey}";
+        // 4. Build iframe URL
+        var iframeUrl = $"https://accept.paymob.com/api/acceptance/iframes/{_options.IframeId}?payment_token={paymentKey}";
 
         return new PaymobCheckoutSession(
             PaymobOrderId: orderId,
             PaymentKey: paymentKey,
-            IframeUrl: checkoutUrl
+            IframeUrl: iframeUrl
         );
     }
 
@@ -71,10 +79,12 @@ public class PaymobClient : IPaymobClient
         using var hmac = new HMACSHA512(Encoding.UTF8.GetBytes(_options.HmacSecret));
         var computedBytes = hmac.ComputeHash(Encoding.UTF8.GetBytes(concatenatedFields));
 
+        // Decode receivedHmac from hex. Reject malformed input.
         byte[] receivedBytes;
         try { receivedBytes = Convert.FromHexString(receivedHmac); }
         catch { return false; }
 
+        // Constant-time compare - prevents timing-based byte-by-byte HMAC guessing.
         return CryptographicOperations.FixedTimeEquals(computedBytes, receivedBytes);
     }
 
@@ -139,8 +149,6 @@ public class PaymobClient : IPaymobClient
             },
             currency = "EGP",
             integration_id = int.Parse(integrationId),
-            notification_url = BuildBackendUrl("api/billing/paymob/webhook"),
-            redirection_url = BuildBackendUrl("api/billing/paymob/return"),
             lock_order_when_paid = true
         };
 
@@ -151,44 +159,9 @@ public class PaymobClient : IPaymobClient
             ?? throw new InvalidOperationException("Paymob payment key: missing token in response");
     }
 
-    private async Task<string> RequestWalletRedirectUrlAsync(
-        string paymentKey,
-        string phoneNumber,
-        CancellationToken ct)
-    {
-        var payload = new
-        {
-            source = new
-            {
-                identifier = NormalizeEgyptianWalletNumber(phoneNumber),
-                subtype = "WALLET"
-            },
-            payment_token = paymentKey
-        };
-
-        using var resp = await PostJsonAsync("https://accept.paymob.com/api/acceptance/payments/pay", payload, ct);
-        using var doc = await JsonDocument.ParseAsync(
-            await resp.Content.ReadAsStreamAsync(ct),
-            cancellationToken: ct);
-        var root = doc.RootElement;
-
-        if (TryGetString(root, "redirect_url", out var redirectUrl))
-            return redirectUrl;
-        if (TryGetString(root, "iframe_redirection_url", out var iframeRedirectUrl))
-            return iframeRedirectUrl;
-        if (TryGetString(root, "payment_url", out var paymentUrl))
-            return paymentUrl;
-
-        _logger.LogError("Paymob wallet response did not contain a redirect URL: {Body}", root.GetRawText());
-        throw new InvalidOperationException("Paymob wallet payment did not return a redirect URL");
-    }
-
     private async Task<HttpResponseMessage> PostJsonAsync(string url, object payload, CancellationToken ct)
     {
-        var json = JsonSerializer.Serialize(payload, new JsonSerializerOptions
-        {
-            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
-        });
+        var json = JsonSerializer.Serialize(payload);
         using var req = new HttpRequestMessage(HttpMethod.Post, url)
         {
             Content = new StringContent(json, Encoding.UTF8, "application/json")
@@ -216,32 +189,6 @@ public class PaymobClient : IPaymobClient
         var parts = fullName.Trim().Split(' ', 2);
         return parts.Length > 1 ? parts[1] : "SafeDose";
     }
-
-    private static string NormalizeEgyptianWalletNumber(string phoneNumber)
-    {
-        var digits = new string((phoneNumber ?? string.Empty).Where(char.IsDigit).ToArray());
-        if (digits.StartsWith("20") && digits.Length == 12)
-            return $"0{digits[2..]}";
-        return digits;
-    }
-
-    private static bool TryGetString(JsonElement root, string propertyName, out string value)
-    {
-        value = string.Empty;
-        if (!root.TryGetProperty(propertyName, out var property))
-            return false;
-
-        value = property.GetString() ?? string.Empty;
-        return !string.IsNullOrWhiteSpace(value);
-    }
-
-    private string? BuildBackendUrl(string path)
-    {
-        if (string.IsNullOrWhiteSpace(_options.PublicBaseUrl))
-            return null;
-
-        return $"{_options.PublicBaseUrl.TrimEnd('/')}/{path.TrimStart('/')}";
-    }
 }
 
 public class PaymobOptions
@@ -250,12 +197,7 @@ public class PaymobOptions
     public string? HmacSecret { get; set; }
     public string? IframeId { get; set; }
 
+    // One Integration ID per payment method. Add more as you add Paymob integrations.
     public string? CardIntegrationId { get; set; }
     public string? WalletIntegrationId { get; set; }
-
-    public string? PublicBaseUrl { get; set; }
-
-    public string? FrontendReturnUrl { get; set; }
-    public string? FrontendSuccessUrl { get; set; }
-    public string? FrontendFailureUrl { get; set; }
 }

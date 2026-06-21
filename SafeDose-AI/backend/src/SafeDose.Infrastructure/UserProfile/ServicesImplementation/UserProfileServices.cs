@@ -47,7 +47,7 @@ namespace SafeDose.Infrastructure.UserProfile.ServicesImplementation
             Account account = await _userGlobalServices.GetUser(); 
 
             if (await _userManager.FindByEmailAsync(userUpdateEmail.Email) is not null)
-                return "الأيميل تم تسجيله  بالفعل";
+                return "Email is already registerd!";
 
 
             var token = await _userManager.GenerateChangeEmailTokenAsync(account, userUpdateEmail.Email);
@@ -55,7 +55,7 @@ namespace SafeDose.Infrastructure.UserProfile.ServicesImplementation
             var result = await _userManager.ChangeEmailAsync(account, userUpdateEmail.Email, token);
 
             if (result.Succeeded)
-                return "تم الاستبدال بنجاح";
+                return "changed";
 
             else
                 throw new Exception(result.Errors.ToString());
@@ -66,7 +66,7 @@ namespace SafeDose.Infrastructure.UserProfile.ServicesImplementation
             Account account = await _userGlobalServices.GetUser();
             account.Name = userUpdateName.Name; 
             await _userProfileRepository.UpdateUser(account);
-            return "تم الاستبدال بنجاح";
+            return "changed";
         }
 
         public async Task<string> UpdatePhone(UserUpdatePhoneDTO userUpdatePhone)
@@ -75,14 +75,14 @@ namespace SafeDose.Infrastructure.UserProfile.ServicesImplementation
             List<Account>? accounts = await _userManager.Users.Where(u => u.PhoneNumber == userUpdatePhone.Phone).ToListAsync();
 
             if (accounts.Count() > 0)
-                return "رقم الهاتف مسجل بالفعل";
+                return "PhoneNumber is already registerd!";
 
             var token = await _userManager.GenerateChangePhoneNumberTokenAsync(account, userUpdatePhone.Phone);
 
             var result = await _userManager.ChangePhoneNumberAsync(account, userUpdatePhone.Phone, token);
 
             if (result.Succeeded)
-                return "تم الاستبدال بنجاح";
+                return "changed";
 
             else
                 throw new Exception(result.Errors.ToString());

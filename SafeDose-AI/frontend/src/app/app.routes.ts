@@ -1,21 +1,23 @@
 import { Routes } from '@angular/router';
-import { adminGuard } from './core/auth/guards/admin-guard';
-import { authGuard } from './core/auth/guards/auth-guard';
-import { guestGuard } from './core/auth/guards/guest-guard';
-import { limitGuard } from './core/auth/guards/limit-guard';
-import { superAdminGuard } from './core/auth/guards/super-admin-guard';
-import { Login } from './features/auth/login/login';
-import { Register } from './features/auth/register/register';
+import { CaregiverReview } from './features/caregiver-review/caregiver-review';
 import { DigitalCard } from './features/digital-card/digital-card';
 import { Home } from './features/home/home';
-import { PatientDetails } from './features/patient-details/patient-details';
+import { InteractionChecker } from './features/interaction-checker/interaction-checker';
+import { InteractionResults } from './features/interaction-results/interaction-results';
 import { PatientHome } from './features/patient-home/patient-home';
 import { Pricing } from './features/pricing/pricing';
-import { PublicCard } from './features/public-card/public-card';
-import { AdminLayout } from './layouts/admin-layout/admin-layout';
 import { MainLayout } from './layouts/main-layout/main-layout';
 import { NotFound } from './shared/components/not-found/not-found';
-import { ScanPrescription } from './features/scan-prescription/scan-prescription';
+import { AdminLayout } from './layouts/admin-layout/admin-layout';
+import { Login } from './features/auth/login/login';
+import { Register } from './features/auth/register/register';
+import { Card } from './shared/components/card/card';
+import { PublicCard } from './features/public-card/public-card';
+import { authGuard } from './core/auth/guards/auth-guard';
+import { adminGuard } from './core/auth/guards/admin-guard';
+import { guestGuard } from './core/auth/guards/guest-guard';
+import { superAdminGuard } from './core/auth/guards/super-admin-guard';
+import { limitGuard } from './core/auth/guards/limit-guard';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'home', pathMatch: 'full' },
@@ -30,12 +32,6 @@ export const routes: Routes = [
         component: PatientHome,
         canActivate: [authGuard],
         title: 'بوابة المريض | SafeDose AI',
-      },
-      {
-        path: 'patient-details/:id',
-        component: PatientDetails,
-        canActivate: [authGuard],
-        title: 'تفاصيل المريض | SafeDose AI',
       },
       {
         path: 'interaction-checker',
@@ -58,14 +54,14 @@ export const routes: Routes = [
       {
         path: 'digital-card',
         component: DigitalCard,
-        canActivate: [authGuard], // limitGuard],
+        canActivate: [authGuard],
         title: 'البطاقة الرقمية | SafeDose AI',
       },
       {
-        path: 'scan-prescription',
-        component: ScanPrescription,
+        path: 'caregiver-review',
+        component: CaregiverReview,
         canActivate: [authGuard],
-        title: '  مسح وصفاتي الطبية | SafeDose AI',
+        title: 'مراجعة الطاقم | SafeDose AI',
       },
       { path: 'pricing', component: Pricing, title: 'الأسعار | SafeDose AI' },
       {
@@ -76,7 +72,7 @@ export const routes: Routes = [
       },
       {
         path: 'family-plan',
-        canActivate: [authGuard],//, limitGuard],
+        canActivate: [authGuard, limitGuard],
         loadComponent: () => import('./features/family-plan/family-plan').then((c) => c.FamilyPlan),
         title: 'خطة العيلة | SafeDose AI',
       },
@@ -86,7 +82,6 @@ export const routes: Routes = [
         loadComponent: () => import('./features/payment/payment').then((m) => m.Payment),
       },
       { path: 'payment/success', redirectTo: '/payment', pathMatch: 'full' },
-      { path: 'payment/fail', redirectTo: '/payment', pathMatch: 'full' },
 
       {
         path: 'notifications',
@@ -96,20 +91,13 @@ export const routes: Routes = [
         title: 'الإشعارات | SafeDose AI',
       },
       {
-        path: 'prescriptions',
-        canActivate: [authGuard],
-        loadComponent: () =>
-          import('./features/prescription-list/prescription-list').then((c) => c.PrescriptionList),
-        title: 'وصفاتي الطبية  | SafeDose AI',
-      },
-      {
         path: 'prescription-detail/:id',
         canActivate: [authGuard],
         loadComponent: () =>
           import('./features/prescription-detail/prescription-detail').then(
             (c) => c.PrescriptionDetail,
           ),
-        title: 'تفاصيل الوصفه | SafeDose AI',
+        title: 'تفاصيل الروشتة | SafeDose AI',
       },
     ],
   },
@@ -142,11 +130,7 @@ export const routes: Routes = [
     ],
   },
 
-  {
-    path: 'card/:token',
-    component: PublicCard,
-    title: 'البطاقة الرقمية | SafeDose AI',
-  },
+  { path: 'card/:id', component: PublicCard, title: 'البطاقة الرقمية | SafeDose AI' },
 
   {
     path: 'login',

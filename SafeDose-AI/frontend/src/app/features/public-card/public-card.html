@@ -5,18 +5,6 @@
       <p class="text-xs text-outline">بطاقة الأدوية الرقمية</p>
     </div>
 
-    @if (loading()) {
-      <div class="rounded-2xl bg-white p-6 text-center text-sm text-outline">
-        جاري تحميل البطاقة...
-      </div>
-    } @else if (error()) {
-      <div
-        class="rounded-2xl bg-danger-container p-4 text-center text-sm font-bold text-on-danger-container"
-      >
-        {{ error() }}
-      </div>
-    } @else if (cardLoaded()) {
-      <app-card [cardData]="cardData()" />
-    }
+    <app-card [cardData]="cardData" />
   </div>
 </div>

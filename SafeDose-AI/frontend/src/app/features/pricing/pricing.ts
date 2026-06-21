@@ -1,5 +1,4 @@
-import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Component, inject, NgZone, OnInit, signal } from '@angular/core';
 import {
   Check,
   Crown,
@@ -10,11 +9,11 @@ import {
   Users,
   Zap,
 } from 'lucide-angular';
-import { EMPTY, from } from 'rxjs';
-import { catchError, finalize } from 'rxjs/operators';
+import { Auth } from '../../core/auth/services/auth';
+import { SubscriptionPlan } from '../../core/models';
+import { Subscription } from '../../core/services/subscription';
 import { ActivatedRoute, Router } from '@angular/router';
 import { PricingTier } from '../../core/models/pricing-tier';
-import { Subscription } from '../../core/services/subscription';
 
 @Component({
   selector: 'app-pricing',
@@ -26,7 +25,6 @@ export class Pricing implements OnInit {
   private readonly subscriptionService = inject(Subscription);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
-  private readonly destroyRef = inject(DestroyRef);
 
   checkIcon = Check;
   crownIcon = Crown;
@@ -43,19 +41,16 @@ export class Pricing implements OnInit {
     this.loadTiers();
   }
 
-  private loadTiers(): void {
+  private async loadTiers(): Promise<void> {
     this.loading.set(true);
-
-    from(this.subscriptionService.getTiers())
-      .pipe(
-        catchError(() => EMPTY),
-        finalize(() => this.loading.set(false)),
-        takeUntilDestroyed(this.destroyRef),
-      )
-      .subscribe((result) => {
-        const unique = Array.from(new Map(result.map((p) => [p.pricingTierId, p])).values());
-        this.plans.set(unique);
-      });
+    try {
+      const result = await this.subscriptionService.getTiers();
+      // إزالة أي تكرار محتمل في pricingTierId قبل ما نخزنها
+      const unique = Array.from(new Map(result.map((p) => [p.pricingTierId, p])).values());
+      this.plans.set(unique);
+    } finally {
+      this.loading.set(false);
+    }
   }
 
   subscribe(tier: PricingTier): void {

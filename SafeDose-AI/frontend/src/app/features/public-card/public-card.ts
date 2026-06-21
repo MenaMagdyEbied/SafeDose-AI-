@@ -1,14 +1,10 @@
-import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Component, inject, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
-import { EMPTY, from } from 'rxjs';
-import { catchError, finalize } from 'rxjs/operators';
-import { MedicalCardService } from '../../core/services/medical-card';
+import { Auth } from '../../core/auth/services/auth';
 import { CardData } from '../../core/models/card-data';
 import { Card } from '../../shared/components/card/card';
-
 @Component({
   selector: 'app-public-card',
   imports: [LucideAngularModule, FormsModule, Card],
@@ -18,12 +14,9 @@ import { Card } from '../../shared/components/card/card';
 export class PublicCard implements OnInit {
   protected readonly router = inject(Router);
   protected readonly route = inject(ActivatedRoute);
-  private readonly medicalCardService = inject(MedicalCardService);
-  private readonly destroyRef = inject(DestroyRef);
+  private readonly auth = inject(Auth);
 
-  loading = signal(false);
-  error = signal('');
-  cardData = signal<CardData>({
+  private _cardData: CardData = {
     id: '',
     name: '',
     age: 0,
@@ -31,33 +24,30 @@ export class PublicCard implements OnInit {
     allergies: [],
     doctorName: '',
     qrUrl: '',
-  });
-  cardLoaded = signal(false);
+  };
 
-  loadCardData(token: string): void {
-    this.loading.set(true);
-    this.error.set('');
-    this.cardLoaded.set(false);
-
-    from(this.medicalCardService.getPublicCard(token))
-      .pipe(
-        catchError(() => {
-          this.error.set('تعذر تحميل البطاقة الطبية.');
-          return EMPTY;
-        }),
-        finalize(() => {
-          this.loading.set(false);
-        }),
-        takeUntilDestroyed(this.destroyRef),
-      )
-      .subscribe((cardData) => {
-        this.cardData.set(cardData);
-        this.cardLoaded.set(true);
-      });
+  get cardData(): CardData {
+    return this._cardData;
   }
 
   ngOnInit() {
-    const token = this.route.snapshot.params['token'];
-    void this.loadCardData(token);
+    const id = this.route.snapshot.params['id'];
+    this.loadCardData(id);
+  }
+
+  loadCardData(id: string) {
+    // TODO: استبدليه بـ API call حقيقي
+    this._cardData = {
+      id: id,
+      name: 'دعاء أشرف',
+      age: 30,
+      medications: [
+        { name: 'جلوكوفاج', dose: '500 ملجم', frequency: 'مرتان يومياً', startDate: '' },
+        { name: 'كونكور', dose: '5 ملجم', frequency: 'مرة مساءً', startDate: '' },
+      ],
+      allergies: ['لا يوجد'],
+      doctorName: 'د. مجدي يعقوب',
+      qrUrl: `https://yourdomain.com/card/${id}`,
+    };
   }
 }

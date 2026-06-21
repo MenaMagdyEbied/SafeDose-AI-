@@ -1,35 +1,27 @@
 <div
-  class="fixed top-6 left-1/2 -translate-x-1/2 z-9999 flex flex-col gap-2.5 items-center pointer-events-none w-full max-w-sm px-4"
+  class="fixed top-6 left-1/2 -translate-x-1/2 z-[9999] flex flex-col gap-3 items-center pointer-events-none w-full max-w-sm px-4"
 >
   @for (toast of toastService.toasts(); track toast.id) {
-    <div class="toast-card pointer-events-auto w-full rounded-2xl overflow-hidden relative">
-      <div class="flex items-center gap-3 px-4 py-3.5 backdrop-blur-xl bg-white/85">
-        <!-- Icon, no circle bg — just colored, floating -->
-        <lucide-icon
-          [img]="toast.type === 'success' ? checkIcon : xCircleIcon"
-          class="w-5 h-5 shrink-0"
-          [class]="toast.type === 'success' ? 'text-emerald-500' : 'text-red-500'"
-        ></lucide-icon>
-
-        <p class="flex-1 text-sm font-bold leading-snug text-on-background">
-          {{ toast.message }}
-        </p>
-
-        <button
-          (click)="toastService.dismiss(toast.id)"
-          class="text-outline/50 hover:text-on-background transition-colors cursor-pointer shrink-0 -mr-1 p-1 rounded-full hover:bg-black/5"
-        >
-          <lucide-icon [img]="xIcon" class="w-3.5 h-3.5"></lucide-icon>
-        </button>
-      </div>
-
-      <!-- Progress bar بيعد الوقت المتبقي للـ auto-dismiss -->
-      <div class="h-[3px] w-full bg-black/5">
-        <div
-          class="h-full progress-fill"
-          [class]="toast.type === 'success' ? 'bg-emerald-500' : 'bg-red-500'"
-        ></div>
-      </div>
+    <div
+      class="pointer-events-auto w-full flex items-start gap-3 px-4 py-3.5 rounded-2xl shadow-2xl border animate-fade-in"
+      [class]="
+        toast.type === 'success'
+          ? 'bg-white border-emerald-200 text-emerald-800'
+          : 'bg-white border-red-200 text-red-800'
+      "
+    >
+      <lucide-icon
+        [img]="toast.type === 'success' ? checkIcon : xCircleIcon"
+        class="w-5 h-5 shrink-0 mt-0.5"
+        [class]="toast.type === 'success' ? 'text-emerald-500' : 'text-red-500'"
+      ></lucide-icon>
+      <p class="flex-1 text-sm font-bold leading-relaxed">{{ toast.message }}</p>
+      <button
+        (click)="toastService.dismiss(toast.id)"
+        class="text-outline hover:text-on-background transition-colors cursor-pointer"
+      >
+        <lucide-icon [img]="xIcon" class="w-4 h-4"></lucide-icon>
+      </button>
     </div>
   }
 </div>

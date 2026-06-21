@@ -17,15 +17,11 @@ export const responseInterceptor: HttpInterceptorFn = (req, next) => {
       if (event?.body?.message && !isSilent) {
         toast.show('success', event.body.message);
       }
-      if (event?.body?.messageArabic && !isSilent) {
-        toast.show('success', event.body.messageArabic);
-      }
     }),
     catchError((err) => {
       const status = err.status;
 
-      const message: string =
-        err?.error?.message || err?.error?.messageArabic || 'حدث خطأ غير متوقع، حاول مرة أخرى.';
+      const message: string = err?.error?.message || 'حدث خطأ غير متوقع، حاول مرة أخرى.';
 
       if (status === 401) {
         auth.logout();

@@ -1,17 +1,13 @@
 namespace SafeDose.Application.DTOs;
 
 public record InitiateCheckoutRequestDto(
-    string TierCode
+    string TierCode    // "premium-annual"
 );
 
 public record InitiateCheckoutResponseDto(
     int PaymentId,
-    string MerchantOrderId,
     string PaymobOrderId,
-    string IframeUrl,
+    string IframeUrl,          // frontend redirects/embeds this
     decimal Amount,
     string Currency
-)
-{
-    public string PaymentUrl => IframeUrl;
-}
+);

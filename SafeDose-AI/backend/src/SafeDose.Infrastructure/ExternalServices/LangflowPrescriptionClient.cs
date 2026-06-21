@@ -22,30 +22,59 @@ public class LangflowPrescriptionClient : ILangflowPrescriptionClient
 
     public async Task<ParsedPrescriptionDto> ParsePrescriptionAsync(Stream imageStream, string fileName, string contentType)
     {
-        // 1. Read the image into memory
-        using var memoryStream = new MemoryStream();
-        await imageStream.CopyToAsync(memoryStream);
-        var imageBytes = memoryStream.ToArray();
+        // 1. Parse FlowUrl to extract base URL and Flow ID
+        var uri = new Uri(_flowUrl);
+        var baseUrl = uri.GetLeftPart(UriPartial.Authority);
+        var flowId = uri.Segments.Last().Replace("?stream=false", "").Trim('/');
+        
+        var uploadUrl = $"{baseUrl}/api/v1/files/upload/{flowId}";
 
-        // 2. Convert image to base64 data URL.
-        // This is the only confirmed-working method to get the image to Gemini via the Langflow API.
-        // File-path-based upload does NOT pass the image correctly to the vision model.
-        var base64 = Convert.ToBase64String(imageBytes);
-        var dataUrl = $"data:{contentType};base64,{base64}";
+        // 2. Upload the file to Langflow using multipart/form-data
+        using var multipartContent = new MultipartFormDataContent();
+        
+        // FastAPI (which Langflow uses) is strict and sometimes fails if the boundary has quotes around it.
+        var boundary = multipartContent.Headers.ContentType?.Parameters.FirstOrDefault(o => o.Name == "boundary");
+        if (boundary != null && boundary.Value != null)
+        {
+            boundary.Value = boundary.Value.Replace("\"", "");
+        }
 
-        // 3. Send to Langflow with image embedded as base64
-        return await ParsePrescriptionByUrlAsync(dataUrl);
+        var streamContent = new StreamContent(imageStream);
+        streamContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(contentType);
+        multipartContent.Add(streamContent, "file", fileName);
+
+        using var uploadRequest = new HttpRequestMessage(HttpMethod.Post, uploadUrl);
+        uploadRequest.Headers.Add("x-api-key", _apiKey);
+        uploadRequest.Content = multipartContent;
+
+        var uploadResponse = await _httpClient.SendAsync(uploadRequest);
+        if (!uploadResponse.IsSuccessStatusCode)
+        {
+            var err = await uploadResponse.Content.ReadAsStringAsync();
+            throw new Exception($"Failed to upload file to Langflow. Status: {uploadResponse.StatusCode}, Error: {err}");
+        }
+
+        var uploadResultStr = await uploadResponse.Content.ReadAsStringAsync();
+        var uploadResultJson = JsonNode.Parse(uploadResultStr);
+        var serverFilePath = uploadResultJson?["file_path"]?.ToString();
+
+        if (string.IsNullOrEmpty(serverFilePath))
+        {
+            throw new Exception($"File uploaded successfully but 'file_path' was not returned. Response: {uploadResultStr}");
+        }
+
+        // 3. Send to Langflow using the returned file path
+        return await ParsePrescriptionByUrlAsync(serverFilePath);
     }
 
     public async Task<ParsedPrescriptionDto> ParsePrescriptionByUrlAsync(string imageUrlOrPath)
     {
         // Generate a unique session ID per request.
-        // This prevents contamination from old Playground sessions stored in Langflow's chat history.
         var sessionId = Guid.NewGuid().ToString();
 
         var requestBody = new
         {
-            input_value = "",          // Empty - exactly like the Playground (image only, no user text)
+            input_value = "Extract the prescription data from the attached image.",
             input_type = "chat",
             output_type = "chat",
             session_id = sessionId,
@@ -83,6 +112,11 @@ public class LangflowPrescriptionClient : ILangflowPrescriptionClient
             var jsonNode = JsonNode.Parse(rawJson);
 
             var textResult = jsonNode?["outputs"]?[0]?["outputs"]?[0]?["results"]?["message"]?["text"]?.ToString();
+            
+            // Temporary debug output to see the full raw text from Gemini
+            Console.WriteLine("=== RAW LANGFLOW TEXT ===");
+            Console.WriteLine(textResult);
+            Console.WriteLine("=========================");
 
             if (string.IsNullOrEmpty(textResult))
             {

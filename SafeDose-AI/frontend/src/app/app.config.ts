@@ -26,6 +26,7 @@ const icons = { Shield, Pill, Sparkles, Activity, TriangleAlert, Heart };
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
+    // provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(
       routes,
       withInMemoryScrolling({ scrollPositionRestoration: 'top' }),

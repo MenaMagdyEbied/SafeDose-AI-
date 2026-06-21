@@ -1,7 +1,7 @@
 <!-- Hero Section -->
 <section class="relative overflow-hidden pt-16 pb-24">
   <div
-    class="absolute inset-0 pointer-events-none bg-[radial-gradient(var(--color-primary)_0.5px,transparent_0.5px)] bg-size-[24px_24px] opacity-10"
+    class="absolute inset-0 pointer-events-none bg-[radial-gradient(var(--color-primary)_0.5px,transparent_0.5px)] [background-size:24px_24px] opacity-10"
   ></div>
   <div class="container-app grid grid-cols-1 lg:grid-cols-2 gap-12 items-center relative z-10">
     <div class="space-y-6 sm:space-y-8 text-right order-2 lg:order-1 animate-slide-in-top">
@@ -38,7 +38,7 @@
     </div>
 
     <div class="order-1 lg:order-2 flex justify-center animate-fade-in">
-      <div class="relative w-full max-w-112.5">
+      <div class="relative w-full max-w-[450px]">
         <div
           class="absolute -top-6 -right-6 w-32 h-32 bg-primary-container/40 rounded-full blur-3xl"
         ></div>
@@ -49,7 +49,7 @@
           class="bg-white border border-outline-variant/80 p-4 rounded-[2.5rem] shadow-2xl relative overflow-hidden group"
         >
           <div
-            class="w-full h-55 sm:h-75 bg-linear-to-br from-primary/10 to-tertiary/10 rounded-3xl flex items-center justify-center"
+            class="w-full h-[220px] sm:h-[300px] bg-gradient-to-br from-primary/10 to-tertiary/10 rounded-3xl flex items-center justify-center"
           >
             <lucide-icon
               [img]="pillIcon"
@@ -138,7 +138,7 @@
 
       <!-- Feature 4 -->
       <div
-        class="md:col-span-2 bg-neutral-dark p-6 sm:p-8 rounded-3xl border border-neutral-dark hover:shadow-lg transition-all flex items-center text-right"
+        class="md:col-span-2 bg-neutral-dark p-6 sm:p-8 rounded-3xl border border-[#222222] hover:shadow-lg transition-all flex items-center text-right"
       >
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 items-center w-full">
           <div class="space-y-2">
@@ -204,7 +204,7 @@
     <div class="flex gap-4 overflow-x-auto pb-3 text-right snap-x snap-mandatory reviews-scroll">
       @for (review of reviews; track review.id) {
         <div
-          class="bg-surface-container-low rounded-2xl p-5 border border-outline-variant/30 space-y-3 shrink-0 w-70 sm:w-[320px] snap-start"
+          class="bg-surface-container-low rounded-2xl p-5 border border-outline-variant/30 space-y-3 shrink-0 w-[280px] sm:w-[320px] snap-start"
         >
           <div class="flex items-center justify-between">
             <div class="flex text-secondary text-sm">
@@ -227,9 +227,9 @@
       }
     </div>
     <!-- Add Review -->
-    @if (!showReviewForm()) {
+    @if (!showReviewForm) {
       <button
-        (click)="showReviewForm.set(true)"
+        (click)="showReviewForm = true"
         class="mx-auto flex items-center gap-2 px-6 py-3 bg-primary text-white rounded-xl font-bold text-sm hover:bg-primary-dark transition-all cursor-pointer"
       >
         <lucide-icon [img]="plusIcon" class="w-4 h-4"></lucide-icon>
@@ -237,7 +237,7 @@
       </button>
     }
 
-    @if (showReviewForm()) {
+    @if (showReviewForm) {
       <div
         class="bg-surface-container-low rounded-2xl p-5 sm:p-6 border border-outline-variant/30 text-right max-w-lg mx-auto space-y-4"
       >
@@ -249,8 +249,8 @@
           <div class="flex gap-1 text-2xl cursor-pointer">
             @for (star of [1, 2, 3, 4, 5]; track star) {
               <span
-                (click)="newReview.update((review) => ({ ...review, rating: star }))"
-                [class]="star <= newReview().rating ? 'text-secondary' : 'text-outline/30'"
+                (click)="newReview.rating = star"
+                [class]="star <= newReview.rating ? 'text-secondary' : 'text-outline/30'"
                 >★</span
               >
             }
@@ -260,8 +260,7 @@
         <div class="space-y-1">
           <label class="text-xs font-bold text-outline">اسمك</label>
           <input
-            [ngModel]="newReview().name"
-            (ngModelChange)="newReview.update((review) => ({ ...review, name: $event }))"
+            [(ngModel)]="newReview.name"
             placeholder="مثال: د. أحمد محمد"
             class="w-full h-10 px-3 bg-white border border-outline-variant rounded-xl text-sm font-bold outline-none focus:border-primary"
           />
@@ -270,8 +269,7 @@
         <div class="space-y-1">
           <label class="text-xs font-bold text-outline">تعليقك</label>
           <textarea
-            [ngModel]="newReview().text"
-            (ngModelChange)="newReview.update((review) => ({ ...review, text: $event }))"
+            [(ngModel)]="newReview.text"
             rows="3"
             placeholder="شاركنا تجربتك مع SafeDose AI..."
             class="w-full px-3 py-2 bg-white border border-outline-variant rounded-xl text-sm font-bold outline-none focus:border-primary resize-none"
@@ -280,15 +278,15 @@
 
         <div class="flex gap-3">
           <button
-            (click)="showReviewForm.set(false)"
+            (click)="showReviewForm = false"
             class="flex-1 h-10 border border-outline-variant text-outline rounded-xl font-bold text-sm hover:bg-slate-50 transition-all cursor-pointer"
           >
             إلغاء
           </button>
           <button
             (click)="submitReview()"
-            [disabled]="!newReview().name.trim() || !newReview().text.trim()"
-            class="flex-2 h-10 bg-primary hover:bg-primary-dark disabled:bg-slate-200 disabled:text-outline text-white rounded-xl font-bold text-sm transition-all cursor-pointer"
+            [disabled]="!newReview.name.trim() || !newReview.text.trim()"
+            class="flex-[2] h-10 bg-primary hover:bg-primary-dark disabled:bg-slate-200 disabled:text-outline text-white rounded-xl font-bold text-sm transition-all cursor-pointer"
           >
             نشر التعليق
           </button>
@@ -301,10 +299,13 @@
 <section class="pb-24">
   <div class="container-app">
     <div
-      class="bg-linear-to-br from-primary to-primary-dark rounded-3xl p-6 sm:p-12 text-center text-white relative overflow-hidden shadow-xl"
+      class="bg-gradient-to-br from-primary to-primary-dark rounded-3xl p-6 sm:p-12 text-center text-white relative overflow-hidden shadow-xl"
     >
       <div class="absolute -right-20 -top-20 opacity-10">
-        <lucide-icon [img]="sparklesIcon" class="w-50 h-50 sm:w-75 sm:h-75"></lucide-icon>
+        <lucide-icon
+          [img]="sparklesIcon"
+          class="w-[200px] h-[200px] sm:w-[300px] sm:h-[300px]"
+        ></lucide-icon>
       </div>
       <div class="relative z-10 space-y-6">
         <h2 class="text-2xl sm:text-3xl font-extrabold">كن أول من يحمي صحته</h2>
@@ -313,7 +314,7 @@
         </p>
         <a
           routerLink="/pricing"
-          class="bg-neutral-dark block w-full sm:w-fit sm:mx-auto hover:bg-neutral-dark text-secondary px-8 py-4 rounded-xl font-bold transition-all"
+          class="bg-neutral-dark block w-full sm:w-fit sm:mx-auto hover:bg-[#222222] text-secondary px-8 py-4 rounded-xl font-bold transition-all"
         >
           ابدأ الآن — خطط الأسعار
         </a>

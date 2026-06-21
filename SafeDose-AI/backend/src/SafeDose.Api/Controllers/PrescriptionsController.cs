@@ -37,8 +37,9 @@ public class PrescriptionsController : ControllerBase
 
         try
         {
+            Account account = await _userGlobalServices.GetUser();
             using var stream = file.OpenReadStream();
-            var result = await _parseUseCase.ExecuteAsync(stream, file.FileName, file.ContentType);
+            var result = await _parseUseCase.ExecuteAsync(stream, file.FileName, file.ContentType, account.Id);
             return Ok(result);
         }
         catch (ArgumentException ex)

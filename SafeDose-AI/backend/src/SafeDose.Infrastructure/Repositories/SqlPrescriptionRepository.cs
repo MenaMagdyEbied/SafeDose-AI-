@@ -46,4 +46,22 @@ public class SqlPrescriptionRepository : IPrescriptionRepository
             throw;
         }
     }
+
+    public async Task<List<Prescription>> GetPrescriptionsByPatientIdAsync(int patientId)
+    {
+        return await _db.Prescriptions
+            .Where(p => p.PatientId == patientId)
+            .Include(p => p.Drugs)
+            .OrderByDescending(p => p.CreatedAt)
+            .ToListAsync();
+    }
+
+    public async Task<Prescription?> GetPrescriptionDetailsByIdAsync(int prescriptionId)
+    {
+        return await _db.Prescriptions
+            .Where(p => p.PrescriptionId == prescriptionId)
+            .Include(p => p.Drugs)
+                .ThenInclude(d => d.PatientMedications)
+            .FirstOrDefaultAsync();
+    }
 }

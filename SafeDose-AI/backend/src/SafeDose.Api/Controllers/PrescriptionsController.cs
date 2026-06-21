@@ -78,5 +78,51 @@ public class PrescriptionsController : ControllerBase
             return StatusCode(500, $"Error saving prescription: {ex.Message}");
         }
     }
+
+    [HttpGet("Patient/{patientId}/Summary")]
+    public async Task<IActionResult> GetPrescriptionsSummary(int patientId, [FromServices] GetPatientPrescriptionsUseCase useCase)
+    {
+        try
+        {
+            Account account = await _userGlobalServices.GetUser();
+            var result = await useCase.ExecuteAsync(patientId, account.Id);
+            return Ok(new { success = true, data = result });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { success = false, message = ex.Message });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new { success = false, message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { success = false, message = $"Error retrieving prescriptions: {ex.Message}" });
+        }
+    }
+
+    [HttpGet("{prescriptionId}/Details")]
+    public async Task<IActionResult> GetPrescriptionDetails(int prescriptionId, [FromServices] GetPrescriptionDetailsUseCase useCase)
+    {
+        try
+        {
+            Account account = await _userGlobalServices.GetUser();
+            var result = await useCase.ExecuteAsync(prescriptionId, account.Id);
+            return Ok(new { success = true, data = result });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { success = false, message = ex.Message });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new { success = false, message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { success = false, message = $"Error retrieving prescription details: {ex.Message}" });
+        }
+    }
 }
 

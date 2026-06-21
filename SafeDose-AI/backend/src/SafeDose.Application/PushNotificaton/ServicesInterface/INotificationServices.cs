@@ -13,7 +13,7 @@ namespace SafeDose.Application.PushNotificaton.ServicesInterface
         // send not
 
         Task UserWillBeNotify();
-        Task SendAsync(string AccountId ,int PatientMedicationTimeId, string title, string body);
+        Task SendAsync(string AccountId, int PatientMedicationTimeId, string title, string body, string patientName, int PatientMedicationId);
 
     }
 }

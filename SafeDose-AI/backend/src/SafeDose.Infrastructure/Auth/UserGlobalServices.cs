@@ -24,11 +24,11 @@ namespace SafeDose.Infrastructure.Auth
         public async Task<Account> GetUser()
         {
             var user = _httpContextAccessor.HttpContext?.User;
-            if (user == null) throw new Exception("Not found this User");
+            if (user == null) throw new Exception("لم يتم العثور على هذا المستخدم");
             string? userId = _userManager.GetUserId(user);
-            if (userId == null) throw new Exception("Not found this User");
+            if (userId == null) throw new Exception("لم يتم العثور على هذا المستخدم");
             Account? userLogin = await _userManager.FindByIdAsync(userId);
-            if (userLogin == null) throw new Exception("Not found this User");
+            if (userLogin == null) throw new Exception("لم يتم العثور على هذا المستخدم");
 
             return userLogin;
         }

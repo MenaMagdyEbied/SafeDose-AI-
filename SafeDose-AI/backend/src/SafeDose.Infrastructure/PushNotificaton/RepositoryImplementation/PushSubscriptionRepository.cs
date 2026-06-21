@@ -21,7 +21,7 @@ namespace SafeDose.Infrastructure.PushNotificaton.RepositoryImplementation
         {
             await _context.PushSubscription.AddAsync(pushSubscription);    
             await _context.SaveChangesAsync();
-            return "successfully added";
+            return "تمت الاضافه بنجاح";
         }
     }
 }

@@ -40,22 +40,34 @@ namespace SafeDose.Infrastructure.PushNotificaton.ServicesImplementation
 
         public async Task UserWillBeNotify()
         {
-            var today = DateOnly.FromDateTime(DateTime.UtcNow);
-            var now = TimeOnly.FromDateTime(DateTime.UtcNow);
-            List<PatientMedicationTime>? patientMedicationTimes = await _context.PatientMedicationTimes.Where(
-                t => t.Time <= now && t.LastReminderDate != today && 
-                t.PatientMedication.Status == 1).ToListAsync();
+            var today = DateOnly.FromDateTime(DateTime.Now);
+            var now = TimeOnly.FromDateTime(DateTime.Now);
 
-            foreach (var pmt in patientMedicationTimes)
+            //List<PatientMedicationTime>? patientMedicationTimes = await _context.PatientMedicationTimes.Where(
+            //t => t.Time <= now && t.LastReminderDate != today &&
+            //t.PatientMedication.Status == 1).Include(pm=>pm.PatientMedication).ThenInclude(d=>d.Drug).ToListAsync();
+
+
+            var ReminderDate = await _context.PatientMedicationTimes.Where(
+            t => t.Time <= now && t.LastReminderDate != today &&
+            t.PatientMedication.Status == 1).Select(d=>new {
+                AccountId = d.AccountId ,
+                PatientMedicationTimeId = d.PatientMedicationTimeId,
+                PatientMedicationId = d.PatientMedicationId,
+                DrugName = d.PatientMedication.Drug.DrugName,
+                PatientName = d.PatientMedication.Patient.FullName
+            }).ToListAsync();
+
+            foreach (var R in ReminderDate)
             {
-                string drugName = pmt.PatientMedication.Drug.DrugName;
-                await SendAsync(pmt.AccountId, pmt.PatientMedicationTimeId, "testTitle", drugName);
+                //string drugName = pmt.PatientMedication.Drug.DrugName;
+                await SendAsync(R.AccountId, R.PatientMedicationTimeId, "حان وقت العلاج", R.DrugName, R.PatientName, R.PatientMedicationId);
             }
 
            // await SendAsync("fb02d9b6-1aba-431a-b095-e9372c89da03", 5, "testTitle", "testBody");
         }
 
-        public async Task SendAsync(string AccountId, int PatientMedicationTimeId, string title, string body)
+        public async Task SendAsync(string AccountId, int PatientMedicationTimeId, string title, string body , string patientName , int PatientMedicationId)
         {
             var subscriptions =
           _context.PushSubscription.Where(p=>p.AccountId == AccountId).ToList();
@@ -65,7 +77,8 @@ namespace SafeDose.Infrastructure.PushNotificaton.ServicesImplementation
                 {
                     title,
                     body,
-                    PatientMedicationTimeId
+                    patientName,
+                    PatientMedicationId
                 });
 
             var vapidDetails = new VapidDetails(
@@ -90,7 +103,7 @@ namespace SafeDose.Infrastructure.PushNotificaton.ServicesImplementation
             }
 
             PatientMedicationTime? patientMedicationTime = await _context.PatientMedicationTimes.SingleOrDefaultAsync(pmt => pmt.PatientMedicationTimeId == PatientMedicationTimeId);
-            patientMedicationTime.LastReminderDate = DateOnly.FromDateTime(DateTime.UtcNow);
+            patientMedicationTime.LastReminderDate = DateOnly.FromDateTime(DateTime.Now);
             await _context.SaveChangesAsync();
         }
 

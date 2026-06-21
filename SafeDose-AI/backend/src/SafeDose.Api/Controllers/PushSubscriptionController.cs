@@ -21,26 +21,26 @@ namespace SafeDose.Api.Controllers
             _notificationServices = notificationServices;
         }
 
-        [HttpPost("PushSubscription")]
+        [HttpPost("Subscripe")]
         public async Task<IActionResult> PushSubscription([FromBody] PushSubscriptionAddDTO dto)
         {
             try
             {
                 string result =await _pushSubscriptionServices.Add(dto);
-                return Ok(result);
+                return Ok(new { message = result });
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);  
+                return BadRequest(new { message = ex.Message });  
             }
         }
 
-        [HttpPost]
-        public async Task<IActionResult> test()
-        {
-            RecurringJob.AddOrUpdate<NotificationServices>(x=>x.UserWillBeNotify(), Cron.Minutely);
-          //  await _notificationServices.UserWillBeNotify();
-            return Ok();    
-        }
+        //[HttpPost]
+        //public async Task<IActionResult> test()
+        //{
+        //    RecurringJob.AddOrUpdate<NotificationServices>(x=>x.UserWillBeNotify(), Cron.Minutely);
+        //  //  await _notificationServices.UserWillBeNotify();
+        //    return Ok();    
+        //}
     }
 }

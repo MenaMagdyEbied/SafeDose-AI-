@@ -93,7 +93,7 @@
         <lucide-icon [img]="checkCircleIcon" class="w-6 h-6 shrink-0"></lucide-icon>
         <div class="text-right">
           @if (doctorName()) {
-            <p class="font-bold text-sm">تم استخراج {{ parsedMeds().length }} دواء</p>
+            <p class="font-bold text-sm">تم استخراج {{ reviewMeds().length }} دواء</p>
             <p class="text-xs text-emerald-600">د. {{ doctorName() }}</p>
           } @else {
             <p class="font-bold text-sm">إضافة وصفة يدويًا</p>
@@ -102,10 +102,10 @@
         </div>
       </div>
 
-      <p class="text-xs text-outline text-center">راجع الأدوية وعدّل أي بيانات قبل الحفظ</p>
+      <p class="text-xs text-outline text-center">راجع كل دواء وأكّد اسمه ومواعيده قبل الحفظ</p>
 
       <div class="space-y-3">
-        @for (med of parsedMeds(); track $index) {
+        @for (med of reviewMeds(); track $index) {
           <div
             class="bg-white rounded-2xl border border-outline-variant shadow-sm p-4 space-y-3 text-right"
           >
@@ -119,29 +119,120 @@
               <span class="text-xs font-bold text-outline">دواء {{ $index + 1 }}</span>
             </div>
 
-            <div class="space-y-1">
-              <label class="text-[10px] font-bold text-outline">اسم الدواء</label>
+            <!-- Verification banner لو موجود -->
+            @if (med.verification?.ui_message_arabic) {
+              <div
+                class="p-2.5 rounded-xl text-xs font-bold"
+                [class.bg-emerald-50]="med.verification?.status === 'EXACT_MATCH'"
+                [class.text-emerald-700]="med.verification?.status === 'EXACT_MATCH'"
+                [class.bg-amber-50]="med.verification?.status !== 'EXACT_MATCH'"
+                [class.text-amber-700]="med.verification?.status !== 'EXACT_MATCH'"
+              >
+                {{ med.verification?.ui_message_arabic }}
+              </div>
+            }
+
+            <!-- اسم الدواء + بحث في الكتالوج -->
+            <div class="space-y-1 relative">
+              <label class="text-[10px] font-bold text-outline">اسم الدواء (من الكتالوج)</label>
               <input
-                [value]="med.drug_name_guess"
-                (input)="updateMed($index, 'drug_name_guess', $any($event.target).value)"
+                [value]="med.resolvedName"
+                (input)="onDrugNameInput($index, $any($event.target).value)"
+                placeholder="ابحث عن اسم الدواء..."
                 class="w-full h-10 px-3 bg-surface-container-low border border-outline-variant rounded-xl text-sm font-bold outline-none focus:border-primary"
               />
+              @if (med.searchSuggestions.length > 0) {
+                <div
+                  class="absolute top-full right-0 left-0 z-30 bg-white border border-outline-variant rounded-xl shadow-lg overflow-hidden mt-1 max-h-48 overflow-y-auto"
+                >
+                  @for (s of med.searchSuggestions; track s) {
+                    <div
+                      (mousedown)="selectSuggestion($index, s)"
+                      class="px-3 py-2 text-sm font-bold text-right hover:bg-surface-container-low transition-colors cursor-pointer border-b border-outline-variant/20"
+                    >
+                      {{ s }}
+                    </div>
+                  }
+                </div>
+              }
+              @if (med.searchSuggestions.length === 0 && med.resolvedName) {
+                <p class="text-[10px] text-outline">
+                  لم يتم العثور على تطابق في قاعدة البيانات، تأكد من الإملاء أو اكتب اسمًا آخر
+                </p>
+              }
             </div>
 
+            <!-- جرعة + طبيب -->
             <div class="grid grid-cols-2 gap-2">
               <div class="space-y-1">
                 <label class="text-[10px] font-bold text-outline">الجرعة</label>
                 <input
-                  [value]="med.dose_guess"
-                  (input)="updateMed($index, 'dose_guess', $any($event.target).value)"
+                  [value]="med.dose"
+                  (input)="updateMedField($index, 'dose', $any($event.target).value)"
                   class="w-full h-9 px-2 bg-surface-container-low border border-outline-variant rounded-xl text-xs font-bold outline-none focus:border-primary"
                 />
               </div>
               <div class="space-y-1">
-                <label class="text-[10px] font-bold text-outline">التكرار</label>
+                <label class="text-[10px] font-bold text-outline">اسم الطبيب</label>
                 <input
-                  [value]="med.frequency_guess"
-                  (input)="updateMed($index, 'frequency_guess', $any($event.target).value)"
+                  [value]="med.doctorName"
+                  (input)="updateMedField($index, 'doctorName', $any($event.target).value)"
+                  class="w-full h-9 px-2 bg-surface-container-low border border-outline-variant rounded-xl text-xs font-bold outline-none focus:border-primary"
+                />
+              </div>
+            </div>
+
+            <!-- عدد المرات يوميًا -->
+            <div class="space-y-1">
+              <label class="text-[10px] font-bold text-outline">عدد مرات الدواء يومياً</label>
+              <select
+                [value]="med.frequencyNumber"
+                (change)="updateMedField($index, 'frequencyNumber', +$any($event.target).value)"
+                class="w-full h-9 px-2 bg-surface-container-low border border-outline-variant rounded-xl text-xs font-bold outline-none focus:border-primary appearance-none"
+              >
+                @for (n of frequencyOptions; track n) {
+                  <option [value]="n">{{ n }} {{ n === 1 ? 'مرة' : 'مرات' }} يومياً</option>
+                }
+              </select>
+            </div>
+
+            <!-- توقيت الأكل -->
+            <div class="space-y-1">
+              <label class="text-[10px] font-bold text-outline">توقيت الدواء بالنسبة للأكل</label>
+              <div class="grid grid-cols-4 gap-1.5">
+                @for (opt of mealTimingOptions; track opt.value) {
+                  <button
+                    type="button"
+                    (click)="updateMedField($index, 'mealTiming', opt.value)"
+                    [class]="
+                      med.mealTiming === opt.value
+                        ? 'p-2 rounded-lg border-2 border-primary bg-primary text-white text-[10px] font-bold cursor-pointer'
+                        : 'p-2 rounded-lg border border-outline-variant text-[10px] font-bold text-outline cursor-pointer'
+                    "
+                  >
+                    {{ opt.label }}
+                  </button>
+                }
+              </div>
+            </div>
+
+            <!-- تواريخ -->
+            <div class="grid grid-cols-2 gap-2">
+              <div class="space-y-1">
+                <label class="text-[10px] font-bold text-outline">تاريخ البداية</label>
+                <input
+                  type="date"
+                  [value]="med.startDate"
+                  (change)="updateMedField($index, 'startDate', $any($event.target).value)"
+                  class="w-full h-9 px-2 bg-surface-container-low border border-outline-variant rounded-xl text-xs font-bold outline-none focus:border-primary"
+                />
+              </div>
+              <div class="space-y-1">
+                <label class="text-[10px] font-bold text-outline">تاريخ النهاية</label>
+                <input
+                  type="date"
+                  [value]="med.endDate"
+                  (change)="updateMedField($index, 'endDate', $any($event.target).value)"
                   class="w-full h-9 px-2 bg-surface-container-low border border-outline-variant rounded-xl text-xs font-bold outline-none focus:border-primary"
                 />
               </div>
@@ -183,7 +274,6 @@
       </div>
     </div>
   }
-
   <!-- ===== Stage 3: Summary (بعد الحفظ — زي الصورة) ===== -->
   @if (stage() === 'summary' && lastSavedPrescription()) {
     <div class="space-y-4">

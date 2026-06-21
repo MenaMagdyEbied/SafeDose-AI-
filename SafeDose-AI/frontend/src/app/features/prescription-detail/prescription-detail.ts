@@ -24,20 +24,27 @@ export class PrescriptionDetail implements OnInit {
 
   selectedPrescription: PrescriptionDetailModel | null = null;
   loading = false;
+  errorText = '';
   editMode = false;
   showDeleteConfirm = false;
 
   ngOnInit(): void {
     const id = Number(this.route.snapshot.paramMap.get('id'));
-    if (id) this.loadPrescription(id);
+    if (id) {
+      this.loadPrescription(id);
+    } else {
+      this.errorText = 'رقم الوصفة غير صالح.';
+    }
   }
 
   private async loadPrescription(id: number): Promise<void> {
     this.loading = true;
+    this.errorText = '';
     try {
-      // this.selectedPrescription = await this.prescriptionService.getById(id);
+      this.selectedPrescription = await this.prescriptionService.getById(id);
     } catch {
       this.selectedPrescription = null;
+      this.errorText = 'تعذر تحميل تفاصيل الوصفة. حاول مرة أخرى.';
     } finally {
       this.loading = false;
     }
@@ -57,6 +64,9 @@ export class PrescriptionDetail implements OnInit {
 
   save(): void {
     this.editMode = false;
+    // ملاحظة: مفيش endpoint تعديل (PUT/PATCH) ظاهر للـ Prescription لحد دلوقتي،
+    // فالتعديل ده شكلي بس على الواجهة ومش بيترفع للباك إند. لو فيه endpoint تحديث
+    // هاتيه عشان نوصله صح.
   }
 
   deletePrescription(): void {
@@ -68,7 +78,7 @@ export class PrescriptionDetail implements OnInit {
     try {
       await this.prescriptionService.delete(this.selectedPrescription.id);
     } catch {
-      // اختياري: تعرض رسالة خطأ
+      this.errorText = 'تعذر حذف الوصفة.';
     }
     this.showDeleteConfirm = false;
     this.goBack();

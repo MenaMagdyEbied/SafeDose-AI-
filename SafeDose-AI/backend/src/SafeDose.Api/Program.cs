@@ -199,7 +199,10 @@ builder.Services.AddScoped<ChangeMedicationStatusUseCase>();
 builder.Services.AddScoped<GetActiveMedicationsUseCase>();
 builder.Services.AddScoped<GetMedicationHistoryUseCase>();
 builder.Services.AddScoped<GetMedicationByIdUseCase>();
+builder.Services.AddScoped<ParsePrescriptionUseCase>();
 builder.Services.AddScoped<SavePrescriptionUseCase>();
+builder.Services.AddScoped<GetPatientPrescriptionsUseCase>();
+builder.Services.AddScoped<GetPrescriptionDetailsUseCase>();
 
 // Swagger with JWT bearer
 builder.Services.AddSwaggerGen(option =>

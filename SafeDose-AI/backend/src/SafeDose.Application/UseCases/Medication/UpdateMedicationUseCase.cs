@@ -4,6 +4,8 @@ using SafeDose.Domain.Entities;
 
 namespace SafeDose.Application.UseCases.Medication;
 
+// partial update of editable fields.
+// DrugId and PatientId are IMMUTABLE here.
 public class UpdateMedicationUseCase
 {
     private readonly IPatientMedicationRepository _meds;
@@ -61,6 +63,7 @@ public class UpdateMedicationUseCase
 
         await _meds.UpdateAsync(med);
 
+        // Times replace the whole schedule. Validated against the (possibly updated) frequency.
         if (dto.Times != null)
         {
             AddMedicationManuallyUseCase.ValidateTimesAgainstFrequency(dto.Times, med.Frequency);

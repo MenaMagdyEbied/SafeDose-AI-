@@ -4,6 +4,9 @@ using SafeDose.Domain.Entities;
 
 namespace SafeDose.Application.UseCases.Medication;
 
+// bulk-add medications from a confirmed prescription.
+// Called by Module 3 after patient confirms OCR results.
+// Validates EVERY drug exists before creating ANY of them (transactional integrity).
 public class AddMedicationsFromPrescriptionUseCase
 {
     private readonly IPatientMedicationRepository _meds;
@@ -40,16 +43,19 @@ public class AddMedicationsFromPrescriptionUseCase
         if (dto.Medications.Length > 20)
             throw new ArgumentException("Maximum 20 medications per bulk add");
 
+        // Ownership
         var patient = await _patients.GetByIdAsync(dto.PatientId)
             ?? throw new ArgumentException("Patient not found");
         if (!string.Equals(patient.AccountId, accountId, StringComparison.Ordinal))
             throw new UnauthorizedAccessException("This patient does not belong to you");
 
+        // Verify ALL drug IDs exist (fail-fast)
         var drugIds = dto.Medications.Select(m => m.DrugId).Distinct().ToArray();
         var drugs = await _drugs.GetByIdsAsync(drugIds);
         if (drugs.Count != drugIds.Length)
             throw new ArgumentException("One or more drug IDs not found in catalog");
 
+        // Validate every item
         foreach (var item in dto.Medications)
         {
             AddMedicationManuallyUseCase.ValidateMealTiming(item.MealTiming);
@@ -70,12 +76,13 @@ public class AddMedicationsFromPrescriptionUseCase
             StartDate = item.StartDate ?? today,
             EndDate = item.EndDate,
             MealTiming = item.MealTiming,
-            Status = 1,
+            Status = 1,                             // active
             AccountId = accountId,
         }).ToList();
 
         await _meds.CreateManyAsync(medications);
 
+        // Single audit entry (bulk operation)
         await _audit.WriteAsync(new AuditLogEntry(
             AccountId: accountId,
             EntityName: nameof(PatientMedication),
@@ -103,6 +110,7 @@ public class AddMedicationsFromPrescriptionUseCase
         }
         catch
         {
+            // Bulk medication save should remain available during AI pipeline outages.
         }
     }
 }

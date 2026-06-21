@@ -20,5 +20,4 @@ public interface IInteractionRepository
     Task SoftDeleteAsync(int interactionCheckId);
 
     Task<int> CountForPatientAsync(int patientId);
-    Task<int> CountForAccountSinceAsync(string accountId, DateTime sinceUtc);
 }

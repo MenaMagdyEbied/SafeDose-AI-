@@ -6,7 +6,6 @@
         public int PaymentId { get; set; }
         public int SubscriptionId { get; set; }
         public string GateWay { get; set; } = null!;
-        public string? MerchantOrderId { get; set; }
         public string? GateWayReference { get; set; }
         public decimal Amount { get; set; }
         public string Currency { get; set; } = null!;

@@ -202,19 +202,29 @@
 
           <div class="space-y-1">
             <label class="text-xs font-bold text-outline">نوع الدم</label>
-            <input
+            <select
               formControlName="bloodType"
-              placeholder="مثال: O+"
-              class="w-full h-10 px-3 bg-surface-container-low border rounded-xl text-sm font-bold outline-none focus:border-primary"
+              class="w-full h-10 px-3 bg-surface-container-low border rounded-xl text-sm font-bold outline-none focus:border-primary appearance-none"
               [class.border-danger]="
                 form.get('bloodType')?.invalid && form.get('bloodType')?.touched
               "
               [class.border-outline-variant]="
                 !(form.get('bloodType')?.invalid && form.get('bloodType')?.touched)
               "
-            />
-            @if (form.get('bloodType')?.touched && form.get('bloodType')?.hasError('pattern')) {
-              <p class="text-xs text-danger">يرجى كتابة قيمة صحيحة مثل O+ أو AB-</p>
+            >
+              <option value="" disabled selected hidden>اختر نوع الدم</option>
+              <option value="A+">A+</option>
+              <option value="A-">A-</option>
+              <option value="B+">B+</option>
+              <option value="B-">B-</option>
+              <option value="AB+">AB+</option>
+              <option value="AB-">AB-</option>
+              <option value="O+">O+</option>
+              <option value="O-">O-</option>
+            </select>
+
+            @if (form.get('bloodType')?.touched && form.get('bloodType')?.hasError('required')) {
+              <p class="text-xs text-danger">يرجى اختيار فصيلة الدم</p>
             }
           </div>
 

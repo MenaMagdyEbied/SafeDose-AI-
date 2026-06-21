@@ -14,25 +14,36 @@ public class SqlFreeTierUsageRepository : IFreeTierUsageRepository
         _db = db;
     }
 
-    public Task<FreeTierUsage?> GetForAccountAndDayAsync(string accountId, DateOnly day)
+    public async Task<FreeTierUsage> GetOrCreateUsageAsync(string accountId)
     {
-        var key = day.ToString("yyyy-MM-dd");
-        return _db.FreeTierUsages
-            .FirstOrDefaultAsync(u => u.AccountId == accountId && u.MonthYear == key);
+        var usage = await _db.FreeTierUsages
+            .Where(u => u.AccountId == accountId)
+            .OrderByDescending(u => u.StartDate)
+            .FirstOrDefaultAsync();
+
+        if (usage == null || DateOnly.FromDateTime(DateTime.UtcNow) >= usage.ResetDate)
+        {
+            usage = new FreeTierUsage
+            {
+                AccountId = accountId,
+                MonthYear = DateTime.UtcNow.ToString("MM-yyyy"),
+                OCRCount = 0,
+                InteractionCheckCount = 0,
+                VoiceInputCount = 0,
+                StartDate = DateTime.UtcNow,
+                ResetDate = DateOnly.FromDateTime(DateTime.UtcNow.AddMonths(1))
+            };
+            _db.FreeTierUsages.Add(usage);
+            await _db.SaveChangesAsync();
+        }
+
+        return usage;
     }
 
-    public async Task<int> CreateAsync(FreeTierUsage usage)
+    public async Task IncrementOCRCountAsync(FreeTierUsage usage)
     {
-        await _db.FreeTierUsages.AddAsync(usage);
-        await _db.SaveChangesAsync();
-        return usage.FreeTierUsageId;
-    }
-
-    public async Task IncrementInteractionCheckAsync(int freeTierUsageId)
-    {
-        var row = await _db.FreeTierUsages.FindAsync(freeTierUsageId);
-        if (row == null) return;
-        row.InteractionCheckCount++;
+        usage.OCRCount++;
+        _db.FreeTierUsages.Update(usage);
         await _db.SaveChangesAsync();
     }
 }

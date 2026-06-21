@@ -281,7 +281,7 @@ namespace SafeDose.Domain.Migrations
                             Id = "1",
                             AccessFailedCount = 0,
                             AccountStatus = (byte)0,
-                            ConcurrencyStamp = "b17214fe-29e5-4f82-85d3-e4154c93c56a",
+                            ConcurrencyStamp = "6840bfa9-1901-4847-971d-b476637dd558",
                             CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Email = "superadmin@gmail.com",
                             EmailConfirmed = true,
@@ -290,9 +290,9 @@ namespace SafeDose.Domain.Migrations
                             Name = "superadmin",
                             NormalizedEmail = "SUPERADMIN@GMAIL.COM",
                             NormalizedUserName = "SUPERADMIN",
-                            PasswordHash = "AQAAAAIAAYagAAAAEPO1TOtZZUk0lmS0chNC6PGOvxqnKGw6APQfT8J8QFj98bAZWqEnnWN/RfWIOoQRmQ==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEElYTzXKtCmIVc7lcsd7ZkQm/trrDKVyg2Xxnfb19ZYsXvU9kYzjby8glJtCG4PHqg==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "2b5c2514-e302-469c-a4ab-7fd7c47bf641",
+                            SecurityStamp = "004405d7-f84e-4a09-8bce-7ea82dcabed5",
                             TwoFactorEnabled = false,
                             UserName = "superadmin"
                         });
@@ -619,8 +619,7 @@ namespace SafeDose.Domain.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("InteractionCheckId"));
 
                     b.Property<string>("AccountId")
-                        .HasMaxLength(450)
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("AcknowledgedAt")
                         .HasColumnType("datetime2");
@@ -712,8 +711,6 @@ namespace SafeDose.Domain.Migrations
                     b.HasIndex("ConsentRecordId");
 
                     b.HasIndex("PatientId");
-
-                    b.HasIndex("AccountId", "CheckedAt");
 
                     b.HasIndex("PatientId", "CheckedAt");
 
@@ -921,10 +918,6 @@ namespace SafeDose.Domain.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<string>("MerchantOrderId")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
                     b.Property<DateTime?>("PaidAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime2")
@@ -937,10 +930,6 @@ namespace SafeDose.Domain.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("PaymentId");
-
-                    b.HasIndex("MerchantOrderId")
-                        .IsUnique()
-                        .HasFilter("[MerchantOrderId] IS NOT NULL");
 
                     b.HasIndex("SubscriptionId");
 
@@ -1057,23 +1046,16 @@ namespace SafeDose.Domain.Migrations
                         .HasMaxLength(3)
                         .HasColumnType("nvarchar(3)");
 
-                    b.Property<int>("InteractionCheckLimitPerDay")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasDefaultValue(3);
-
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
-
-                    b.Property<int>("MedicationLimitPerPatient")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasDefaultValue(5);
 
                     b.Property<decimal>("MonthlyPrice")
                         .HasColumnType("decimal(10,2)");
 
                     b.Property<int>("PatientLimit")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PrescriptionParseLimit")
                         .HasColumnType("int");
 
                     b.Property<string>("TierCode")

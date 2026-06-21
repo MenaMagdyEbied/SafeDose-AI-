@@ -3,6 +3,7 @@ using SafeDose.Application.Interfaces;
 
 namespace SafeDose.Application.UseCases.Medication;
 
+// full history grouped by Status.
 public class GetMedicationHistoryUseCase
 {
     private readonly IPatientMedicationRepository _meds;

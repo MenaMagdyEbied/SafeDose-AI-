@@ -18,6 +18,7 @@ using SafeDose.Domain.ApplicationDbContext;
 using SafeDose.Domain.Entities;
 using SafeDose.Domain.Services;
 using SafeDose.Infrastructure.Auth;
+using SafeDose.Infrastructure.ExternalServices;
 using SafeDose.Infrastructure.Repositories;
 using SafeDose.Infrastructure.Seeders;
 using SafeDose.Infrastructure.UserProfile.RepositoryImplementation;
@@ -114,6 +115,7 @@ builder.Services
             TimeSpan.FromMilliseconds(200 * Math.Pow(3, attempt - 1))));
 
 // Billing - repositories
+builder.Services.AddScoped<IFreeTierUsageRepository, SqlFreeTierUsageRepository>();
 builder.Services.AddScoped<IPricingTierRepository, SqlPricingTierRepository>();
 builder.Services.AddScoped<ISubscriptionRepository, SqlSubscriptionRepository>();
 builder.Services.AddScoped<IPaymentRepository, SqlPaymentRepository>();

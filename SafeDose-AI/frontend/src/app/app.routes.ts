@@ -2,7 +2,6 @@ import { Routes } from '@angular/router';
 import { adminGuard } from './core/auth/guards/admin-guard';
 import { authGuard } from './core/auth/guards/auth-guard';
 import { guestGuard } from './core/auth/guards/guest-guard';
-import { limitGuard } from './core/auth/guards/limit-guard';
 import { superAdminGuard } from './core/auth/guards/super-admin-guard';
 import { Login } from './features/auth/login/login';
 import { Register } from './features/auth/register/register';
@@ -58,7 +57,7 @@ export const routes: Routes = [
       {
         path: 'digital-card',
         component: DigitalCard,
-        canActivate: [authGuard], // limitGuard],
+        canActivate: [authGuard],
         title: 'البطاقة الرقمية | SafeDose AI',
       },
       {
@@ -76,7 +75,7 @@ export const routes: Routes = [
       },
       {
         path: 'family-plan',
-        canActivate: [authGuard],//, limitGuard],
+        canActivate: [authGuard],
         loadComponent: () => import('./features/family-plan/family-plan').then((c) => c.FamilyPlan),
         title: 'خطة العيلة | SafeDose AI',
       },

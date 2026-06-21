@@ -105,7 +105,7 @@ export class ChatBot {
             text: result.reply,
             timestamp: new Date(),
             severityLevel: result.severityLevel,
-            actions: result.actions,
+            // actions: result.actions,
           },
         ];
       });

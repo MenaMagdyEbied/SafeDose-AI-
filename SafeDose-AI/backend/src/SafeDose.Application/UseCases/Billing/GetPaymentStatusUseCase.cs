@@ -4,6 +4,9 @@ using SafeDose.Domain.Enums;
 
 namespace SafeDose.Application.UseCases.Billing;
 
+// Called by the success/failure redirect page so the frontend can show the right UI.
+// Patient lands at /payment-success?merchant_order_id=SD-123 -> frontend polls this
+// until SubscriptionActive flips true (webhook arrived) or timeout.
 public class GetPaymentStatusUseCase
 {
     private readonly IPaymentRepository _payments;
@@ -22,13 +25,22 @@ public class GetPaymentStatusUseCase
         if (string.IsNullOrWhiteSpace(merchantOrderId))
             return null;
 
+        // merchant_order_id looks like "SD-{paymentId}". Parse it back.
         if (!merchantOrderId.StartsWith("SD-") || !int.TryParse(merchantOrderId[3..], out var paymentId))
             return null;
 
-        var payment = await _payments.GetByMerchantOrderIdAsync(merchantOrderId)
-            ?? await _payments.GetByIdAsync(paymentId);
+        var payment = await _payments.GetByGatewayReferenceAsync("Paymob", merchantOrderId);
+        // After the webhook arrives, GatewayReference is replaced with the TransactionId.
+        // So the order-id lookup misses. Resort to scanning - cheap because we have PaymentId.
+        if (payment == null)
+        {
+            // Slow path - only happens after webhook has rewritten GatewayReference.
+            payment = await _payments.GetByGatewayReferenceAsync("Paymob",
+                merchantOrderId.Replace("SD-", ""));
+        }
         if (payment == null) return null;
 
+        // Scope to account - patient can only see their own payment.
         var sub = await _subs.GetByIdAsync(payment.SubscriptionId);
         if (sub == null) return null;
         if (!string.Equals(sub.AccountId, accountId, StringComparison.Ordinal))

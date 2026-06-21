@@ -44,15 +44,17 @@ export class FamilyPlan implements OnInit {
   error = '';
 
   readonly genderOptions = [
-    { value: 0, label: 'ذكر' },
-    { value: 1, label: 'أنثى' },
+    { value: 0, label: 'اختر النوع' },
+    { value: 1, label: 'ذكر' },
+    { value: 2, label: 'أنثى' },
+    { value: 3, label: 'أخرى' },
   ];
 
   readonly form = this.fb.nonNullable.group({
     fullName: ['', [Validators.required, Validators.minLength(2)]],
     dateOfBirth: ['', Validators.required],
     gender: [0, Validators.required],
-    bloodType: ['', [Validators.pattern(/^(A|B|AB|O)[+-]$/)]],
+    bloodType: [''],
     chronicConditions: [''],
     allergies: [''],
   });
@@ -183,9 +185,6 @@ export class FamilyPlan implements OnInit {
     const memberId = (member as any).patientId ?? member.id ?? null;
     this.editingId.set(memberId);
     console.log('editingId after:', this.editingId());
-
-
-
 
     this.editingId.set(memberId);
     this.error = '';

@@ -76,7 +76,7 @@ export const routes: Routes = [
       },
       {
         path: 'family-plan',
-        canActivate: [authGuard], // limitGuard],
+        canActivate: [authGuard],//, limitGuard],
         loadComponent: () => import('./features/family-plan/family-plan').then((c) => c.FamilyPlan),
         title: 'خطة العيلة | SafeDose AI',
       },

@@ -37,7 +37,7 @@ public class FreeTierQuotaService : IFreeTierQuotaService
                 "InteractionCheck",
                 current,
                 tier.InteractionCheckLimitPerDay,
-                $"وصلت إلى الحد الأقصى ({tier.InteractionCheckLimitPerDay}) لفحوصات اليوم. اشترك للوصول الغير محدود.");
+                $"انتهى الحد المجاني لفحص التداخلات الدوائية اليوم ({tier.InteractionCheckLimitPerDay} فحوصات يوميًا). اشترك في الباقة المدفوعة للوصول إلى عدد غير محدود من الفحوصات.");
     }
 
     public async Task IncrementInteractionCheckAsync(string accountId)
@@ -78,7 +78,7 @@ public class FreeTierQuotaService : IFreeTierQuotaService
                 "Medication",
                 currentActiveCount,
                 tier.MedicationLimitPerPatient,
-                $"الحساب المجاني محدود بـ {tier.MedicationLimitPerPatient} أدوية لكل مريض. اشترك للحصول على عدد غير محدود.");
+                $"انتهى الحد المجاني للأدوية ({tier.MedicationLimitPerPatient} أدوية لكل مريض). اشترك في الباقة المدفوعة لإضافة عدد غير محدود من الأدوية.");
     }
 
     private async Task<bool> IsPremiumAsync(string accountId)

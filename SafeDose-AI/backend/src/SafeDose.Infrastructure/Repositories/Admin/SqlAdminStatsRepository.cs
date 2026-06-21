@@ -10,19 +10,14 @@ public class SqlAdminStatsRepository : IAdminStatsRepository
     private readonly AppDbContext _db;
     public SqlAdminStatsRepository(AppDbContext db) => _db = db;
 
-    private const byte PaymentSuccess  = (byte)PaymentStatus.Success;
-    private const byte SubActive       = (byte)SubscriptionStatus.Active;
-    private const byte SubCancelled    = (byte)SubscriptionStatus.Cancelled;
-
-    // ── Revenue ──────────────────────────────────────────────────────────────
+    private const byte PaymentSuccess = (byte)PaymentStatus.Success;
+    private const byte SubActive      = (byte)SubscriptionStatus.Active;
+    private const byte SubCancelled   = (byte)SubscriptionStatus.Cancelled;
 
     public async Task<decimal> SumSuccessfulPaymentsAsync(DateTime fromUtc, DateTime toUtc)
     {
         var sum = await _db.Payments
-            .Where(p => p.Status == PaymentSuccess
-                     && p.PaidAt != null
-                     && p.PaidAt >= fromUtc
-                     && p.PaidAt < toUtc)
+            .Where(p => p.Status == PaymentSuccess && p.PaidAt != null && p.PaidAt >= fromUtc && p.PaidAt < toUtc)
             .SumAsync(p => (decimal?)p.Amount);
         return sum ?? 0m;
     }
@@ -37,25 +32,17 @@ public class SqlAdminStatsRepository : IAdminStatsRepository
         }
 
         var fromUtc = monthsList[0].Start;
-        var toUtc   = monthsList[^1].End;
-
+        var toUtc = monthsList[^1].End;
         var rows = await _db.Payments
-            .Where(p => p.Status == PaymentSuccess
-                     && p.PaidAt != null
-                     && p.PaidAt >= fromUtc
-                     && p.PaidAt < toUtc)
+            .Where(p => p.Status == PaymentSuccess && p.PaidAt != null && p.PaidAt >= fromUtc && p.PaidAt < toUtc)
             .Select(p => new { p.Amount, PaidAt = p.PaidAt!.Value })
             .ToListAsync();
 
         return monthsList.Select(m =>
-            new RevenueBucket(
-                m.Year,
-                m.Month,
+            new RevenueBucket(m.Year, m.Month,
                 rows.Where(r => r.PaidAt >= m.Start && r.PaidAt < m.End).Sum(r => r.Amount))
         ).ToList();
     }
-
-    // ── Account counts ───────────────────────────────────────────────────────
 
     public Task<int> CountAccountsTotalAsync()
         => _db.Accounts.CountAsync(a => !a.IsDeleted);
@@ -79,15 +66,11 @@ public class SqlAdminStatsRepository : IAdminStatsRepository
     public Task<int> CountAccountsActiveAsOfAsync(DateTime cutoffUtc)
         => _db.Accounts.CountAsync(a => !a.IsDeleted && a.AccountStatus == 1 && a.CreatedAt <= cutoffUtc);
 
-    // ── Patient gender ───────────────────────────────────────────────────────
-
     public Task<int> CountPatientsByGenderAsync(byte? gender)
         => _db.Patients.CountAsync(p => p.IsActive && p.Gender == gender);
 
     public Task<int> CountPatientsTotalAsync()
         => _db.Patients.CountAsync(p => p.IsActive);
-
-    // ── Subscriptions ────────────────────────────────────────────────────────
 
     public async Task<int> CountPaidActiveSubscriptionsAsync()
     {
@@ -102,8 +85,6 @@ public class SqlAdminStatsRepository : IAdminStatsRepository
             && (s.Status == SubActive
                 || (s.Status == SubCancelled && s.EndAt != null && s.EndAt > now)));
     }
-
-    // ── Treatment cards ──────────────────────────────────────────────────────
 
     public Task<int> CountPrescriptionsTotalAsync()
         => _db.Prescriptions.CountAsync();
@@ -120,9 +101,6 @@ public class SqlAdminStatsRepository : IAdminStatsRepository
         return _db.Prescriptions.CountAsync(p => p.CreatedAt < cutoff);
     }
 
-    // ── Recent activity sources ──────────────────────────────────────────────
-    // Each one is a single SQL projection so the use case doesn't N+1.
-
     public async Task<IReadOnlyList<RecentSignupRow>> GetRecentSignupsAsync(int limit)
         => await _db.Accounts
             .Where(a => !a.IsDeleted)
@@ -134,4 +112,40 @@ public class SqlAdminStatsRepository : IAdminStatsRepository
     public async Task<IReadOnlyList<RecentSubscriptionRow>> GetRecentSubscriptionsAsync(int limit)
     {
         var q = from s in _db.Subscriptions
-                join a 
+                join a in _db.Accounts on s.AccountId equals a.Id
+                join t in _db.PricingTiers on s.PricingTierId equals t.PricingTierId
+                where s.Status == SubActive
+                orderby s.StartAt descending
+                select new RecentSubscriptionRow(a.Name ?? a.Email ?? "مستخدم", t.TierName, t.TierNameArabic, s.StartAt);
+        return await q.Take(limit).ToListAsync();
+    }
+
+    public async Task<IReadOnlyList<RecentPaymentRow>> GetRecentPaymentsAsync(int limit)
+    {
+        var q = from p in _db.Payments
+                join s in _db.Subscriptions on p.SubscriptionId equals s.SubscriptionId
+                join a in _db.Accounts on s.AccountId equals a.Id
+                where p.Status == PaymentSuccess && p.PaidAt != null
+                orderby p.PaidAt descending
+                select new RecentPaymentRow(p.Amount, p.Currency, a.Name, p.PaidAt!.Value);
+        return await q.Take(limit).ToListAsync();
+    }
+
+    public async Task<IReadOnlyList<RecentPrescriptionRow>> GetRecentPrescriptionsAsync(int limit)
+    {
+        var q = from pr in _db.Prescriptions
+                join pt in _db.Patients on pr.PatientId equals pt.PatientId
+                orderby pr.CreatedAt descending
+                select new RecentPrescriptionRow(pt.FullName, pr.CreatedAt);
+        return await q.Take(limit).ToListAsync();
+    }
+
+    public async Task<IReadOnlyList<RecentPriceChangeRow>> GetRecentPriceChangesAsync(int limit)
+    {
+        var q = from c in _db.PricingChangeHistories
+                join t in _db.PricingTiers on c.PricingTierId equals t.PricingTierId
+                orderby c.CreatedAt descending
+                select new RecentPriceChangeRow(t.TierName, t.TierNameArabic, c.OldPrice, c.NewPrice, c.CreatedAt);
+        return await q.Take(limit).ToListAsync();
+    }
+}

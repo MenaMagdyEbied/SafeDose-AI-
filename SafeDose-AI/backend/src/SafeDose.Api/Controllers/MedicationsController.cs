@@ -54,7 +54,7 @@ public class MedicationsController : ControllerBase
         catch (UnauthorizedAccessException) { return Forbid(); }
         catch (SafeDose.Application.Exceptions.QuotaExceededException ex)
         {
-            return BadRequest(new ErrorResponse("QUOTA_EXCEEDED", ex.MessageArabic, ex.MessageEnglish));
+            return BadRequest(new ErrorResponse("QUOTA_EXCEEDED", ex.MessageArabic));
         }
         catch (ArgumentException ex) { return BadValidation(ex.Message); }
     }

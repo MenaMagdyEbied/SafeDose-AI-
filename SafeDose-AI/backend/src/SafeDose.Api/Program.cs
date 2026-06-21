@@ -68,7 +68,6 @@ builder.Services.AddAuthentication(options =>
 {
     options.SaveToken = false;
     options.RequireHttpsMetadata = false;
-    // Don't let the middleware remap "sub" to NameIdentifier - keeps user.Id distinct from userName
     options.MapInboundClaims = false;
     options.TokenValidationParameters = new TokenValidationParameters
     {
@@ -96,28 +95,23 @@ builder.Services.AddScoped<IInteractionRepository, SqlInteractionRepository>();
 builder.Services.AddScoped<ICriticalPairLookup, SqlCriticalPairLookup>();
 builder.Services.AddScoped<IPatientRepository, SqlPatientRepository>();
 builder.Services.AddScoped<IPrescriptionRepository, SqlPrescriptionRepository>();
-
-// One class, two interfaces (full repo + read-only provider)
 builder.Services.AddScoped<SqlPatientMedicationRepository>();
 builder.Services.AddScoped<IPatientMedicationRepository>(
     sp => sp.GetRequiredService<SqlPatientMedicationRepository>());
 builder.Services.AddScoped<IPatientMedicationProvider>(
     sp => sp.GetRequiredService<SqlPatientMedicationRepository>());
-
 builder.Services.AddScoped<IAuditLogService, SqlAuditLogService>();
 
 // Langflow client with retry
 builder.Services
     .AddHttpClient<ILangflowClient, LangflowClient>(client =>
     {
-        // Langflow LLM calls can take a while on cold start - 30s wasn't enough
         client.Timeout = TimeSpan.FromSeconds(120);
     })
     .AddPolicyHandler(HttpPolicyExtensions
         .HandleTransientHttpError()
         .WaitAndRetryAsync(3, attempt =>
             TimeSpan.FromMilliseconds(200 * Math.Pow(3, attempt - 1))));
-
 
 // Billing - repositories
 builder.Services.AddScoped<IPricingTierRepository, SqlPricingTierRepository>();
@@ -145,46 +139,7 @@ builder.Services.AddScoped<PricingTierSeeder>();
 builder.Services.AddScoped<IPricingTierSeeder>(sp => sp.GetRequiredService<PricingTierSeeder>());
 builder.Services.AddHostedService<PricingTierSeederHostedService>();
 
-// ─── Admin dashboard module ──────────────────────────────────────────────────
-// Repositories
-builder.Services.AddScoped<SafeDose.Application.Interfaces.Admin.IAdminStatsRepository,
-                           SafeDose.Infrastructure.Repositories.Admin.SqlAdminStatsRepository>();
-builder.Services.AddScoped<SafeDose.Application.Interfaces.Admin.IAdminAccountRepository,
-                           SafeDose.Infrastructure.Repositories.Admin.SqlAdminAccountRepository>();
-builder.Services.AddScoped<SafeDose.Application.Interfaces.Admin.IAdminPricingTierRepository,
-                           SafeDose.Infrastructure.Repositories.Admin.SqlAdminPricingTierRepository>();
-
-// Auth
-builder.Services.AddScoped<SafeDose.Application.UseCases.Admin.Auth.AdminLoginUseCase>();
-
-// Dashboard use cases
-builder.Services.AddScoped<SafeDose.Application.UseCases.Admin.Dashboard.GetDashboardKpisUseCase>();
-builder.Services.AddScoped<SafeDose.Application.UseCases.Admin.Dashboard.GetAdminRevenueChartUseCase>();
-builder.Services.AddScoped<SafeDose.Application.UseCases.Admin.Dashboard.GetGenderDistributionUseCase>();
-builder.Services.AddScoped<SafeDose.Application.UseCases.Admin.Dashboard.GetTreatmentCardsUseCase>();
-builder.Services.AddScoped<SafeDose.Application.UseCases.Admin.Dashboard.GetTeamBreakdownUseCase>();
-builder.Services.AddScoped<SafeDose.Application.UseCases.Admin.Dashboard.GetFreeVsPaidUseCase>();
-builder.Services.AddScoped<SafeDose.Application.UseCases.Admin.Dashboard.GetRecentActivitiesUseCase>();
-
-// PricingTiers admin use cases
-builder.Services.AddScoped<SafeDose.Application.UseCases.Admin.PricingTiers.GetAdminPricingTiersUseCase>();
-builder.Services.AddScoped<SafeDose.Application.UseCases.Admin.PricingTiers.UpdatePricingTierAdminUseCase>();
-builder.Services.AddScoped<SafeDose.Application.UseCases.Admin.PricingTiers.AddFeatureUseCase>();
-builder.Services.AddScoped<SafeDose.Application.UseCases.Admin.PricingTiers.RemoveFeatureUseCase>();
-
-// Admin accounts management
-builder.Services.AddScoped<SafeDose.Application.UseCases.Admin.Accounts.ListAdminsUseCase>();
-builder.Services.AddScoped<SafeDose.Application.UseCases.Admin.Accounts.CreateAdminUseCase>();
-builder.Services.AddScoped<SafeDose.Application.UseCases.Admin.Accounts.UpdateAdminUseCase>();
-builder.Services.AddScoped<SafeDose.Application.UseCases.Admin.Accounts.DeleteAdminUseCase>();
-builder.Services.AddScoped<SafeDose.Application.UseCases.Admin.Accounts.ToggleAdminStatusUseCase>();
-
-// Dashboard pre-warm cache + background refresh (hourly)
-builder.Services.AddMemoryCache();
-builder.Services.AddSingleton<SafeDose.Application.Caching.DashboardCache>();
-builder.Services.AddHostedService<SafeDose.Application.BackgroundJobs.DashboardCacheRefreshService>();
-// ─── End admin dashboard module ─────────────────────────────────────────────
-
+// Langflow prescription client
 builder.Services
     .AddHttpClient<ILangflowPrescriptionClient, LangflowPrescriptionClient>(client =>
     {
@@ -194,7 +149,6 @@ builder.Services
         .HandleTransientHttpError()
         .WaitAndRetryAsync(3, attempt =>
             TimeSpan.FromMilliseconds(200 * Math.Pow(3, attempt - 1))));
-
 
 // Drug Interaction use cases
 builder.Services.AddScoped<SearchDrugsUseCase>();
@@ -206,4 +160,110 @@ builder.Services.AddScoped<GetInteractionCheckByIdUseCase>();
 builder.Services.AddScoped<AcknowledgeWarningUseCase>();
 builder.Services.AddScoped<DeleteInteractionCheckUseCase>();
 builder.Services.AddScoped<GetPatientProfileSnapshotUseCase>();
-builder.Services.AddScoped<SeedCriticalPairsUse
+builder.Services.AddScoped<SeedCriticalPairsUseCase>();
+builder.Services.AddScoped<ParsePrescriptionUseCase>();
+
+// CriticalPair seeder runs on startup
+builder.Services.AddScoped<CriticalPairSeeder>();
+builder.Services.AddScoped<ICriticalPairSeeder>(sp => sp.GetRequiredService<CriticalPairSeeder>());
+builder.Services.AddHostedService<CriticalPairSeederHostedService>();
+
+// DrugCatalog seeder runs on startup (reads CSV)
+builder.Services.AddScoped<DrugCatalogSeeder>();
+builder.Services.AddScoped<IDrugCatalogSeeder>(sp => sp.GetRequiredService<DrugCatalogSeeder>());
+builder.Services.AddHostedService<DrugCatalogSeederHostedService>();
+
+// ─── Admin dashboard module ──────────────────────────────────────────────────
+builder.Services.AddScoped<SafeDose.Application.Interfaces.Admin.IAdminStatsRepository,
+                           SafeDose.Infrastructure.Repositories.Admin.SqlAdminStatsRepository>();
+builder.Services.AddScoped<SafeDose.Application.Interfaces.Admin.IAdminAccountRepository,
+                           SafeDose.Infrastructure.Repositories.Admin.SqlAdminAccountRepository>();
+builder.Services.AddScoped<SafeDose.Application.Interfaces.Admin.IAdminPricingTierRepository,
+                           SafeDose.Infrastructure.Repositories.Admin.SqlAdminPricingTierRepository>();
+
+builder.Services.AddScoped<SafeDose.Application.UseCases.Admin.Auth.AdminLoginUseCase>();
+
+builder.Services.AddScoped<SafeDose.Application.UseCases.Admin.Dashboard.GetDashboardKpisUseCase>();
+builder.Services.AddScoped<SafeDose.Application.UseCases.Admin.Dashboard.GetAdminRevenueChartUseCase>();
+builder.Services.AddScoped<SafeDose.Application.UseCases.Admin.Dashboard.GetGenderDistributionUseCase>();
+builder.Services.AddScoped<SafeDose.Application.UseCases.Admin.Dashboard.GetTreatmentCardsUseCase>();
+builder.Services.AddScoped<SafeDose.Application.UseCases.Admin.Dashboard.GetTeamBreakdownUseCase>();
+builder.Services.AddScoped<SafeDose.Application.UseCases.Admin.Dashboard.GetFreeVsPaidUseCase>();
+builder.Services.AddScoped<SafeDose.Application.UseCases.Admin.Dashboard.GetRecentActivitiesUseCase>();
+
+builder.Services.AddScoped<SafeDose.Application.UseCases.Admin.PricingTiers.GetAdminPricingTiersUseCase>();
+builder.Services.AddScoped<SafeDose.Application.UseCases.Admin.PricingTiers.UpdatePricingTierAdminUseCase>();
+builder.Services.AddScoped<SafeDose.Application.UseCases.Admin.PricingTiers.AddFeatureUseCase>();
+builder.Services.AddScoped<SafeDose.Application.UseCases.Admin.PricingTiers.RemoveFeatureUseCase>();
+
+builder.Services.AddScoped<SafeDose.Application.UseCases.Admin.Accounts.ListAdminsUseCase>();
+builder.Services.AddScoped<SafeDose.Application.UseCases.Admin.Accounts.CreateAdminUseCase>();
+builder.Services.AddScoped<SafeDose.Application.UseCases.Admin.Accounts.UpdateAdminUseCase>();
+builder.Services.AddScoped<SafeDose.Application.UseCases.Admin.Accounts.DeleteAdminUseCase>();
+builder.Services.AddScoped<SafeDose.Application.UseCases.Admin.Accounts.ToggleAdminStatusUseCase>();
+
+// Chatbot
+builder.Services.AddScoped<SafeDose.Application.UseCases.Chatbot.GetChatbotPatientContextUseCase>();
+builder.Services.AddScoped<SafeDose.Application.UseCases.Chatbot.ProcessChatMessageUseCase>();
+builder.Services.AddScoped<SafeDose.Application.UseCases.Chatbot.ProcessPublicChatMessageUseCase>();
+builder.Services
+    .AddHttpClient<SafeDose.Application.Interfaces.IChatLlmClient, SafeDose.Infrastructure.ExternalServices.FireworksChatLlmClient>(c =>
+    {
+        c.Timeout = TimeSpan.FromSeconds(60);
+    });
+
+// Dashboard pre-warm cache + background refresh
+builder.Services.AddMemoryCache();
+builder.Services.AddSingleton<SafeDose.Application.Caching.DashboardCache>();
+builder.Services.AddHostedService<SafeDose.Application.BackgroundJobs.DashboardCacheRefreshService>();
+// ─── End admin dashboard module ─────────────────────────────────────────────
+
+// CORS
+builder.Services.AddCors(o => o.AddDefaultPolicy(p =>
+    p.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod()));
+
+// Swagger
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "SafeDose API", Version = "v1" });
+    // ApiKey scheme so the user types "Bearer <token>" themselves — matches the
+    // way the team has been entering tokens since Ahmed set this up.
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Name        = "Authorization",
+        Type        = SecuritySchemeType.ApiKey,
+        Scheme      = "Bearer",
+        In          = ParameterLocation.Header,
+        Description = "JWT Authorization header using the Bearer scheme. Example: 'Bearer eyJhbGciOi...'"
+    });
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id   = "Bearer"
+                }
+            },
+            Array.Empty<string>()
+        }
+    });
+});
+
+var app = builder.Build();
+
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
+
+app.UseHttpsRedirection();
+app.UseCors();
+app.UseAuthentication();
+app.UseAuthorization();
+app.MapControllers();
+
+app.Run();

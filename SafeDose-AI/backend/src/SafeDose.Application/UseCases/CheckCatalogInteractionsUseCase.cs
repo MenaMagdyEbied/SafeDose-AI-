@@ -213,8 +213,7 @@ public class CheckCatalogInteractionsUseCase
         var usedToday = await _interactions.CountForAccountSinceAsync(accountId, startOfTodayUtc);
         if (usedToday >= tier.InteractionCheckLimitPerDay)
             throw new Exceptions.QuotaExceededException(
-                $"وصلت إلى الحد الأقصى للفحوصات اليومية ({tier.InteractionCheckLimitPerDay} يومياً). اشترك في الباقة المدفوعة للحصول على عدد غير محدود.",
-                $"Daily interaction check limit reached for your plan ({tier.InteractionCheckLimitPerDay} per day).");
+                $"انتهى الحد المجاني لفحص التداخلات الدوائية اليوم ({tier.InteractionCheckLimitPerDay} فحوصات يوميًا). اشترك في الباقة المدفوعة للوصول إلى عدد غير محدود من الفحوصات.");
     }
 
     private static DateTime StartOfCairoDayAsUtc(DateTime nowUtc)

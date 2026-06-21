@@ -4,24 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { LucideAngularModule, Plus, Save, Trash2, TriangleAlert } from 'lucide-angular';
 import { Prescription } from '../../core/services/prescription';
-interface PrescriptionMed {
-  name: string;
-  dose: string;
-  frequency: string;
-  duration: string;
-  chemicalName?: string;
-  registryCode?: string;
-  warning?: string | null;
-}
+import { PrescriptionDetail as PrescriptionDetailModel } from '../../core/models/prescription-list';
 
-interface PrescriptionDetailData {
-  id: number;
-  name: string;
-  date: string;
-  source: 'scan' | 'manual';
-  doctorName?: string | null;
-  meds: PrescriptionMed[];
-}
 @Component({
   selector: 'app-prescription-detail',
   imports: [LucideAngularModule, FormsModule],
@@ -29,23 +13,33 @@ interface PrescriptionDetailData {
   styleUrl: './prescription-detail.css',
 })
 export class PrescriptionDetail implements OnInit {
- private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
   private readonly location = inject(Location);
+  private readonly prescriptionService = inject(Prescription);
 
   trashIcon = Trash2;
   alertTriangleIcon = TriangleAlert;
   plusIcon = Plus;
   saveIcon = Save;
 
-  selectedPrescription: PrescriptionDetailData | null = null;
+  selectedPrescription: PrescriptionDetailModel | null = null;
+  loading = false;
   editMode = false;
   showDeleteConfirm = false;
 
   ngOnInit(): void {
-    const state = this.router.getCurrentNavigation()?.extras?.state ?? history.state;
+    const id = Number(this.route.snapshot.paramMap.get('id'));
+    if (id) this.loadPrescription(id);
+  }
 
-    if (state?.prescription) {
-      this.selectedPrescription = state.prescription;
+  private async loadPrescription(id: number): Promise<void> {
+    this.loading = true;
+    try {
+      // this.selectedPrescription = await this.prescriptionService.getById(id);
+    } catch {
+      this.selectedPrescription = null;
+    } finally {
+      this.loading = false;
     }
   }
 
@@ -54,12 +48,7 @@ export class PrescriptionDetail implements OnInit {
   }
 
   addMed(): void {
-    this.selectedPrescription?.meds.push({
-      name: '',
-      dose: '',
-      frequency: '',
-      duration: '',
-    });
+    this.selectedPrescription?.meds.push({ name: '', dose: '', frequency: '', duration: '' });
   }
 
   removeMed(index: number): void {
@@ -67,7 +56,6 @@ export class PrescriptionDetail implements OnInit {
   }
 
   save(): void {
-    // مفيش endpoint تحديث وصفة حاليًا، نقفل وضع التعديل محليًا فقط
     this.editMode = false;
   }
 
@@ -75,8 +63,13 @@ export class PrescriptionDetail implements OnInit {
     this.showDeleteConfirm = true;
   }
 
-  confirmDelete(): void {
-    // مفيش endpoint حذف وصفة حاليًا
+  async confirmDelete(): Promise<void> {
+    if (!this.selectedPrescription) return;
+    try {
+      await this.prescriptionService.delete(this.selectedPrescription.id);
+    } catch {
+      // اختياري: تعرض رسالة خطأ
+    }
     this.showDeleteConfirm = false;
     this.goBack();
   }

@@ -65,9 +65,9 @@
   <!-- Quick Actions -->
   <section class="space-y-2">
     <h3 class="text-md font-bold text-outline">اختصارات سريعة</h3>
-    <div class="grid grid-cols-3 gap-2 sm:gap-3">
+    <div class="grid grid-cols-4 gap-2 sm:gap-3">
       <button
-        routerLink="/caregiver-review"
+        routerLink="/scan-prescription"
         class="flex flex-col items-center justify-center gap-2 bg-white border border-outline-variant/30 rounded-2xl p-3 sm:p-4 min-h-25 hover:bg-slate-50 transition-colors cursor-pointer"
       >
         <lucide-icon [img]="cameraIcon" class="w-7 h-7 sm:w-8 sm:h-8 text-primary"></lucide-icon>
@@ -75,16 +75,26 @@
           >مسح وصفة</span
         >
       </button>
-    <button
-  (click)="openEditModal()"
-  class="flex flex-col items-center justify-center gap-2 bg-white border border-outline-variant/30 rounded-2xl p-3 sm:p-4 min-h-25 hover:bg-slate-50 transition-colors cursor-pointer"
->
-  <lucide-icon [img]="plusIcon" class="w-7 h-7 sm:w-8 sm:h-8 text-primary"></lucide-icon>
-  <span class="text-[11px] sm:text-xs font-bold text-on-background text-center">
-    إضافة دواء
-  </span>
-</button>
-  
+      <button
+        (click)="openEditModal()"
+        class="flex flex-col items-center justify-center gap-2 bg-white border border-outline-variant/30 rounded-2xl p-3 sm:p-4 min-h-25 hover:bg-slate-50 transition-colors cursor-pointer"
+      >
+        <lucide-icon [img]="plusIcon" class="w-7 h-7 sm:w-8 sm:h-8 text-primary"></lucide-icon>
+        <span class="text-[11px] sm:text-xs font-bold text-on-background text-center">
+          إضافة دواء
+        </span>
+      </button>
+
+      <button
+        routerLink="/prescriptions"
+        class="flex flex-col items-center justify-center gap-2 bg-white border border-outline-variant/30 rounded-2xl p-3 sm:p-4 min-h-25 hover:bg-slate-50 transition-colors cursor-pointer"
+      >
+        <lucide-icon [img]="pillIcon" class="w-7 h-7 sm:w-8 sm:h-8 text-primary"></lucide-icon>
+        <span class="text-[11px] sm:text-xs font-bold text-on-background text-center"
+          >الوصفات الطبية</span
+        >
+      </button>
+
       <button
         routerLink="/digital-card"
         class="flex flex-col items-center justify-center gap-2 bg-white border border-outline-variant/30 rounded-2xl p-3 sm:p-4 min-h-25 hover:bg-slate-50 transition-colors cursor-pointer"

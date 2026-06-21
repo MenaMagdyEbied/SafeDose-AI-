@@ -1,6 +1,6 @@
 import { ChangeDetectorRef, Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import {
   Camera,
   CircleCheck,
@@ -13,22 +13,20 @@ import {
   Upload,
   X,
 } from 'lucide-angular';
-import { ScannedMed } from '../../core/models/scanned-med';
 import { EMPTY, from } from 'rxjs';
-import { catchError, finalize, map, switchMap } from 'rxjs/operators';
-import { AddMedication } from '../../shared/components/add-medication/add-medication';
+import { catchError, finalize } from 'rxjs/operators';
 import { ParsedMedication, SavePrescriptionPayload } from '../../core/models/prescription-api';
-import { Prescription } from '../../core/services/prescription';
 import { PatientService } from '../../core/services/patient';
+import { Prescription } from '../../core/services/prescription';
 type ViewStage = 'upload' | 'review' | 'summary';
 
 @Component({
-  selector: 'app-caregiver-review',
-  imports: [LucideAngularModule, RouterLink, AddMedication],
-  templateUrl: './caregiver-review.html',
-  styleUrl: './caregiver-review.css',
+  selector: 'app-scan-prescription',
+  imports: [LucideAngularModule],
+  templateUrl: './scan-prescription.html',
+  styleUrl: './scan-prescription.css',
 })
-export class CaregiverReview implements OnInit {
+export class ScanPrescription implements OnInit {
   private readonly router = inject(Router);
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly destroyRef = inject(DestroyRef);
@@ -58,7 +56,6 @@ export class CaregiverReview implements OnInit {
   doctorName = signal<string | null>(null);
   parsedMeds = signal<ParsedMedication[]>([]);
 
-  // آخر وصفة محفوظة فعليًا، تُعرض في شاشة الملخص بعد الحفظ
   lastSavedPrescription = signal<{
     id: number;
     name: string;
@@ -196,7 +193,10 @@ export class CaregiverReview implements OnInit {
     ]);
   }
 
+<<<<<<< Updated upstream
   /** ينقل من شاشة المراجعة لشاشة الحفظ الفعلي */
+=======
+>>>>>>> Stashed changes
   confirmAndSave(): void {
     if (!this.currentPatientId) {
       this.errorText.set('تعذر تحديد المريض. حاول مرة أخرى.');
@@ -244,7 +244,6 @@ export class CaregiverReview implements OnInit {
         takeUntilDestroyed(this.destroyRef),
       )
       .subscribe((result) => {
-        // ✅ بعد الحفظ، نروح لشاشة الملخص (مش لصفحة التفاصيل مباشرة)
         this.lastSavedPrescription.set({
           id: result.prescriptionId,
           name: prescriptionName,
@@ -256,7 +255,6 @@ export class CaregiverReview implements OnInit {
       });
   }
 
-  /** يفتح صفحة التفاصيل الكاملة لوصفة معينة من شاشة الملخص */
   viewPrescriptionDetail(): void {
     const saved = this.lastSavedPrescription();
     if (!saved) return;

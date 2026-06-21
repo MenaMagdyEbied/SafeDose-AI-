@@ -1,10 +1,13 @@
-import { Component, inject } from '@angular/core';
+import { Component, DestroyRef, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ChatMessage } from '../../../core/models';
 import { Activity, LucideAngularModule, MessageSquare, Mic, Send, X } from 'lucide-angular';
 import { Auth } from '../../../core/auth/services/auth';
 import { Router } from '@angular/router';
 import { ChatBotService } from '../../../core/services/chat-bot-service';
 import { FormsModule } from '@angular/forms';
+import { EMPTY, from } from 'rxjs';
+import { catchError, finalize } from 'rxjs/operators';
 
 @Component({
   selector: 'app-chat-bot',
@@ -16,6 +19,7 @@ export class ChatBot {
   private readonly chatbotService = inject(ChatBotService);
   private readonly auth = inject(Auth);
   private readonly router = inject(Router);
+  private readonly destroyRef = inject(DestroyRef);
 
   isOpen = false;
   inputText = '';
@@ -59,9 +63,10 @@ export class ChatBot {
     }
   }
 
-  async sendMessage(): Promise<void> {
+  sendMessage(): void {
     const text = this.inputText.trim();
     if (!text) return;
+
     this.messages = [
       ...this.messages,
       { id: 'user-' + Date.now(), sender: 'user', text, timestamp: new Date() },
@@ -70,19 +75,40 @@ export class ChatBot {
     this.loading = true;
 
     const patientName = this.auth.user?.userName || 'أحمد';
-    const result = await this.chatbotService.sendMessage(text, this.messages, patientName);
-    this.messages = [
-      ...this.messages,
-      {
-        id: 'bot-' + Date.now(),
-        sender: 'bot',
-        text: result.reply,
-        timestamp: new Date(),
-        severityLevel: result.severityLevel,
-        actions: result.actions,
-      },
-    ];
-    this.loading = false;
+
+    from(this.chatbotService.sendMessage(text, this.messages, patientName))
+      .pipe(
+        catchError(() => {
+          this.messages = [
+            ...this.messages,
+            {
+              id: 'bot-' + Date.now(),
+              sender: 'bot',
+              text: 'حدث خطأ أثناء معالجة الرسالة. حاول مرة أخرى.',
+              timestamp: new Date(),
+              severityLevel: 'info',
+            },
+          ];
+          return EMPTY;
+        }),
+        finalize(() => {
+          this.loading = false;
+        }),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe((result) => {
+        this.messages = [
+          ...this.messages,
+          {
+            id: 'bot-' + Date.now(),
+            sender: 'bot',
+            text: result.reply,
+            timestamp: new Date(),
+            severityLevel: result.severityLevel,
+            // actions: result.actions,
+          },
+        ];
+      });
   }
 
   sendChip(chip: string): void {

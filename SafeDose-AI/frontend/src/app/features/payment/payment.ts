@@ -1,8 +1,12 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, DestroyRef, inject, OnInit } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CircleCheck, Lock, LucideAngularModule, Shield } from 'lucide-angular';
+import { EMPTY, from } from 'rxjs';
+import { catchError, finalize, switchMap } from 'rxjs/operators';
 import { Billing } from '../../core/services/billing';
+import { Auth } from '../../core/auth/services/auth';
 
 @Component({
   selector: 'app-payment',
@@ -14,6 +18,8 @@ export class Payment implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly billingService = inject(Billing);
+  private readonly authService = inject(Auth);
+  private readonly destroyRef = inject(DestroyRef);
 
   lockIcon = Lock;
   checkCircleIcon = CircleCheck;
@@ -21,10 +27,12 @@ export class Payment implements OnInit {
 
   loading = false;
   showSuccess = false;
+  showFailure = false;
   showError = false;
   errorText = '';
   planId = 'pro';
   verifying = false;
+  method: 'card' | 'wallet' = 'card';
 
   userForm = {
     fullName: '',
@@ -53,7 +61,6 @@ export class Payment implements OnInit {
   get tierCode() {
     return this.plans[this.planId] ? this.planId : 'premium-monthly';
   }
-
   get planName() {
     return this.plans[this.planId]?.name ?? '';
   }
@@ -63,21 +70,59 @@ export class Payment implements OnInit {
   get planFeatures() {
     return this.plans[this.planId]?.features ?? [];
   }
-
+  get paymentMethodValue(): string {
+    return this.method === 'card' ? 'card' : 'wallet';
+  }
   ngOnInit(): void {
-    this.route.queryParams.subscribe(async (params: any) => {
-      this.planId = params['plan'] ?? 'pro';
+    this.prefillUserData();
 
-      const merchantOrderId = params['merchant_order_id'];
-      if (merchantOrderId) {
-        this.verifying = true;
-        await this.verifyPayment(merchantOrderId);
-        this.verifying = false;
-      }
-    });
+    this.route.queryParams
+      .pipe(
+        switchMap((params: any) => {
+          this.planId = params['plan'] ?? 'pro';
+          const merchantOrderId = params['merchant_order_id'];
+
+          if (!merchantOrderId) {
+            return EMPTY;
+          }
+
+          this.verifying = true;
+          return from(this.billingService.getPaymentStatus(merchantOrderId)).pipe(
+            catchError(() => {
+              this.errorText = 'فشل التحقق من حالة الدفع.';
+              this.showError = true;
+              this.showFailure = true;
+              return EMPTY;
+            }),
+            finalize(() => {
+              this.verifying = false;
+            }),
+          );
+        }),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe((data: any) => {
+        if (data?.success) {
+          this.showSuccess = true;
+          this.showFailure = false;
+        } else if (data) {
+          this.errorText = 'لم يتم تأكيد الدفع. إذا تم خصم المبلغ، تواصل مع الدعم.';
+          this.showError = true;
+          this.showFailure = true;
+        }
+      });
   }
 
-  async pay(): Promise<void> {
+  private prefillUserData(): void {
+    const currentUser = this.authService.user;
+    if (currentUser) {
+      this.userForm.fullName = currentUser.name || currentUser.userName || '';
+      this.userForm.email = currentUser.email || '';
+      this.userForm.phoneNumber = currentUser.phone || '';
+    }
+  }
+
+  pay(): void {
     if (
       !this.userForm.fullName.trim() ||
       !this.userForm.email.trim() ||
@@ -90,40 +135,60 @@ export class Payment implements OnInit {
 
     this.loading = true;
     this.showError = false;
+    this.showFailure = false;
 
-    try {
-      const data = await this.billingService.checkout({
+    from(
+      this.billingService.checkout({
         tierCode: this.tierCode,
-        paymentMethod: 'paymob',
+        paymentMethod: this.paymentMethodValue,
         fullName: this.userForm.fullName,
         email: this.userForm.email,
         phoneNumber: this.userForm.phoneNumber,
+      }),
+    )
+      .pipe(
+        catchError((err: any) => {
+          this.errorText =
+            (typeof err?.error === 'string' ? err.error : err?.error?.message) ||
+            'حدث خطأ أثناء إنشاء طلب الدفع.';
+          this.showError = true;
+          this.showFailure = true;
+          return EMPTY;
+        }),
+        finalize(() => {
+          this.loading = false;
+        }),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe((data) => {
+        window.location.href = data.paymentUrl;
       });
-
-      window.location.href = data.paymentUrl;
-    } catch (err: any) {
-      this.errorText =
-        (typeof err?.error === 'string' ? err.error : err?.error?.message) ||
-        'حدث خطأ أثناء إنشاء طلب الدفع.';
-      this.showError = true;
-    } finally {
-      this.loading = false;
-    }
+  }
+  verifyPayment(merchantOrderId: string): void {
+    from(this.billingService.getPaymentStatus(merchantOrderId))
+      .pipe(
+        catchError(() => {
+          this.errorText = 'فشل التحقق من حالة الدفع.';
+          this.showError = true;
+          this.showFailure = true;
+          return EMPTY;
+        }),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe((data) => {
+        if (data.success) {
+          this.showSuccess = true;
+          this.showFailure = false;
+        } else {
+          this.errorText = 'لم يتم تأكيد الدفع. إذا تم خصم المبلغ، تواصل مع الدعم.';
+          this.showError = true;
+          this.showFailure = true;
+        }
+      });
   }
 
-  async verifyPayment(merchantOrderId: string): Promise<void> {
-    try {
-      const data = await this.billingService.getPaymentStatus(merchantOrderId);
-      if (data.success) {
-        this.showSuccess = true;
-      } else {
-        this.errorText = 'لم يتم تأكيد الدفع. إذا تم خصم المبلغ، تواصل مع الدعم.';
-        this.showError = true;
-      }
-    } catch {
-      this.errorText = 'فشل التحقق من حالة الدفع.';
-      this.showError = true;
-    }
+  closeFailureModal(): void {
+    this.showFailure = false;
   }
 
   goHome(): void {
@@ -131,4 +196,3 @@ export class Payment implements OnInit {
     this.router.navigate(['/home']);
   }
 }
-

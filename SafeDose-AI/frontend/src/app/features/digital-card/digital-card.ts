@@ -1,23 +1,47 @@
-import { Component, inject } from '@angular/core';
+import {
+  AfterViewInit,
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  DestroyRef,
+  inject,
+  signal,
+} from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
+import { EMPTY, from, of } from 'rxjs';
+import { catchError, finalize, map, switchMap } from 'rxjs/operators';
 import { Auth } from '../../core/auth/services/auth';
+import { UserProfile } from '../../core/auth/services/user-profile';
 import { CardData } from '../../core/models/card-data';
+import { MedicalCardService } from '../../core/services/medical-card';
 import { Card } from '../../shared/components/card/card';
-import { ArrowRight } from 'lucide-angular';
-
-import { Heart, Pill, Plus, Printer, QrCode, Shield, SquarePen, Trash2, X } from 'lucide-angular';
+import {
+  ArrowRight,
+  Heart,
+  Pill,
+  Printer,
+  QrCode,
+  Shield,
+  SquarePen,
+  Trash2,
+  X,
+} from 'lucide-angular';
 
 @Component({
   selector: 'app-digital-card',
-  imports: [LucideAngularModule, RouterLink, FormsModule, Card],
+  imports: [LucideAngularModule, FormsModule, Card],
   templateUrl: './digital-card.html',
   styleUrl: './digital-card.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class DigitalCard {
-  protected readonly router = inject(Router);
+export class DigitalCard implements AfterViewInit {
   private readonly auth = inject(Auth);
+  private readonly medicalCardService = inject(MedicalCardService);
+  private readonly userProfileService = inject(UserProfile);
+  private readonly cdr = inject(ChangeDetectorRef);
+  private readonly destroyRef = inject(DestroyRef);
 
   heartIcon = Heart;
   pillIcon = Pill;
@@ -26,42 +50,122 @@ export class DigitalCard {
   shieldIcon = Shield;
   editIcon = SquarePen;
   trashIcon = Trash2;
-  plusIcon = Plus;
   xIcon = X;
-
   arrowRightIcon = ArrowRight;
-  get userData() {
-    return {
-      phone: '+201099999999',
-      name: 'دعاء أشرف',
-      age: 30,
-      conditions: ['السكري', 'الضغط', 'القلب'],
-      allergies: 'لا يوجد',
-      doctorName: 'د. مجدي يعقوب',
-      subscriptionPlan: 'free',
-    };
-    // return this.auth.user;
+
+  loading = signal(false);
+  error = signal('');
+  qrImage = signal('');
+  cardLoaded = signal(false);
+  cardData = signal<CardData>({
+    id: '',
+    name: '',
+    age: 0,
+    medications: [],
+    allergies: [],
+    doctorName: '',
+    qrUrl: '',
+  });
+
+  private resolvePatientId() {
+    const fallback = 'd5b564aa-4a5b-4752-ba90-a0c822e71d9e';
+    return from(this.userProfileService.getUserProfile()).pipe(
+      map((profile: any) => {
+        const id = profile.patientId ?? profile.id ?? profile.userId;
+        return id ? String(id).trim() : fallback;
+      }),
+      catchError(() => of(fallback)),
+    );
+  }
+
+  loadCard(): void {
+    this.error.set('');
+    this.loading.set(true);
+    this.cdr.markForCheck();
+
+    this.resolvePatientId()
+      .pipe(
+        switchMap((patientId) => {
+          if (!patientId) {
+            this.error.set('لم يتم العثور على معرف المريض.');
+            this.cdr.markForCheck();
+            return EMPTY;
+          }
+
+          return from(
+            Promise.all([
+              this.medicalCardService.getPrivateCard(patientId),
+              this.medicalCardService.getPrivateQrCode(patientId),
+            ]),
+          );
+        }),
+        catchError(() => {
+          this.error.set('تعذر تحميل البطاقة الطبية الخاصة.');
+          return EMPTY;
+        }),
+        finalize(() => {
+          this.loading.set(false);
+          this.cdr.markForCheck();
+        }),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe(([card, qr]) => {
+        this.cardData.set(card);
+        this.qrImage.set(qr);
+        this.cardLoaded.set(true);
+        this.cdr.markForCheck();
+      });
+  }
+
+  ngAfterViewInit(): void {
+    queueMicrotask(() => {
+      this.loadCard();
+    });
   }
 
   printCard(): void {
     window.print();
   }
-  get cardData(): CardData {
-    return {
-      id: '123',
-      name: this.userData.name,
-      age: this.userData.age,
-      medications: [],
-      allergies: [this.userData.allergies],
-      doctorName: this.userData.doctorName,
-      qrUrl: `https://yourdomain.com/card/123`, // ← ده اللي الـ QR هيشاور عليه
-    };
+
+  downloadPdf(): void {
+    this.resolvePatientId()
+      .pipe(
+        switchMap((patientId) => {
+          if (!patientId) {
+            this.error.set('لم يتم العثور على معرف المريض لتحميل الملف.');
+            return EMPTY;
+          }
+
+          return from(this.medicalCardService.downloadPrivatePdf(patientId));
+        }),
+        catchError(() => {
+          this.error.set('تعذر تحميل ملف PDF للبطاقة.');
+          return EMPTY;
+        }),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe();
   }
 
   generateQR(): void {
-    // توديه لصفحة الـ QR وتبعتيله الـ URL
-    this.router.navigate(['/qr'], {
-      queryParams: { url: this.cardData.qrUrl },
-    });
+    this.resolvePatientId()
+      .pipe(
+        switchMap((patientId) => {
+          if (!patientId) {
+            this.error.set('لم يتم العثور على معرف المريض لإنشاء الـ QR.');
+            return EMPTY;
+          }
+
+          return from(this.medicalCardService.getPrivateQrCode(patientId));
+        }),
+        catchError(() => {
+          this.error.set('تعذر تحميل رمز الـ QR.');
+          return EMPTY;
+        }),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe((qrImage) => {
+        this.qrImage.set(qrImage);
+      });
   }
 }

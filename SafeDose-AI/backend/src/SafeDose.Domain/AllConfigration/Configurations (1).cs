@@ -119,8 +119,26 @@ public class PricingTierConfiguration : IEntityTypeConfiguration<PricingTier>
         b.Property(x => x.Currency).HasMaxLength(3);
         b.Property(x => x.BillingCycleDays).HasDefaultValue(0);
         b.Property(x => x.CreatedAt).HasDefaultValueSql("GETDATE()");
+        b.Property(x => x.TierNameArabic).HasMaxLength(120);
 
         b.HasIndex(x => x.TierCode).IsUnique();
+    }
+}
+
+public class PricingTierFeatureConfiguration : IEntityTypeConfiguration<PricingTierFeature>
+{
+    public void Configure(EntityTypeBuilder<PricingTierFeature> b)
+    {
+        b.HasKey(x => x.PricingTierFeatureId);
+
+        b.Property(x => x.LabelArabic).HasMaxLength(200).IsRequired();
+
+        b.HasOne(x => x.PricingTier)
+            .WithMany(t => t.Features)
+            .HasForeignKey(x => x.PricingTierId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        b.HasIndex(x => x.PricingTierId);
     }
 }
 

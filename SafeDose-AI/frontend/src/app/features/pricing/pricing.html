@@ -4,14 +4,6 @@
     <p class="text-on-surface-variant max-w-xl mx-auto text-sm sm:text-base">
       اختر الباقة المناسبة لك. ابدأ مجاناً وقم بالترقية في أي وقت.
     </p>
-    @if (upgradeRequired) {
-      <div class="bg-secondary/10 border border-secondary/30 rounded-2xl p-4 text-right space-y-1">
-        <p class="font-extrabold text-on-background">🔒 هذه الميزة تتطلب اشتراكاً مدفوعاً</p>
-        <p class="text-sm text-outline">
-          اختر الباقة المناسبة للوصول لميزة إدارة أفراد العيلة وغيرها
-        </p>
-      </div>
-    }
   </div>
   <!-- Loading -->
   @if (loading()) {
@@ -161,7 +153,7 @@
         <h3 class="font-bold text-on-background text-right">مقارنة الميزات</h3>
       </div>
       <div class="overflow-x-auto">
-        <table class="w-full text-sm min-w-[480px]">
+        <table class="w-full text-sm min-w-120">
           <thead class="bg-slate-50 text-outline">
             <tr>
               <th class="px-4 py-3 text-right font-bold">الميزة</th>

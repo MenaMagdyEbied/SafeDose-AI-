@@ -19,11 +19,9 @@ public class SqlPrescriptionRepository : IPrescriptionRepository
         using var transaction = await _db.Database.BeginTransactionAsync();
         try
         {
-            // Add prescription (this will also add Drugs and PatientMedications attached to Drugs)
             await _db.Prescriptions.AddAsync(prescription);
             await _db.SaveChangesAsync();
 
-            // Make sure the PatientMedication has the correct PrescriptionId populated
             if (prescription.Drugs != null)
             {
                 foreach (var drug in prescription.Drugs)
@@ -33,7 +31,6 @@ public class SqlPrescriptionRepository : IPrescriptionRepository
                         patientMedication.PrescriptionId = prescription.PrescriptionId;
                     }
                 }
-                // Save again to update the PrescriptionId in PatientMedications
                 await _db.SaveChangesAsync();
             }
 
@@ -47,9 +44,10 @@ public class SqlPrescriptionRepository : IPrescriptionRepository
         }
     }
 
-    public async Task<List<Prescription>> GetPrescriptionsByPatientIdAsync(int patientId)
+    public async Task<IReadOnlyList<Prescription>> GetPrescriptionsByPatientIdAsync(int patientId)
     {
         return await _db.Prescriptions
+            .AsNoTracking()
             .Where(p => p.PatientId == patientId)
             .Include(p => p.Drugs)
             .OrderByDescending(p => p.CreatedAt)
@@ -59,8 +57,9 @@ public class SqlPrescriptionRepository : IPrescriptionRepository
     public async Task<Prescription?> GetPrescriptionDetailsByIdAsync(int prescriptionId)
     {
         return await _db.Prescriptions
+            .AsNoTracking()
             .Where(p => p.PrescriptionId == prescriptionId)
-            .Include(p => p.Drugs)
+            .Include(p => p.Drugs!)
                 .ThenInclude(d => d.PatientMedications)
             .FirstOrDefaultAsync();
     }

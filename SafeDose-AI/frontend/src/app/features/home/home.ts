@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import {
@@ -61,8 +61,8 @@ export class Home {
     { id: 3, name: 'محمد علي', rating: 4, text: 'واجهة سهلة وبسيطة، وفحص التداخلات دقيق جداً.' },
   ];
 
-  showReviewForm = false;
-  newReview = { name: '', text: '', rating: 5 };
+  showReviewForm = signal(false);
+  newReview = signal({ name: '', text: '', rating: 5 });
 
   getStars(rating: number): number[] {
     return Array(rating).fill(0);
@@ -73,14 +73,14 @@ export class Home {
   }
 
   submitReview() {
-    if (!this.newReview.name.trim() || !this.newReview.text.trim()) return;
+    if (!this.newReview().name.trim() || !this.newReview().text.trim()) return;
     this.reviews.unshift({
       id: Date.now(),
-      name: this.newReview.name,
-      text: this.newReview.text,
-      rating: this.newReview.rating,
+      name: this.newReview().name,
+      text: this.newReview().text,
+      rating: this.newReview().rating,
     });
-    this.newReview = { name: '', text: '', rating: 5 };
-    this.showReviewForm = false;
+    this.newReview.set({ name: '', text: '', rating: 5 });
+    this.showReviewForm.set(false);
   }
 }

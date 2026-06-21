@@ -32,8 +32,6 @@ public class InteractionsController : ControllerBase
         _delete = delete;
     }
 
-    // The ONE check endpoint. Takes catalog drug IDs (from search OR from "my meds" checkboxes).
-    // Optional patientId pulls in the patient's age, allergies, chronic conditions, and active meds as context.
     [HttpPost("check")]
     public async Task<IActionResult> Check(
         [FromBody] CheckCatalogInteractionsRequestDto request,
@@ -53,6 +51,11 @@ public class InteractionsController : ControllerBase
         {
             return StatusCode(403, new ErrorResponse(
                 ErrorCodes.Forbidden, ArabicMessages.Forbidden));
+        }
+        catch (SafeDose.Application.Exceptions.QuotaExceededException ex)
+        {
+            return BadRequest(new ErrorResponse(
+                "QUOTA_EXCEEDED", ex.MessageArabic));
         }
         catch (ArgumentException ex)
         {

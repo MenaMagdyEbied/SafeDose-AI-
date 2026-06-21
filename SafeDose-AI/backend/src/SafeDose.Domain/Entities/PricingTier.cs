@@ -17,7 +17,13 @@ namespace SafeDose.Domain.Entities
         public bool IsActive { get; set; }
         public DateTime CreatedAt { get; set; }
 
+        // Admin-edit-plans screen — Arabic name shown to patients on the pricing page,
+        // and the timestamp of the most recent admin edit. Both nullable so existing rows are fine.
+        public string? TierNameArabic { get; set; }
+        public DateTime? UpdatedAt { get; set; }
+
         public ICollection<PricingChangeHistory> PricingChangeHistories { get; set; } = [];
         public ICollection<Subscription> Subscriptions { get; set; } = [];
+        public ICollection<PricingTierFeature> Features { get; set; } = [];
     }
 }

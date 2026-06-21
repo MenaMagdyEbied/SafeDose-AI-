@@ -1,32 +1,56 @@
 
+export interface PineconeCandidate {
+  score: number;
+  name: string;
+  scientific_name: string;
+  drug_class: string;
+}
+
+export type VerificationStatus = 'EXACT_MATCH' | 'POSSIBLE_MATCH' | 'NO_MATCH';
+export type VerificationNextAction =
+  | 'AUTO_SAVE'
+  | 'SHOW_CONFIRMATION_DIALOG'
+  | 'REQUEST_MANUAL_ENTRY';
+
+export interface MedVerification {
+  status: VerificationStatus;
+  patient_confirmation_required: boolean;
+  verified_scientific_name?: string;
+  match_reason?: string;
+  candidates_to_show_patient?: string[];
+  ui_message_arabic?: string;
+  next_action: VerificationNextAction;
+}
+
 export interface ParsedMedication {
+  raw_text?: string;
   drug_name_guess: string;
   dose_guess: string | null;
+  concentration_guess?: string | null;
+  dosage_form_guess?: string | null;
   frequency_guess: string | null;
   duration_guess: string | null;
-  needsReview: boolean;
+  confidence?: 'high' | 'medium' | 'low';
+  pinecone_candidates?: PineconeCandidate[];
+  verification?: MedVerification; // اختياري لأن الشكل المبسط مفيهوش
+  needsReview?: boolean;
 }
 
 export interface ParsePrescriptionResponse {
   doctor_name: string | null;
-  image_url: string | null;
+  doctor_specialty?: string | null;
+  clinic_name?: string | null;
+  patient_name?: string | null;
+  issue_date?: string | null;
+  image_url?: string | null; // ظهر في الشكل التاني
+  ocr_text?: string;
   medications: ParsedMedication[];
+  extraction_quality?: string;
+  warnings?: string[];
+  overall_next_action?: string;
 }
 
-export enum DrugRoute {
-  Oral = 0,
-}
-
-export enum DrugFrequency {
-  Daily = 1,
-}
-
-export enum MealTiming {
-  None = 0,
-  // ضبطيها حسب enum الباك إند الفعلي
-}
-
-export interface SavePrescriptionDrug {
+export interface SaveDrugDto {
   drugName: string;
   dose: string;
   doctorName: string;
@@ -41,7 +65,7 @@ export interface SavePrescriptionPayload {
   patientId: number;
   prescriptionName: string;
   imageUrl: string;
-  drugs: SavePrescriptionDrug[];
+  drugs: SaveDrugDto[];
 }
 
 export interface SavePrescriptionResult {

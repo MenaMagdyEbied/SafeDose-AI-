@@ -13,16 +13,26 @@
 
   @if (loading()) {
     <div class="bg-white rounded-3xl border border-outline-variant p-8 text-center space-y-4">
-      <div class="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto"></div>
+      <div
+        class="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto"
+      ></div>
       <p class="font-bold text-on-background text-sm">جاري تحميل الوصفات...</p>
     </div>
   }
 
   @if (!loading() && prescriptions().length === 0 && !errorText()) {
-    <div class="bg-white rounded-3xl border border-outline-variant p-8 sm:p-12 text-center space-y-3">
-      <lucide-icon [img]="alertTriangleIcon" class="w-12 h-12 text-outline/30 mx-auto"></lucide-icon>
+    <div
+      class="bg-white rounded-3xl border border-outline-variant p-8 sm:p-12 text-center space-y-3"
+    >
+      <lucide-icon
+        [img]="alertTriangleIcon"
+        class="w-12 h-12 text-outline/30 mx-auto"
+      ></lucide-icon>
       <p class="font-bold text-on-background text-sm">لا توجد وصفات مسجلة بعد</p>
-      <a routerLink="/caregiver-review" class="inline-block bg-primary text-white px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-primary-dark transition-all cursor-pointer">
+      <a
+        routerLink="/caregiver-review"
+        class="inline-block bg-primary text-white px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-primary-dark transition-all cursor-pointer"
+      >
         مسح وصفة جديدة
       </a>
     </div>
@@ -31,7 +41,9 @@
   @if (!loading() && prescriptions().length > 0) {
     <div class="space-y-4">
       <!-- Success Banner -->
-      <div class="flex items-center gap-3 bg-emerald-50 text-emerald-800 p-4 rounded-xl border border-emerald-200">
+      <div
+        class="flex items-center gap-3 bg-emerald-50 text-emerald-800 p-4 rounded-xl border border-emerald-200"
+      >
         <lucide-icon [img]="checkCircleIcon" class="w-6 h-6 shrink-0"></lucide-icon>
         <div class="text-right">
           <p class="font-bold text-sm">وصفاتك المحفوظة</p>
@@ -62,18 +74,15 @@
               <div>
                 <h3 class="font-extrabold text-on-background text-sm">{{ prescription.name }}</h3>
                 <p class="text-xs text-outline">
-                  {{ prescription.date }} · {{ prescription.meds.length }} أدوية ·
-                  <span [class]="prescription.source === 'scan' ? 'text-primary' : 'text-tertiary'">
-                    {{ prescription.source === 'scan' ? '📷 مسح' : '✍️ يدوي' }}
-                  </span>
+                  {{ prescription.date }} · {{ prescription.drugCount }} أدوية
                 </p>
               </div>
             </div>
 
             <div class="flex flex-wrap gap-2 justify-end">
-              @for (med of prescription.meds; track med.name) {
+              @for (name of prescription.drugNames; track name) {
                 <span class="px-2.5 py-1 bg-primary/10 text-primary rounded-full text-xs font-bold">
-                  {{ med.name }}
+                  {{ name }}
                 </span>
               }
             </div>
@@ -86,20 +95,33 @@
 
 <!-- Delete Confirm Modal -->
 @if (showDeleteConfirm()) {
-  <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in" dir="rtl">
+  <div
+    class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in"
+    dir="rtl"
+  >
     <div class="bg-white rounded-3xl p-6 shadow-2xl max-w-sm w-full text-center space-y-4">
-      <div class="w-14 h-14 bg-danger-container rounded-full flex items-center justify-center mx-auto">
+      <div
+        class="w-14 h-14 bg-danger-container rounded-full flex items-center justify-center mx-auto"
+      >
         <lucide-icon [img]="trashIcon" class="w-7 h-7 text-danger"></lucide-icon>
       </div>
       <div class="space-y-1">
         <h3 class="text-lg font-extrabold text-on-background">حذف الوصفة؟</h3>
-        <p class="text-sm text-outline">هيتم حذف "{{ prescriptionToDelete()?.name }}" ومش هترجع تاني</p>
+        <p class="text-sm text-outline">
+          هيتم حذف "{{ prescriptionToDelete()?.name }}" ومش هترجع تاني
+        </p>
       </div>
       <div class="grid grid-cols-2 gap-3">
-        <button (click)="deleteConfirmed()" class="w-full h-12 bg-danger hover:bg-red-700 text-white rounded-2xl font-bold text-sm cursor-pointer transition-all">
+        <button
+          (click)="deleteConfirmed()"
+          class="w-full h-12 bg-danger hover:bg-red-700 text-white rounded-2xl font-bold text-sm cursor-pointer transition-all"
+        >
           حذف
         </button>
-        <button (click)="cancelDelete()" class="w-full h-12 bg-slate-100 hover:bg-slate-200 text-on-surface-variant rounded-2xl font-bold text-sm cursor-pointer transition-all">
+        <button
+          (click)="cancelDelete()"
+          class="w-full h-12 bg-slate-100 hover:bg-slate-200 text-on-surface-variant rounded-2xl font-bold text-sm cursor-pointer transition-all"
+        >
           إلغاء
         </button>
       </div>

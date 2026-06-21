@@ -1,9 +1,10 @@
+
 export interface PrescriptionListItem {
   id: number;
   name: string;
   date: string;
-  source: 'scan' | 'manual';
-  meds: { name: string }[];
+  drugCount: number;
+  drugNames: string[];
 }
 
 export interface PrescriptionDetailMed {
@@ -13,14 +14,15 @@ export interface PrescriptionDetailMed {
   duration: string;
   chemicalName?: string;
   registryCode?: string;
-  warning?: string | null;
+  warning?: string;
 }
 
 export interface PrescriptionDetail {
   id: number;
   name: string;
   date: string;
-  source: 'scan' | 'manual';
+  drugCount: number;
   doctorName?: string | null;
+  source?: 'scan' | 'manual';
   meds: PrescriptionDetailMed[];
 }

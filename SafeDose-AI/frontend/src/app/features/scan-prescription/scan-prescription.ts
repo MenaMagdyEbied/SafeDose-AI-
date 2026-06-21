@@ -15,11 +15,27 @@ import {
 } from 'lucide-angular';
 import { EMPTY, from } from 'rxjs';
 import { catchError, finalize } from 'rxjs/operators';
-import { ParsedMedication, SavePrescriptionPayload } from '../../core/models/prescription-api';
+import {
+  ParsedMedication,
+  SaveDrugDto,
+  SavePrescriptionPayload,
+} from '../../core/models/prescription-api';
 import { PatientService } from '../../core/services/patient';
 import { Prescription } from '../../core/services/prescription';
+import { Interaction } from '../../core/services/interaction';
+
 type ViewStage = 'upload' | 'review' | 'summary';
 
+interface ReviewMed extends ParsedMedication {
+  resolvedName: string;
+  searchSuggestions: string[];
+  frequencyNumber: number;
+  doctorName: string;
+  dose: string;
+  startDate: string;
+  endDate: string;
+  mealTiming: number;
+}
 @Component({
   selector: 'app-scan-prescription',
   imports: [LucideAngularModule],
@@ -32,6 +48,7 @@ export class ScanPrescription implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
   private readonly prescriptionService = inject(Prescription);
   private readonly patientService = inject(PatientService);
+  private readonly interactionService = inject(Interaction);
 
   stage = signal<ViewStage>('upload');
   loading = signal(false);
@@ -52,9 +69,10 @@ export class ScanPrescription implements OnInit {
   eyeIcon = Eye;
 
   private currentPatientId: number | null = null;
+  private today = new Date().toISOString().slice(0, 10);
 
   doctorName = signal<string | null>(null);
-  parsedMeds = signal<ParsedMedication[]>([]);
+  reviewMeds = signal<ReviewMed[]>([]);
 
   lastSavedPrescription = signal<{
     id: number;
@@ -63,6 +81,14 @@ export class ScanPrescription implements OnInit {
     source: 'scan' | 'manual';
     meds: { name: string }[];
   } | null>(null);
+
+  frequencyOptions = [1, 2, 3, 4];
+  mealTimingOptions = [
+    { value: 0, label: 'بدون تحديد' },
+    { value: 1, label: 'قبل الأكل' },
+    { value: 2, label: 'مع الأكل' },
+    { value: 3, label: 'بعد الأكل' },
+  ];
 
   ngOnInit(): void {
     this.patientService
@@ -151,37 +177,71 @@ export class ScanPrescription implements OnInit {
       )
       .subscribe((res) => {
         this.doctorName.set(res.doctor_name);
-        this.parsedMeds.set(res.medications);
+        const meds = res.medications.map((m) => this.toReviewMed(m));
+        this.reviewMeds.set(meds);
         this.stage.set('review');
+
+        // بحث تلقائي في الكتالوج لكل دواء بناءً على الاسم المخمّن
+        meds.forEach((m, i) => this.searchForMed(i, m.resolvedName));
       });
   }
 
-  addManually(): void {
-    this.doctorName.set(null);
-    this.parsedMeds.set([
-      {
-        drug_name_guess: '',
-        dose_guess: '',
-        frequency_guess: '',
-        duration_guess: null,
-        needsReview: true,
-      },
-    ]);
-    this.stage.set('review');
+  private toReviewMed(m: ParsedMedication): ReviewMed {
+    return {
+      ...m,
+      resolvedName: m.drug_name_guess ?? '',
+      searchSuggestions: [],
+      frequencyNumber: this.parseFrequencyNumber(m.frequency_guess),
+      doctorName: this.doctorName() ?? '',
+      dose: m.dose_guess ?? '',
+      startDate: this.today,
+      endDate: this.today,
+      mealTiming: 0,
+    };
   }
 
-  updateMed(index: number, field: keyof ParsedMedication, value: string): void {
-    this.parsedMeds.update((list) =>
+  /** بيدور في /drugs/search عشان يطلع اقتراحات حقيقية من الكتالوج لكل دواء */
+  private searchForMed(index: number, query: string): void {
+    if (!query?.trim()) return;
+
+    from(this.interactionService.searchDrugs(query))
+      .pipe(
+        catchError(() => EMPTY),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe((results) => {
+        const names = results.map((r) => r.commercialNameAr || r.commercialNameEn);
+        this.reviewMeds.update((list) =>
+          list.map((m, i) => (i === index ? { ...m, searchSuggestions: names } : m)),
+        );
+      });
+  }
+
+  onDrugNameInput(index: number, value: string): void {
+    this.reviewMeds.update((list) =>
+      list.map((m, i) => (i === index ? { ...m, resolvedName: value } : m)),
+    );
+    this.searchForMed(index, value);
+  }
+
+  selectSuggestion(index: number, name: string): void {
+    this.reviewMeds.update((list) =>
+      list.map((m, i) => (i === index ? { ...m, resolvedName: name, searchSuggestions: [] } : m)),
+    );
+  }
+
+  updateMedField(index: number, field: keyof ReviewMed, value: any): void {
+    this.reviewMeds.update((list) =>
       list.map((m, i) => (i === index ? { ...m, [field]: value } : m)),
     );
   }
 
   removeMed(index: number): void {
-    this.parsedMeds.update((list) => list.filter((_, i) => i !== index));
+    this.reviewMeds.update((list) => list.filter((_, i) => i !== index));
   }
 
   addEmptyMed(): void {
-    this.parsedMeds.update((list) => [
+    this.reviewMeds.update((list) => [
       ...list,
       {
         drug_name_guess: '',
@@ -189,43 +249,55 @@ export class ScanPrescription implements OnInit {
         frequency_guess: '',
         duration_guess: null,
         needsReview: true,
+        resolvedName: '',
+        searchSuggestions: [],
+        frequencyNumber: 1,
+        doctorName: this.doctorName() ?? '',
+        dose: '',
+        startDate: this.today,
+        endDate: this.today,
+        mealTiming: 0,
       },
     ]);
   }
 
-<<<<<<< Updated upstream
-  /** ينقل من شاشة المراجعة لشاشة الحفظ الفعلي */
-=======
->>>>>>> Stashed changes
+  addManually(): void {
+    this.doctorName.set(null);
+    this.reviewMeds.set([]);
+    this.addEmptyMed();
+    this.stage.set('review');
+  }
+
   confirmAndSave(): void {
     if (!this.currentPatientId) {
       this.errorText.set('تعذر تحديد المريض. حاول مرة أخرى.');
       return;
     }
 
-    const validMeds = this.parsedMeds().filter((m) => m.drug_name_guess.trim());
+    const validMeds = this.reviewMeds().filter((m) => m.resolvedName.trim());
     if (validMeds.length === 0) {
       this.errorText.set('أضف دواء واحد على الأقل قبل الحفظ.');
       return;
     }
 
-    const today = new Date().toISOString().slice(0, 10);
     const prescriptionName = 'وصفة بتاريخ ' + new Date().toLocaleDateString('ar-EG');
+
+    const drugs: SaveDrugDto[] = validMeds.map((m) => ({
+      drugName: m.resolvedName.trim(),
+      dose: m.dose,
+      doctorName: m.doctorName,
+      route: 0,
+      frequency: m.frequencyNumber,
+      startDate: m.startDate,
+      endDate: m.endDate,
+      mealTiming: m.mealTiming,
+    }));
 
     const payload: SavePrescriptionPayload = {
       patientId: this.currentPatientId,
       prescriptionName,
       imageUrl: '',
-      drugs: validMeds.map((m) => ({
-        drugName: m.drug_name_guess.trim(),
-        dose: m.dose_guess ?? '',
-        doctorName: this.doctorName() ?? '',
-        route: 0,
-        frequency: this.parseFrequencyNumber(m.frequency_guess),
-        startDate: today,
-        endDate: today,
-        mealTiming: 0,
-      })),
+      drugs,
     };
 
     this.saving.set(true);
@@ -234,7 +306,10 @@ export class ScanPrescription implements OnInit {
     from(this.prescriptionService.save(payload))
       .pipe(
         catchError((err) => {
-          this.errorText.set(err?.error?.message || 'حدث خطأ أثناء حفظ الوصفة. حاول مرة أخرى.');
+          this.errorText.set(
+            (typeof err?.error === 'string' ? err.error : err?.error?.message) ||
+              'حدث خطأ أثناء حفظ الوصفة. حاول مرة أخرى.',
+          );
           return EMPTY;
         }),
         finalize(() => {
@@ -249,7 +324,7 @@ export class ScanPrescription implements OnInit {
           name: prescriptionName,
           date: new Date().toLocaleDateString('ar-EG'),
           source: this.doctorName() ? 'scan' : 'manual',
-          meds: validMeds.map((m) => ({ name: m.drug_name_guess })),
+          meds: validMeds.map((m) => ({ name: m.resolvedName })),
         });
         this.stage.set('summary');
       });
@@ -258,43 +333,35 @@ export class ScanPrescription implements OnInit {
   viewPrescriptionDetail(): void {
     const saved = this.lastSavedPrescription();
     if (!saved) return;
-
-    this.router.navigate(['/prescription-detail', saved.id], {
-      state: {
-        prescription: {
-          id: saved.id,
-          name: saved.name,
-          date: saved.date,
-          source: saved.source,
-          doctorName: this.doctorName(),
-          meds: this.parsedMeds()
-            .filter((m) => m.drug_name_guess.trim())
-            .map((m) => ({
-              name: m.drug_name_guess,
-              dose: m.dose_guess ?? '',
-              frequency: m.frequency_guess ?? '',
-              duration: m.duration_guess ?? '',
-            })),
-        },
-      },
-    });
+    this.router.navigate(['/prescription-detail', saved.id]);
   }
 
   private parseFrequencyNumber(text: string | null): number {
     if (!text) return 1;
-    if (text.includes('مرتين') || text.toLowerCase().includes('twice')) return 2;
-    if (text.includes('ثلاث') || text.includes('٣')) return 3;
-    if (text.includes('أربع') || text.includes('٤')) return 4;
+    const t = text.toLowerCase();
+
+    if (t.includes('مرتين') || t.includes('twice') || t.includes('2 times') || t.includes('2x'))
+      return 2;
+    if (t.includes('ثلاث') || t.includes('٣') || t.includes('3 times') || t.includes('3x'))
+      return 3;
+    if (t.includes('أربع') || t.includes('٤') || t.includes('4 times') || t.includes('4x'))
+      return 4;
+
+    const everyHoursMatch = t.match(/every\s+(\d+)\s+hours?/);
+    if (everyHoursMatch) {
+      const hours = parseInt(everyHoursMatch[1], 10);
+      if (hours > 0) return Math.max(1, Math.round(24 / hours));
+    }
+
     return 1;
   }
-
   goHome(): void {
-    this.router.navigate(['/patient']);
+    this.router.navigate(['/patient-home']);
   }
 
   reset(): void {
     this.stage.set('upload');
-    this.parsedMeds.set([]);
+    this.reviewMeds.set([]);
     this.doctorName.set(null);
     this.lastSavedPrescription.set(null);
     this.errorText.set('');

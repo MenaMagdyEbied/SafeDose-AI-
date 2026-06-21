@@ -1,11 +1,18 @@
-import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { ParsePrescriptionResponse, SavePrescriptionPayload } from '../models/prescription-api';
-import { PrescriptionListItem } from '../models/prescription-list';
-import { PrescriptionDetail } from '../../features/prescription-detail/prescription-detail';
+import {
+  ParsePrescriptionResponse,
+  SavePrescriptionPayload,
+  SavePrescriptionResult,
+} from '../models/prescription-api';
+import { PrescriptionDetail, PrescriptionListItem } from '../models/prescription-list';
 
+interface ApiEnvelope<T> {
+  success: boolean;
+  data: T;
+}
 @Injectable({
   providedIn: 'root',
 })
@@ -13,8 +20,8 @@ export class Prescription {
   private readonly baseUrl = environment.apiUrl + '/Prescriptions';
   private readonly http = inject(HttpClient);
 
-  // POST /api/Prescriptions/parse
-  parse(file: File): Promise<ParsePrescriptionResponse> {
+  /** POST /api/Prescriptions/parse — يحلل صورة الوصفة بالذكاء الاصطناعي */
+  async parse(file: File): Promise<ParsePrescriptionResponse> {
     const formData = new FormData();
     formData.append('file', file);
     return firstValueFrom(
@@ -22,23 +29,47 @@ export class Prescription {
     );
   }
 
-  // POST /api/Prescriptions/save
-  save(payload: SavePrescriptionPayload): Promise<{ prescriptionId: number }> {
-    return firstValueFrom(
-      this.http.post<{ prescriptionId: number }>(`${this.baseUrl}/save`, payload),
-    );
-  } 
-  getByPatient(patientId: number): Promise<PrescriptionListItem[]> {
-    return firstValueFrom(
-      this.http.get<PrescriptionListItem[]>(`${this.baseUrl}/patient/${patientId}`),
-    );
+  /** POST /api/Prescriptions/save */
+  async save(payload: SavePrescriptionPayload): Promise<SavePrescriptionResult> {
+    return firstValueFrom(this.http.post<SavePrescriptionResult>(`${this.baseUrl}/save`, payload));
   }
 
-  getById(id: number): Promise<PrescriptionDetail> {
-    return firstValueFrom(this.http.get<PrescriptionDetail>(`${this.baseUrl}/${id}`));
+  /** GET /api/Prescriptions/Patient/{patientId}/Summary */
+  async getByPatient(patientId: number): Promise<PrescriptionListItem[]> {
+    const res = await firstValueFrom(
+      this.http.get<ApiEnvelope<any[]>>(`${this.baseUrl}/Patient/${patientId}/Summary`),
+    );
+    return res.data.map((item) => ({
+      id: item.prescriptionId,
+      name: item.prescriptionName,
+      date: item.date,
+      drugCount: item.drugCount,
+      drugNames: item.drugNames ?? [],
+    }));
   }
 
-  delete(id: number): Promise<void> {
-    return firstValueFrom(this.http.delete<void>(`${this.baseUrl}/${id}`));
+  /** GET /api/Prescriptions/{prescriptionId}/Details */
+  async getById(prescriptionId: number): Promise<PrescriptionDetail> {
+    const res = await firstValueFrom(
+      this.http.get<ApiEnvelope<any>>(`${this.baseUrl}/${prescriptionId}/Details`),
+    );
+    const d = res.data;
+    return {
+      id: d.prescriptionId,
+      name: d.prescriptionName,
+      date: d.date,
+      drugCount: d.drugCount,
+      meds: (d.medications ?? []).map((m: any) => ({
+        name: m.drugName,
+        dose: m.dose,
+        frequency: m.frequency,
+        duration: m.duration,
+      })),
+    };
+  }
+
+  // مفيش delete endpoint ظاهر في Swagger لسه، سيبتها زي ما هي مؤقتًا
+  async delete(id: number): Promise<void> {
+    await firstValueFrom(this.http.delete(`${this.baseUrl}/${id}`));
   }
 }

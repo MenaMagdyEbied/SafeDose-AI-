@@ -15,9 +15,7 @@
     <PackageReference Include="QRCoder" Version="1.8.0" />
     <PackageReference Include="QuestPDF" Version="2026.6.0" />
     <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="8.0.0" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\SafeDose.Domain\SafeDose.Domain.csproj" />
-    <ProjectReference Include="..\SafeDose.Shared\SafeDose.Shared.csproj" />
-  </ItemGroup>
-</Project>
+
+    <!-- Admin dashboard module dependencies -->
+    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions

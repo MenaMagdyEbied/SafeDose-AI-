@@ -1,8 +1,6 @@
 using Microsoft.Extensions.Configuration;
 using SafeDose.Application.DTOs.PrescriptionDTOs;
 using SafeDose.Application.Interfaces;
-using System.IO;
-using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -24,58 +22,50 @@ public class LangflowPrescriptionClient : ILangflowPrescriptionClient
 
     public async Task<ParsedPrescriptionDto> ParsePrescriptionAsync(Stream imageStream, string fileName, string contentType)
     {
-        // 1. Prepare base address and flow ID
-        var uri = new Uri(_flowUrl);
-        var baseAddress = $"{uri.Scheme}://{uri.Authority}";
-        var flowId = uri.Segments.Last().Trim('/');
-
-        // 2. Read the image into memory
+        // 1. Read the image into memory
         using var memoryStream = new MemoryStream();
         await imageStream.CopyToAsync(memoryStream);
         var imageBytes = memoryStream.ToArray();
 
-        // 3. Upload the image to Langflow
-        var uploadUrl = $"{baseAddress}/api/v1/files/upload/{flowId}";
-        var filePath = await UploadImageAsync(uploadUrl, imageBytes, fileName, contentType);
+        // 2. Convert image to base64 data URL.
+        // This is the only confirmed-working method to get the image to Gemini via the Langflow API.
+        // File-path-based upload does NOT pass the image correctly to the vision model.
+        var base64 = Convert.ToBase64String(imageBytes);
+        var dataUrl = $"data:{contentType};base64,{base64}";
 
-        // If the first upload URL fails, try the fallback URL
-        if (string.IsNullOrEmpty(filePath))
-        {
-            var fallbackUrl = $"{baseAddress}/api/v1/upload/{flowId}";
-            filePath = await UploadImageAsync(fallbackUrl, imageBytes, fileName, contentType);
-        }
-
-        if (string.IsNullOrEmpty(filePath))
-        {
-            throw new Exception("Failed to upload the image to Langflow.");
-        }
-
-        // 4. Ask Langflow to process the uploaded file
-        return await ParsePrescriptionByUrlAsync(filePath);
+        // 3. Send to Langflow with image embedded as base64
+        return await ParsePrescriptionByUrlAsync(dataUrl);
     }
 
     public async Task<ParsedPrescriptionDto> ParsePrescriptionByUrlAsync(string imageUrlOrPath)
     {
-        // 1. Prepare the request body
-        // Langflow needs the image passed in a 'files' array for the Chat Input, not as plain text.
+        // Generate a unique session ID per request.
+        // This prevents contamination from old Playground sessions stored in Langflow's chat history.
+        var sessionId = Guid.NewGuid().ToString();
+
         var requestBody = new
         {
-            input_value = "Extract the prescription data from the attached image.",
+            input_value = "",          // Empty - exactly like the Playground (image only, no user text)
             input_type = "chat",
             output_type = "chat",
+            session_id = sessionId,
             tweaks = new Dictionary<string, object>
             {
-                { "Chat Input", new { files = new[] { imageUrlOrPath } } }
+                {
+                    "ChatInput-272Js", new
+                    {
+                        files = new[] { imageUrlOrPath }
+                    }
+                }
             }
         };
 
-        // 2. Send the request to Langflow
         using var request = new HttpRequestMessage(HttpMethod.Post, _flowUrl);
         request.Headers.Add("x-api-key", _apiKey);
         request.Content = JsonContent.Create(requestBody);
 
         var response = await _httpClient.SendAsync(request);
-        
+
         if (!response.IsSuccessStatusCode)
         {
             var errorContent = await response.Content.ReadAsStringAsync();
@@ -86,44 +76,12 @@ public class LangflowPrescriptionClient : ILangflowPrescriptionClient
         return MapLangflowResponseToDto(responseContent);
     }
 
-    private async Task<string> UploadImageAsync(string url, byte[] imageBytes, string fileName, string contentType)
-    {
-        try
-        {
-            using var formData = new MultipartFormDataContent();
-            
-            var fileContent = new ByteArrayContent(imageBytes);
-            fileContent.Headers.ContentType = new MediaTypeHeaderValue(contentType);
-            
-            formData.Add(fileContent, "file", fileName);
-
-            using var request = new HttpRequestMessage(HttpMethod.Post, url);
-            request.Headers.Add("x-api-key", _apiKey);
-            request.Content = formData;
-
-            var response = await _httpClient.SendAsync(request);
-            if (!response.IsSuccessStatusCode)
-                return null; // Return null if upload fails
-
-            // Parse response to get the file path
-            var responseContent = await response.Content.ReadAsStringAsync();
-            var jsonNode = JsonNode.Parse(responseContent);
-            return jsonNode?["file_path"]?.ToString();
-        }
-        catch
-        {
-            return null;
-        }
-    }
-
     private ParsedPrescriptionDto MapLangflowResponseToDto(string rawJson)
     {
         try
         {
-            // 1. Parse the JSON response dynamically
             var jsonNode = JsonNode.Parse(rawJson);
 
-            // 2. Go deep into the Langflow response structure to find the actual text message
             var textResult = jsonNode?["outputs"]?[0]?["outputs"]?[0]?["results"]?["message"]?["text"]?.ToString();
 
             if (string.IsNullOrEmpty(textResult))
@@ -131,22 +89,23 @@ public class LangflowPrescriptionClient : ILangflowPrescriptionClient
                 throw new Exception($"Could not find the text message in Langflow response. Raw JSON: {rawJson}");
             }
 
-            // 3. Clean up the text (Remove Markdown formatting like ```json and ```)
             var cleanJson = textResult
                 .Replace("```json", "", StringComparison.OrdinalIgnoreCase)
                 .Replace("```", "")
                 .Trim();
 
-            // 4. Convert the clean JSON text into our C# Object
+            // Check if the AI returned an error response (e.g., image not recognized as a prescription)
+            var parsedNode = JsonNode.Parse(cleanJson);
+            var errorField = parsedNode?["error"]?.ToString();
+            if (!string.IsNullOrEmpty(errorField))
+            {
+                throw new Exception($"AI could not process the image: {errorField}");
+            }
+
             var dto = JsonSerializer.Deserialize<ParsedPrescriptionDto>(cleanJson, new JsonSerializerOptions
             {
                 PropertyNameCaseInsensitive = true
             });
-
-            if (dto == null || (dto.PrescriptionName == null && (dto.Drugs == null || dto.Drugs.Count == 0)))
-            {
-                throw new Exception($"DEBUG: Langflow returned empty DTO. Raw text from Langflow: {textResult}");
-            }
 
             return dto ?? new ParsedPrescriptionDto();
         }

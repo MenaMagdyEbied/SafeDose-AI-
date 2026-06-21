@@ -5,6 +5,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="Hangfire.AspNetCore" Version="1.8.23" />
+    <PackageReference Include="Hangfire.SqlServer" Version="1.8.23" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.0" />
@@ -15,6 +17,7 @@
     <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.8" />
     <PackageReference Include="QRCoder" Version="1.8.0" />
     <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="8.0.0" />
+    <PackageReference Include="WebPush" Version="1.0.13" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\SafeDose.Application\SafeDose.Application.csproj" />

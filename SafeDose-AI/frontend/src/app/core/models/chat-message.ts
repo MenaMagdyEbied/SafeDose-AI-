@@ -1,4 +1,4 @@
-import { ChatAction } from './chat-action';
+// import { ChatAction } from './chat-action';
 
 export interface ChatMessage {
   id: string;
@@ -6,6 +6,6 @@ export interface ChatMessage {
   text: string;
   timestamp: Date;
   severityLevel?: 'safe' | 'caution' | 'danger' | 'info';
-  actions?: ChatAction[];
+  // actions?: ChatAction[];
   isPlayingSpeech?: boolean;
 }

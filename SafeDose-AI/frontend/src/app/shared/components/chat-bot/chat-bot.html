@@ -91,7 +91,7 @@
               <div [class]="getMsgClass(msg)">
                 <p class="whitespace-pre-wrap">{{ msg.text }}</p>
               </div>
-              @if (msg.sender === 'bot' && msg.actions && msg.actions.length > 0) {
+              <!-- @if (msg.sender === 'bot' && msg.actions && msg.actions.length > 0) {
                 <div class="flex flex-wrap gap-2 justify-start pt-1">
                   @for (act of msg.actions; track act.action) {
                     <button
@@ -102,7 +102,7 @@
                     </button>
                   }
                 </div>
-              }
+              } -->
             </div>
             @if (msg.sender === 'user') {
               <div

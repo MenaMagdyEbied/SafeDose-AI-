@@ -193,7 +193,10 @@ export class ScanPrescription implements OnInit {
     ]);
   }
 
+<<<<<<< Updated upstream
   /** ينقل من شاشة المراجعة لشاشة الحفظ الفعلي */
+=======
+>>>>>>> Stashed changes
   confirmAndSave(): void {
     if (!this.currentPatientId) {
       this.errorText.set('تعذر تحديد المريض. حاول مرة أخرى.');

@@ -1,6 +1,6 @@
 <section class="container-app space-y-6 pt-16 pb-24" dir="rtl">
   <!-- Loading -->
-  @if (loading()) {
+  @if (loading) {
     <div class="space-y-4 animate-pulse">
       <div class="h-28 bg-surface-container rounded-2xl"></div>
       <div class="h-48 bg-surface-container rounded-2xl"></div>
@@ -8,7 +8,7 @@
     </div>
   }
 
-  @if (!loading()) {
+  @if (!loading) {
     <div class="max-w-full mx-auto space-y-6">
       <!-- Header -->
       <div class="flex items-center justify-between">
@@ -17,14 +17,14 @@
           <p class="text-xs text-outline">رقم المستخدم: {{ profile.id }}</p>
         </div>
         <button
-          (click)="editMode.set(!editMode())"
+          (click)="editMode = !editMode"
           [class]="
-            editMode()
+            editMode
               ? 'px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold border border-outline-variant text-outline hover:bg-slate-50 transition-all cursor-pointer'
               : 'px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-primary text-white hover:bg-primary-dark transition-all cursor-pointer'
           "
         >
-          {{ editMode() ? 'إلغاء' : 'تعديل' }}
+          {{ editMode ? 'إلغاء' : 'تعديل' }}
         </button>
       </div>
 
@@ -37,7 +37,7 @@
             >
               {{ profile.fullName ? profile.fullName[0] : '؟' }}
             </div>
-            @if (editMode()) {
+            @if (editMode) {
               <button
                 class="absolute -bottom-1 -left-1 w-7 h-7 bg-primary text-white rounded-full flex items-center justify-center shadow cursor-pointer"
               >
@@ -46,7 +46,7 @@
             }
           </div>
           <div class="flex-1 text-right space-y-1 min-w-0">
-            @if (editMode()) {
+            @if (editMode) {
               <input
                 [(ngModel)]="profile.fullName"
                 class="w-full h-10 px-3 bg-surface-container-low border border-outline-variant rounded-xl text-sm font-bold outline-none focus:border-primary"
@@ -78,7 +78,7 @@
         <div class="p-4 sm:p-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div class="space-y-1 text-right">
             <label class="text-xs font-bold text-outline">رقم الهاتف</label>
-            @if (editMode()) {
+            @if (editMode) {
               <input
                 [(ngModel)]="profile.phone"
                 dir="ltr"
@@ -93,7 +93,7 @@
 
           <div class="space-y-1 text-right">
             <label class="text-xs font-bold text-outline">البريد الإلكتروني</label>
-            @if (editMode()) {
+            @if (editMode) {
               <input
                 [(ngModel)]="profile.email"
                 dir="ltr"
@@ -108,7 +108,7 @@
 
           <div class="space-y-1 text-right">
             <label class="text-xs font-bold text-outline">العمر</label>
-            @if (editMode()) {
+            @if (editMode) {
               <input
                 [(ngModel)]="profile.age"
                 type="number"
@@ -123,7 +123,7 @@
 
           <div class="space-y-1 text-right">
             <label class="text-xs font-bold text-outline">الجنس</label>
-            @if (editMode()) {
+            @if (editMode) {
               <select
                 [(ngModel)]="profile.gender"
                 class="w-full h-10 px-3 bg-surface-container-low border border-outline-variant rounded-xl text-sm font-bold outline-none focus:border-primary"
@@ -139,7 +139,7 @@
 
           <div class="space-y-1 text-right">
             <label class="text-xs font-bold text-outline">فصيلة الدم</label>
-            @if (editMode()) {
+            @if (editMode) {
               <select
                 [(ngModel)]="profile.bloodType"
                 class="w-full h-10 px-3 bg-surface-container-low border border-outline-variant rounded-xl text-sm font-bold outline-none focus:border-primary"
@@ -157,7 +157,7 @@
 
           <div class="space-y-1 text-right">
             <label class="text-xs font-bold text-outline">الوزن / الطول</label>
-            @if (editMode()) {
+            @if (editMode) {
               <div class="flex gap-2">
                 <input
                   [(ngModel)]="profile.weight"
@@ -196,7 +196,7 @@
         <div class="p-4 sm:p-5 space-y-3">
           @for (med of profile.medications; track $index) {
             <div class="bg-surface-container-low rounded-xl px-3 sm:px-4 py-3 text-right space-y-2">
-              @if (editMode()) {
+              @if (editMode) {
                 <!-- Edit Mode -->
                 <div class="flex items-center gap-2">
                   <button
@@ -259,7 +259,7 @@
           }
 
           <!-- Add Button (Edit Mode only) -->
-          @if (editMode()) {
+          @if (editMode) {
             <button
               (click)="addMedication()"
               class="w-full h-10 rounded-xl border-2 border-dashed border-primary/30 text-primary text-sm font-bold hover:bg-primary/5 transition-all cursor-pointer flex items-center justify-center gap-2"
@@ -280,7 +280,7 @@
         <div class="p-4 sm:p-5 space-y-3">
           <div class="flex flex-wrap gap-2">
             @for (cond of allConditions; track cond) {
-              @if (editMode()) {
+              @if (editMode) {
                 <button
                   (click)="toggleCondition(cond)"
                   [class]="
@@ -301,8 +301,8 @@
             }
 
             <!-- Custom conditions (not in allConditions list) -->
-            @for (cond of customConditions(); track cond) {
-              @if (editMode()) {
+            @for (cond of customConditions; track cond) {
+              @if (editMode) {
                 <div
                   class="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-bold bg-primary text-white border border-primary"
                 >
@@ -324,16 +324,15 @@
             }
           </div>
 
-          @if (!editMode() && profile.conditions.length === 0 && customConditions().length === 0) {
+          @if (!editMode && profile.conditions.length === 0 && customConditions.length === 0) {
             <p class="text-sm text-outline">لا توجد حالات مزمنة مسجلة</p>
           }
 
           <!-- Add Custom Condition (Edit Mode only) -->
-          @if (editMode()) {
+          @if (editMode) {
             <div class="flex gap-2 pt-1">
               <input
-                [ngModel]="newConditionInput()"
-                (ngModelChange)="newConditionInput.set($event)"
+                [(ngModel)]="newConditionInput"
                 placeholder="أضف حالة غير موجودة في القائمة..."
                 class="flex-1 h-9 px-3 bg-surface-container-low border border-outline-variant rounded-xl text-sm font-bold outline-none focus:border-primary text-right"
                 (keydown.enter)="addCustomCondition()"
@@ -355,7 +354,7 @@
           <h4 class="font-extrabold text-on-background text-sm">الحساسية الدوائية</h4>
         </div>
         <div class="p-4 sm:p-5">
-          @if (editMode()) {
+          @if (editMode) {
             <textarea
               [(ngModel)]="profile.allergies"
               rows="2"
@@ -379,7 +378,7 @@
         <div class="p-4 sm:p-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div class="space-y-1 text-right">
             <label class="text-xs font-bold text-outline">اسم جهة الطوارئ</label>
-            @if (editMode()) {
+            @if (editMode) {
               <input
                 [(ngModel)]="profile.emergencyName"
                 class="w-full h-10 px-3 bg-surface-container-low border border-outline-variant rounded-xl text-sm font-bold outline-none focus:border-primary"
@@ -391,7 +390,7 @@
 
           <div class="space-y-1 text-right">
             <label class="text-xs font-bold text-outline">رقم الطوارئ</label>
-            @if (editMode()) {
+            @if (editMode) {
               <input
                 [(ngModel)]="profile.emergency"
                 dir="ltr"
@@ -406,7 +405,7 @@
 
           <div class="sm:col-span-2 space-y-1 text-right">
             <label class="text-xs font-bold text-outline">الطبيب المعالج</label>
-            @if (editMode()) {
+            @if (editMode) {
               <input
                 [(ngModel)]="profile.doctor"
                 class="w-full h-10 px-3 bg-surface-container-low border border-outline-variant rounded-xl text-sm font-bold outline-none focus:border-primary"
@@ -424,7 +423,7 @@
       </div>
 
       <!-- Save -->
-      @if (editMode()) {
+      @if (editMode) {
         <button
           (click)="save()"
           class="w-full h-14 bg-primary hover:bg-primary-dark text-white rounded-2xl font-bold text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.98] shadow-md cursor-pointer"

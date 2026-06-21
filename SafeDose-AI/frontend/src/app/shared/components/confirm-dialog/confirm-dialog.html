@@ -1,4 +1,4 @@
-@if (isOpen()) {
+@if (isOpen) {
   <div
     class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 animate-fade-in"
     (click)="onCancel()"
@@ -18,26 +18,24 @@
 
       <!-- Text -->
       <div class="text-center space-y-1">
-        <h3 class="text-base font-extrabold text-on-background">{{ title() }}</h3>
-        <p class="text-xs text-outline leading-relaxed">{{ message() }}</p>
+        <h3 class="text-base font-extrabold text-on-background">{{ title }}</h3>
+        <p class="text-xs text-outline leading-relaxed">{{ message }}</p>
       </div>
 
       <!-- Buttons -->
       <div class="grid grid-cols-2 gap-3">
         <button
-          type="button"
           (click)="onConfirm()"
           class="h-11 font-bold text-sm rounded-2xl transition-all cursor-pointer text-white"
           [class]="confirmBg"
         >
-          {{ confirmText() }}
+          {{ confirmText }}
         </button>
         <button
-          type="button"
           (click)="onCancel()"
           class="h-11 bg-surface-container-high hover:bg-surface-container-highest text-on-background font-bold text-sm rounded-2xl transition-all cursor-pointer"
         >
-          {{ cancelText() }}
+          {{ cancelText }}
         </button>
       </div>
     </div>

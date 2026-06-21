@@ -1,4 +1,4 @@
-﻿
+
 
 namespace SafeDose.Domain.Entities
 {
@@ -11,8 +11,7 @@ namespace SafeDose.Domain.Entities
         public decimal MonthlyPrice { get; set; }
         public string Currency { get; set; } = null!;
         public int PatientLimit { get; set; }
-        public int InteractionCheckLimitPerDay { get; set; }
-        public int MedicationLimitPerPatient { get; set; }
+        public int PrescriptionParseLimit { get; set; }
         // Days until subscription expires. 30 = monthly, 365 = annual, 0 = no expiry (free tier)
         public int BillingCycleDays { get; set; }
         public bool IsActive { get; set; }

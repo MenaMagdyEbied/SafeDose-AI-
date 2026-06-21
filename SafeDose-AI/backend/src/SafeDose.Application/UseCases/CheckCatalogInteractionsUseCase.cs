@@ -6,6 +6,11 @@ using SafeDose.Domain.Enums;
 
 namespace SafeDose.Application.UseCases;
 
+// On-demand interaction check that takes catalog drug IDs (not saved Drug rows).
+// Used by the "افحص التداخلات الدوائية الآن" page.
+// If a PatientId is passed, the patient's verified active meds + allergies
+// are folded into the context sent to Langflow, AND the result is persisted
+// to InteractionChecks so the patient can review it later under "history".
 public class CheckCatalogInteractionsUseCase
 {
     private readonly IDrugRepository _drugs;
@@ -13,25 +18,19 @@ public class CheckCatalogInteractionsUseCase
     private readonly IPatientMedicationProvider _patientMeds;
     private readonly ILangflowClient _langflow;
     private readonly IInteractionRepository _interactions;
-    private readonly ISubscriptionRepository _subscriptions;
-    private readonly IPricingTierRepository _tiers;
 
     public CheckCatalogInteractionsUseCase(
         IDrugRepository drugs,
         IPatientRepository patients,
         IPatientMedicationProvider patientMeds,
         ILangflowClient langflow,
-        IInteractionRepository interactions,
-        ISubscriptionRepository subscriptions,
-        IPricingTierRepository tiers)
+        IInteractionRepository interactions)
     {
         _drugs = drugs;
         _patients = patients;
         _patientMeds = patientMeds;
         _langflow = langflow;
         _interactions = interactions;
-        _subscriptions = subscriptions;
-        _tiers = tiers;
     }
 
     public async Task<CheckInteractionsResponseDto> ExecuteAsync(
@@ -44,14 +43,8 @@ public class CheckCatalogInteractionsUseCase
         if (request.DrugCatalogIds.Length > 6)
             throw new ArgumentException("Maximum 6 drugs per check (UI limit)");
 
-        if (string.IsNullOrWhiteSpace(accountId))
-            throw new ArgumentException("AccountId required");
-
-        var tier = await ResolveTierAsync(accountId);
-        await EnforceDailyInteractionLimitAsync(accountId, tier);
-
+        // Load the catalog entries for the picked drugs.
         var catalogEntries = new List<LangflowDrugInput>();
-        var nameLookup = new Dictionary<int, (string En, string? Ar)>();
         foreach (var id in request.DrugCatalogIds.Distinct())
         {
             var entry = await _drugs.GetCatalogByIdAsync(id);
@@ -64,9 +57,9 @@ public class CheckCatalogInteractionsUseCase
                 ScientificName: entry.ScientificName,
                 DrugClass: entry.DrugClass
             ));
-            nameLookup[entry.DrugCatalogId] = (entry.CommercialNameEn, entry.CommercialNameAr);
         }
 
+        // Optional patient context (age, allergies, current verified meds).
         LangflowPatientContext? patientContext = null;
         if (request.PatientId.HasValue)
         {
@@ -95,10 +88,13 @@ public class CheckCatalogInteractionsUseCase
             );
         }
 
+        // Run the check.
         var result = await _langflow.CheckMultiDrugInteractionAsync(
             new LangflowInteractionRequest(catalogEntries.ToArray(), patientContext),
             cancellationToken);
 
+        // Langflow failure - return precautionary "caution" verdict and persist it
+        // so the patient can still see "we tried this combo, service was down" in history.
         if (result == null)
         {
             var fallback = new CheckInteractionsResponseDto(
@@ -120,20 +116,6 @@ public class CheckCatalogInteractionsUseCase
             return fallback with { InteractionCheckId = savedFallbackId };
         }
 
-        var analyzedFromLangflow = result.AnalyzedDrugs?.ToDictionary(d => d.DrugId) ?? new();
-        var analyzedDrugs = catalogEntries.Select(c =>
-        {
-            analyzedFromLangflow.TryGetValue(c.DrugId, out var fromLf);
-            var (en, ar) = nameLookup[c.DrugId];
-            return new AnalyzedDrugDto(
-                DrugId: c.DrugId,
-                ArabicName: !string.IsNullOrWhiteSpace(fromLf?.ArabicName) ? fromLf.ArabicName : ar ?? en,
-                EnglishName: !string.IsNullOrWhiteSpace(fromLf?.EnglishName) ? fromLf.EnglishName : en,
-                DosageNote: fromLf?.DosageNote,
-                Role: !string.IsNullOrWhiteSpace(fromLf?.Role) ? fromLf.Role : "primary"
-            );
-        }).ToArray();
-
         var response = new CheckInteractionsResponseDto(
             InteractionCheckId: 0,
             Level: result.Level,
@@ -142,7 +124,9 @@ public class CheckCatalogInteractionsUseCase
             TitleArabic: result.TitleArabic,
             ExplanationArabic: result.ExplanationArabic,
             RecommendedActionArabic: result.RecommendedActionArabic,
-            AnalyzedDrugs: analyzedDrugs,
+            AnalyzedDrugs: result.AnalyzedDrugs
+                .Select(d => new AnalyzedDrugDto(d.DrugId, d.ArabicName, d.EnglishName, d.DosageNote, d.Role))
+                .ToArray(),
             ConflictingPairs: result.ConflictingPairs
                 .Select(p => new ConflictingPairDto(p.DrugA, p.DrugB, p.ReasonArabic, p.Severity))
                 .ToArray(),
@@ -156,6 +140,8 @@ public class CheckCatalogInteractionsUseCase
         return response with { InteractionCheckId = savedId };
     }
 
+    // Writes the result to InteractionChecks if the patient supplied a PatientId.
+    // Anonymous checks (no patientId) are not saved - they have no history view.
     private async Task<int> PersistCheckAsync(
         CheckCatalogInteractionsRequestDto request,
         List<LangflowDrugInput> drugs,
@@ -164,9 +150,11 @@ public class CheckCatalogInteractionsUseCase
         string? modelVersion,
         CancellationToken cancellationToken)
     {
+        if (!request.PatientId.HasValue) return 0;
+
         var record = new InteractionCheck
         {
-            PatientId = request.PatientId,
+            PatientId = request.PatientId.Value,
             TriggerType = 1,
             DrugCount = (byte)drugs.Count,
             CheckedDrugsJson = JsonSerializer.Serialize(drugs.Select(d => new
@@ -192,43 +180,6 @@ public class CheckCatalogInteractionsUseCase
         };
         await _interactions.AddAsync(record);
         return record.InteractionCheckId;
-    }
-
-    private async Task<PricingTier> ResolveTierAsync(string accountId)
-    {
-        var subscription = await _subscriptions.GetActiveByAccountAsync(accountId);
-        if (subscription?.PricingTier != null)
-            return subscription.PricingTier;
-
-        return await _tiers.GetByCodeAsync("free")
-            ?? throw new InvalidOperationException("Free pricing tier is not configured");
-    }
-
-    private async Task EnforceDailyInteractionLimitAsync(string accountId, PricingTier tier)
-    {
-        if (tier.InteractionCheckLimitPerDay == int.MaxValue)
-            return;
-
-        var startOfTodayUtc = StartOfCairoDayAsUtc(DateTime.UtcNow);
-        var usedToday = await _interactions.CountForAccountSinceAsync(accountId, startOfTodayUtc);
-        if (usedToday >= tier.InteractionCheckLimitPerDay)
-            throw new Exceptions.QuotaExceededException(
-                $"وصلت إلى الحد الأقصى للفحوصات اليومية ({tier.InteractionCheckLimitPerDay} يومياً). اشترك في الباقة المدفوعة للحصول على عدد غير محدود.",
-                $"Daily interaction check limit reached for your plan ({tier.InteractionCheckLimitPerDay} per day).");
-    }
-
-    private static DateTime StartOfCairoDayAsUtc(DateTime nowUtc)
-    {
-        var cairoTz = TryGetCairoTz();
-        var cairoNow = TimeZoneInfo.ConvertTimeFromUtc(nowUtc, cairoTz);
-        var cairoMidnight = new DateTime(cairoNow.Year, cairoNow.Month, cairoNow.Day, 0, 0, 0, DateTimeKind.Unspecified);
-        return TimeZoneInfo.ConvertTimeToUtc(cairoMidnight, cairoTz);
-    }
-
-    private static TimeZoneInfo TryGetCairoTz()
-    {
-        try { return TimeZoneInfo.FindSystemTimeZoneById("Egypt Standard Time"); }
-        catch (TimeZoneNotFoundException) { return TimeZoneInfo.FindSystemTimeZoneById("Africa/Cairo"); }
     }
 
     private static int CalcAge(DateOnly? dob)

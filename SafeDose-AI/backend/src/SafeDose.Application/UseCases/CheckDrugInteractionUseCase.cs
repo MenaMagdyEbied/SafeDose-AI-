@@ -1,4 +1,4 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 using SafeDose.Application.DTOs;
 using SafeDose.Application.Interfaces;
 using SafeDose.Domain.Entities;
@@ -7,6 +7,21 @@ using SafeDose.Domain.Services;
 
 namespace SafeDose.Application.UseCases;
 
+// Orchestrates the drug interaction pipeline.
+//
+// Order:
+//   1. Validate input (1-6 drugs, exist in catalog)
+//   2. Detect duplicates
+//   3. Cache lookup
+//   4. HARD RULE: allergy match → Level 3 (no LLM needed)
+//   5. HARD RULE: critical-pair table → Level 3 (no LLM needed)
+//   6. Load patient context (allergies, conditions, current meds)
+//   7. Call Langflow 4-stage pipeline
+//   8. Graceful degradation if LLM fails → Level 2 precautionary
+//   9. Combine signals via SeverityCalculator (final level)
+//  10. Persist InteractionCheck with full audit trail
+//  11. Write compliance audit log
+//  12. Return mapped response for UI
 public class CheckDrugInteractionUseCase
 {
     private readonly IDrugRepository _drugRepository;
@@ -53,6 +68,7 @@ public class CheckDrugInteractionUseCase
         CancellationToken cancellationToken = default,
         string? accountId = null)
     {
+        // INPUT VALIDATION
         if (request.DrugIds is null || request.DrugIds.Length == 0)
             throw new ArgumentException("At least one drug must be selected");
         if (request.DrugIds.Length > 6)
@@ -63,18 +79,23 @@ public class CheckDrugInteractionUseCase
         if (allDrugs.Count != distinctIds.Length)
             throw new ArgumentException("One or more drug IDs not found in catalog");
 
+        // Skip unverified drugs from the interaction check (they have no catalog match,
+        // so we cannot reliably check what they interact with).
         var drugs = allDrugs.Where(d => d.IsVerified).ToList();
         if (drugs.Count == 0)
             throw new ArgumentException("No verified drugs to check - selected drugs are not in the catalog");
 
+        // DUPLICATE DETECTION
         var duplicates = _duplicateDetector.Detect(drugs);
 
+        // CACHE LOOKUP
         var cacheKey = _cacheHasher.Build(distinctIds, request.PatientId);
         var cached = await _interactionRepository.GetCachedByKeyAsync(
             cacheKey, TimeSpan.FromHours(1));
         if (cached != null)
             return MapToResponse(cached, drugs);
 
+        // LOAD PATIENT CONTEXT
         Patient? patient = null;
         IReadOnlyList<PatientActiveMedication> currentMeds = Array.Empty<PatientActiveMedication>();
         if (request.PatientId.HasValue)
@@ -91,6 +112,7 @@ public class CheckDrugInteractionUseCase
                 request.PatientId.Value, cancellationToken);
         }
 
+        // HARD RULE - ALLERGY CHECK
         var allergyResult = AllergyMatchResult.NoMatch();
         if (patient != null)
         {
@@ -98,12 +120,14 @@ public class CheckDrugInteractionUseCase
             allergyResult = _allergyMatcher.Check(drugs.Select(d => d.DrugName), allergies);
         }
 
+        // HARD RULE - CRITICAL-PAIR CHECK
         var allIdsForPairCheck = distinctIds
             .Concat(currentMeds.Select(m => m.DrugId))
             .Distinct()
             .ToArray();
         var criticalPairs = await _criticalPairLookup.FindAllPairsAsync(allIdsForPairCheck);
 
+        // Also check by scientific name (for "all NSAIDs + Warfarin" type rules)
         var allScientificNames = drugs.Select(d => d.DrugName)
             .Concat(currentMeds.Select(m => m.ScientificName ?? m.DrugName))
             .Where(n => !string.IsNullOrWhiteSpace(n))
@@ -112,6 +136,7 @@ public class CheckDrugInteractionUseCase
             .FindByScientificNamesAsync(allScientificNames);
         var allCriticalPairs = criticalPairs.Concat(scientificCriticalPairs).ToArray();
 
+        // FAST-FAIL on hard rules
         LangflowInteractionResult verdict;
         if (allergyResult.HasMatch)
         {
@@ -123,6 +148,7 @@ public class CheckDrugInteractionUseCase
         }
         else
         {
+            // CALL LANGFLOW
             var langflowRequest = BuildLangflowRequest(drugs, patient, currentMeds);
             LangflowInteractionResult? llmResult = null;
             try
@@ -132,21 +158,25 @@ public class CheckDrugInteractionUseCase
             }
             catch
             {
+                // swallow - fall back below
             }
             verdict = llmResult ?? BuildPrecautionaryVerdict(drugs);
         }
 
+        // COMBINE SIGNALS via SeverityCalculator
         var finalLevel = _severityCalc.Calculate(new SeveritySignals(
             HasAllergyMatch: allergyResult.HasMatch,
             HasCriticalPairMatch: allCriticalPairs.Length > 0,
             HasDuplicateDrugs: duplicates.HasDuplicates,
             LlmDerivedLevel: verdict.Level
         ));
+        // If severity calc upgraded the level, propagate it
         if (finalLevel != verdict.Level)
         {
             verdict = verdict with { Level = finalLevel };
         }
 
+        // PERSIST
         var consentRecordId = await ResolveConsentRecordIdAsync(patient);
         var saved = await PersistAsync(
             request, distinctIds, drugs, cacheKey, verdict,
@@ -155,17 +185,19 @@ public class CheckDrugInteractionUseCase
             consentRecordId: consentRecordId,
             accountId: patient?.AccountId);
 
+        // COMPLIANCE AUDIT
         if (patient != null)
         {
             await _audit.WriteAsync(new AuditLogEntry(
                 AccountId: patient.AccountId,
                 EntityName: nameof(InteractionCheck),
                 EntityRowId: saved.InteractionCheckId,
-                ActionType: 5,
+                ActionType: 5,                              // 5 = DrugInteractionCheck
                 AccessReason: $"Multi-drug check (level {(int)saved.SeverityLevel})"
             ), cancellationToken);
         }
 
+        // RESPONSE
         return MapToResponse(saved, drugs);
     }
 
@@ -269,6 +301,7 @@ public class CheckDrugInteractionUseCase
 
     private async Task<int?> ResolveConsentRecordIdAsync(Patient? patient)
     {
+        // TODO: query latest active consent record once IConsentRepository is available.
         await Task.CompletedTask;
         return null;
     }

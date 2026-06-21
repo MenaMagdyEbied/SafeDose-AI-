@@ -1,9 +1,10 @@
 using SafeDose.Application.DTOs;
 using SafeDose.Application.Interfaces;
-using SafeDose.Domain.Enums;
 
 namespace SafeDose.Application.UseCases.Billing;
 
+// Returns the current patient's plan info. The UI uses this to show the badge and
+// whether to gate premium endpoints.
 public class GetMySubscriptionUseCase
 {
     private readonly ISubscriptionRepository _subs;
@@ -29,7 +30,6 @@ public class GetMySubscriptionUseCase
             );
         }
 
-        var status = (SubscriptionStatus)active.Status;
         return new SubscriptionDto(
             SubscriptionId: active.SubscriptionId,
             TierCode: active.PricingTier.TierCode,
@@ -37,12 +37,7 @@ public class GetMySubscriptionUseCase
             StartAt: active.StartAt,
             EndAt: active.EndAt,
             IsActive: true,
-            StatusArabic: status switch
-            {
-                SubscriptionStatus.Active => "نشط",
-                SubscriptionStatus.Cancelled => "ملغى - مستمر حتى تاريخ الانتهاء",
-                _ => "نشط"
-            }
+            StatusArabic: "نشط"
         );
     }
 }

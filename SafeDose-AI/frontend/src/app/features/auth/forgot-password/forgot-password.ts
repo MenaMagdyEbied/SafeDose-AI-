@@ -1,5 +1,13 @@
-import { Component, inject, signal } from '@angular/core';
-import { FormsModule, NgForm } from '@angular/forms';
+import { Component } from '@angular/core';
+import { inject } from '@angular/core';
+import {
+  FormBuilder,
+  FormGroup,
+  FormsModule,
+  NgForm,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { TriangleAlert, Key, LucideAngularModule, Mail } from 'lucide-angular';
 import { Auth } from '../../../core/auth/services/auth';
@@ -18,40 +26,39 @@ export class ForgotPassword {
   mailIcon = Mail;
   alertIcon = TriangleAlert;
 
-  email = signal('');
-  loading = signal(false);
-  sent = signal(false);
-  errorText = signal('');
-  touched = signal(false);
+  email = '';
+  loading = false;
+  sent = false;
+  errorText = '';
+  touched = false;
 
   get isEmailInvalid(): boolean {
-    const value = this.email().trim();
+    const value = this.email.trim();
     if (!value) return true;
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return !emailRegex.test(value);
   }
 
   send(form: NgForm): void {
-    this.touched.set(true);
+    this.touched = true;
     if (this.isEmailInvalid) return;
 
-    this.loading.set(true);
-    this.errorText.set('');
+    this.loading = true;
+    this.errorText = '';
 
-    this.authService.forgotPassword({ email: this.email().trim() }).subscribe({
+    this.authService.forgotPassword({ email: this.email.trim() }).subscribe({
       next: () => {
-        this.loading.set(false);
-        this.sent.set(true);
+        this.loading = false;
+        this.sent = true;
         this.router.navigate(['/reset-password'], {
-          queryParams: { email: this.email() },
+          queryParams: { email: this.email },
         });
       },
       error: (err) => {
-        this.loading.set(false);
-        this.errorText.set(
+        this.loading = false;
+        this.errorText =
           (typeof err?.error === 'string' ? err.error : err?.error?.message) ||
-            'البريد الإلكتروني غير مسجل.',
-        );
+          'البريد الإلكتروني غير مسجل.';
       },
     });
   }

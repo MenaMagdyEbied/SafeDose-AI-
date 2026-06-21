@@ -1,4 +1,4 @@
-using System.Security.Claims;
+﻿using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SafeDose.Application.DTOs;
@@ -52,10 +52,6 @@ public class MedicationsController : ControllerBase
             return CreatedAtAction(nameof(GetById), new { id = result.PatientMedicationId }, result);
         }
         catch (UnauthorizedAccessException) { return Forbid(); }
-        catch (SafeDose.Application.Exceptions.QuotaExceededException ex)
-        {
-            return BadRequest(new ErrorResponse("QUOTA_EXCEEDED", ex.MessageArabic, ex.MessageEnglish));
-        }
         catch (ArgumentException ex) { return BadValidation(ex.Message); }
     }
 

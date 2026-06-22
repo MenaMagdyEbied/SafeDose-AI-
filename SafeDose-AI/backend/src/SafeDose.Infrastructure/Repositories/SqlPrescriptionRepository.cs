@@ -75,5 +75,9 @@ public class SqlPrescriptionRepository : IPrescriptionRepository
         _db.Prescriptions.Remove(prescription);
         await _db.SaveChangesAsync();
         return true;
+    public async Task<int> CountForAccountSinceAsync(string accountId, DateTime sinceUtc)
+    {
+        return await _db.Prescriptions
+            .CountAsync(p => p.AccountId == accountId && p.CreatedAt >= sinceUtc);
     }
 }

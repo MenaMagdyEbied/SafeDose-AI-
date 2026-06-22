@@ -10,4 +10,5 @@ public interface ISubscriptionRepository
     Task<Subscription?> GetByIdAsync(int subscriptionId);
     Task<int> CreateAsync(Subscription subscription);
     Task UpdateAsync(Subscription subscription);
+    Task<DateTime?> GetAccountCreatedAtAsync(string accountId);
 }

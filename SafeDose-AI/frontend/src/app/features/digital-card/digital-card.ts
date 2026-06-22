@@ -13,9 +13,9 @@ import { LucideAngularModule } from 'lucide-angular';
 import { EMPTY, from, of } from 'rxjs';
 import { catchError, finalize, map, switchMap } from 'rxjs/operators';
 import { Auth } from '../../core/auth/services/auth';
-import { UserProfile } from '../../core/auth/services/user-profile';
 import { CardData } from '../../core/models/card-data';
 import { MedicalCardService } from '../../core/services/medical-card';
+import { PatientService } from '../../core/services/patient';
 import { Card } from '../../shared/components/card/card';
 import {
   ArrowRight,
@@ -39,7 +39,7 @@ import {
 export class DigitalCard implements AfterViewInit {
   private readonly auth = inject(Auth);
   private readonly medicalCardService = inject(MedicalCardService);
-  private readonly userProfileService = inject(UserProfile);
+  private readonly patientService = inject(PatientService);
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly destroyRef = inject(DestroyRef);
 
@@ -67,14 +67,17 @@ export class DigitalCard implements AfterViewInit {
     qrUrl: '',
   });
 
+  // Backend MedicalCard endpoints expect a Patient INT id, NOT the Account GUID.
+  // Pull it from /patients/my[0], not the user profile.
   private resolvePatientId() {
-    const fallback = 'd5b564aa-4a5b-4752-ba90-a0c822e71d9e';
-    return from(this.userProfileService.getUserProfile()).pipe(
-      map((profile: any) => {
-        const id = profile.patientId ?? profile.id ?? profile.userId;
-        return id ? String(id).trim() : fallback;
+    return from(this.patientService.getMyPatients()).pipe(
+      map((patients) => {
+        if (!patients || patients.length === 0) return '';
+        const p = patients[0] as any;
+        const id = p.patientId ?? p.id ?? null;
+        return id != null ? String(id).trim() : '';
       }),
-      catchError(() => of(fallback)),
+      catchError(() => of('')),
     );
   }
 
@@ -87,7 +90,7 @@ export class DigitalCard implements AfterViewInit {
       .pipe(
         switchMap((patientId) => {
           if (!patientId) {
-            this.error.set('لم يتم العثور على معرف المريض.');
+            this.error.set('لازم تضيف بيانات المريض الأول من بوابة المريض.');
             this.cdr.markForCheck();
             return EMPTY;
           }
@@ -135,7 +138,6 @@ export class DigitalCard implements AfterViewInit {
             this.error.set('لم يتم العثور على معرف المريض لتحميل الملف.');
             return EMPTY;
           }
-
           return from(this.medicalCardService.downloadPrivatePdf(patientId));
         }),
         catchError(() => {
@@ -155,7 +157,6 @@ export class DigitalCard implements AfterViewInit {
             this.error.set('لم يتم العثور على معرف المريض لإنشاء الـ QR.');
             return EMPTY;
           }
-
           return from(this.medicalCardService.getPrivateQrCode(patientId));
         }),
         catchError(() => {

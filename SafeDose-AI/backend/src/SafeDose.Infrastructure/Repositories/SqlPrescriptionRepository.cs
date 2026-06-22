@@ -63,4 +63,17 @@ public class SqlPrescriptionRepository : IPrescriptionRepository
                 .ThenInclude(d => d.PatientMedications)
             .FirstOrDefaultAsync();
     }
+
+    public async Task<bool> DeletePrescriptionAsync(int prescriptionId)
+    {
+        var prescription = await _db.Prescriptions
+            .Include(p => p.Drugs!)
+                .ThenInclude(d => d.PatientMedications)
+            .FirstOrDefaultAsync(p => p.PrescriptionId == prescriptionId);
+        if (prescription == null) return false;
+
+        _db.Prescriptions.Remove(prescription);
+        await _db.SaveChangesAsync();
+        return true;
+    }
 }

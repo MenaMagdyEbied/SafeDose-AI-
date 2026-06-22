@@ -259,6 +259,20 @@ export class Register {
       confirmPassword: this.step4Form.value.confirmPassword,
     };
 
+    // The backend register endpoint only stores Account fields (no Patient row yet).
+    // We stash the step-2 profile here so the very first successful login can create
+    // the primary patient automatically (see Auth.login()).
+    try {
+      const pending = {
+        fullName: this.step1Form.value.fullName,
+        age: this.step2Form.value.age,
+        chronicConditions: this.selectedConditions,
+      };
+      localStorage.setItem('safedose_pending_patient', JSON.stringify(pending));
+    } catch {
+      // localStorage can be blocked in private mode — login will just skip auto-create.
+    }
+
     this.authService.register(payload).subscribe({
       next: () => {
         this.loading.set(false);

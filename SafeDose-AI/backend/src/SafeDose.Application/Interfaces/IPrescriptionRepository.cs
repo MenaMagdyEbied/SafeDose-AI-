@@ -11,4 +11,8 @@ public interface IPrescriptionRepository
 
     // Used by GetPrescriptionDetailsUseCase — detail view, drugs + their patient-medication rows included.
     Task<Prescription?> GetPrescriptionDetailsByIdAsync(int prescriptionId);
+
+    // Hard delete — used by the prescription list "remove" action. Drugs/PatientMedications
+    // cascade per EF model relationships. Returns false if the row was already gone.
+    Task<bool> DeletePrescriptionAsync(int prescriptionId);
 }

@@ -45,14 +45,27 @@
         <lucide-icon [name]="shieldAlertIcon" [size]="20"></lucide-icon>
         فحص التداخلات
       </a>
-      <a
-        routerLink="/pricing"
-        routerLinkActive="text-primary"
-        class="flex gap-1 items-center hover:text-primary"
-      >
-        <lucide-icon name="pill" [size]="20"></lucide-icon>
-        الأسعار
-      </a>
+      <!-- 4th nav: shows "الأسعار" for free users, "اشتراكي" for paid users.
+           Keeps the nav balanced and gives subscribed users a way to manage. -->
+      @if (subscriptionService.hasActivePaidPlan()) {
+        <a
+          routerLink="/profile"
+          routerLinkActive="text-primary"
+          class="flex gap-1 items-center hover:text-primary"
+        >
+          <lucide-icon name="crown" [size]="20"></lucide-icon>
+          اشتراكي
+        </a>
+      } @else {
+        <a
+          routerLink="/pricing"
+          routerLinkActive="text-primary"
+          class="flex gap-1 items-center hover:text-primary"
+        >
+          <lucide-icon name="pill" [size]="20"></lucide-icon>
+          الأسعار
+        </a>
+      }
     </nav>
 
     <!-- Right Actions -->

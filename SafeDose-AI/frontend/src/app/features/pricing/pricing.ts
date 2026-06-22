@@ -15,6 +15,7 @@ import { catchError, finalize } from 'rxjs/operators';
 import { ActivatedRoute, Router } from '@angular/router';
 import { PricingTier } from '../../core/models/pricing-tier';
 import { Subscription } from '../../core/services/subscription';
+import { Auth } from '../../core/auth/services/auth';
 
 @Component({
   selector: 'app-pricing',
@@ -24,6 +25,7 @@ import { Subscription } from '../../core/services/subscription';
 })
 export class Pricing implements OnInit {
   private readonly subscriptionService = inject(Subscription);
+  private readonly authService = inject(Auth);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
@@ -40,7 +42,19 @@ export class Pricing implements OnInit {
   upgradeRequired = this.route.snapshot.queryParams['reason'] === 'upgrade-required';
 
   ngOnInit(): void {
-    this.loadTiers();
+    // If the user is already on a paid plan, the pricing page shouldn't show up.
+    // It comes back automatically when the subscription expires (isActive flips to false).
+    if (this.authService.isLoggedIn) {
+      this.subscriptionService.refresh().then((sub) => {
+        if (sub?.isActive && sub.tierCode !== 'free') {
+          this.router.navigate(['/home']);
+          return;
+        }
+        this.loadTiers();
+      });
+    } else {
+      this.loadTiers();
+    }
   }
 
   private loadTiers(): void {

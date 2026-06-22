@@ -5,6 +5,7 @@ import { environment } from '../../../environments/environment';
 import { CardData } from '../models/card-data';
 
 export type MedicalCardResponse = CardData;
+
 interface ApiResponse<T> {
   success: boolean;
   message: string;
@@ -19,11 +20,11 @@ interface MedicalCardApiData {
   dateOfBirth: string;
   gender: number;
   medicalCardToken: string;
+  doctorName: string | null;
   currentMedications: any[];
 }
-@Injectable({
-  providedIn: 'root',
-})
+
+@Injectable({ providedIn: 'root' })
 export class MedicalCardService {
   private readonly apiUrl = environment.apiUrl;
   private readonly http = inject(HttpClient);
@@ -31,7 +32,7 @@ export class MedicalCardService {
   getPublicCard(token: string): Promise<MedicalCardResponse> {
     return firstValueFrom(
       this.http.get<MedicalCardResponse>(
-        `${this.apiUrl}/MedicalCard/Public/${encodeURIComponent(token)}`,
+        this.apiUrl + '/MedicalCard/Public/' + encodeURIComponent(token),
       ),
     );
   }
@@ -39,7 +40,7 @@ export class MedicalCardService {
   getPrivateCard(patientId: string): Promise<CardData> {
     return firstValueFrom(
       this.http.get<ApiResponse<MedicalCardApiData>>(
-        `${this.apiUrl}/MedicalCard/Private/${encodeURIComponent(patientId)}`,
+        this.apiUrl + '/MedicalCard/Private/' + encodeURIComponent(patientId),
       ),
     ).then((res) => this.mapToCardData(res.data, patientId));
   }
@@ -52,25 +53,24 @@ export class MedicalCardService {
       id,
       name: data.fullName,
       age,
-      medications: data.currentMedications.map((m) => ({
-        name: m.name ?? m.drugName ?? '',
-        dose: m.dose ?? '',
-        frequency: m.frequency ?? '',
-        startDate: m.startDate ?? '',
+      medications: (data.currentMedications || []).map((m) => ({
+        name: m.name || m.drugName || '',
+        dose: m.dose || '',
+        frequency: m.frequency || '',
+        startDate: m.startDate || '',
       })),
       allergies: data.allergies ? [data.allergies] : [],
-      doctorName: '',
+      doctorName: data.doctorName || '',
       qrUrl: data.medicalCardToken,
     };
   }
 
   async getPrivateQrCode(patientId: string): Promise<string> {
     const blob = await firstValueFrom(
-      this.http.get(`${this.apiUrl}/MedicalCard/Private/${encodeURIComponent(patientId)}/qrcode`, {
+      this.http.get(this.apiUrl + '/MedicalCard/Private/' + encodeURIComponent(patientId) + '/qrcode', {
         responseType: 'blob',
       }),
     );
-
     return await new Promise<string>((resolve, reject) => {
       const reader = new FileReader();
       reader.onloadend = () => resolve(reader.result as string);
@@ -81,16 +81,15 @@ export class MedicalCardService {
 
   async downloadPrivatePdf(patientId: string): Promise<void> {
     const blob = await firstValueFrom(
-      this.http.get(`${this.apiUrl}/MedicalCard/Private/${encodeURIComponent(patientId)}/pdf`, {
+      this.http.get(this.apiUrl + '/MedicalCard/Private/' + encodeURIComponent(patientId) + '/pdf', {
         headers: new HttpHeaders({ 'X-Skip-Loader': 'true' }),
         responseType: 'blob',
       }),
     );
-
     const url = window.URL.createObjectURL(blob);
     const anchor = document.createElement('a');
     anchor.href = url;
-    anchor.download = `medical-card-${patientId}.pdf`;
+    anchor.download = 'medical-card-' + patientId + '.pdf';
     anchor.click();
     window.setTimeout(() => window.URL.revokeObjectURL(url), 0);
   }

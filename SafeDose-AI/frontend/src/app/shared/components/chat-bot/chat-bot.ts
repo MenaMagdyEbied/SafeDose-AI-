@@ -1,4 +1,4 @@
-import { Component, DestroyRef, inject } from '@angular/core';
+import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ChatMessage } from '../../../core/models';
 import { Activity, LucideAngularModule, MessageSquare, Mic, Send, X } from 'lucide-angular';
@@ -23,7 +23,9 @@ export class ChatBot {
 
   isOpen = false;
   inputText = '';
-  loading = false;
+  // Signal so flipping between true/false during async never triggers NG0100.
+  loading = signal(false);
+
   messages: ChatMessage[] = [
     {
       id: 'initial',
@@ -72,7 +74,7 @@ export class ChatBot {
       { id: 'user-' + Date.now(), sender: 'user', text, timestamp: new Date() },
     ];
     this.inputText = '';
-    this.loading = true;
+    this.loading.set(true);
 
     const patientName = this.auth.user?.userName || 'أحمد';
 
@@ -92,7 +94,7 @@ export class ChatBot {
           return EMPTY;
         }),
         finalize(() => {
-          this.loading = false;
+          this.loading.set(false);
         }),
         takeUntilDestroyed(this.destroyRef),
       )
@@ -105,7 +107,6 @@ export class ChatBot {
             text: result.reply,
             timestamp: new Date(),
             severityLevel: result.severityLevel,
-            // actions: result.actions,
           },
         ];
       });

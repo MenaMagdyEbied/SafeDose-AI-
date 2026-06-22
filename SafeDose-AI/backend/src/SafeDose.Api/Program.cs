@@ -164,6 +164,39 @@ builder.Services.AddScoped<DeleteInteractionCheckUseCase>();
 builder.Services.AddScoped<GetPatientProfileSnapshotUseCase>();
 builder.Services.AddScoped<SeedCriticalPairsUseCase>();
 builder.Services.AddScoped<ParsePrescriptionUseCase>();
+builder.Services.AddScoped<SavePrescriptionUseCase>();
+builder.Services.AddScoped<GetPatientPrescriptionsUseCase>();
+builder.Services.AddScoped<GetPrescriptionDetailsUseCase>();
+builder.Services.AddScoped<DeletePrescriptionUseCase>();
+
+// Patient use cases (PatientsController) — without these, /api/patients/* returns
+// 500 "Unable to resolve service for type 'CreatePatientUseCase'".
+builder.Services.AddScoped<CreatePatientUseCase>();
+builder.Services.AddScoped<UpdatePatientUseCase>();
+builder.Services.AddScoped<GetMyPatientsUseCase>();
+builder.Services.AddScoped<GetPatientByIdUseCase>();
+builder.Services.AddScoped<DeactivatePatientUseCase>();
+
+// Medication use cases (MedicationsController) — already using SafeDose.Application.UseCases.Medication
+builder.Services.AddScoped<AddMedicationManuallyUseCase>();
+builder.Services.AddScoped<AddMedicationsFromPrescriptionUseCase>();
+builder.Services.AddScoped<UpdateMedicationUseCase>();
+builder.Services.AddScoped<ChangeMedicationStatusUseCase>();
+builder.Services.AddScoped<GetActiveMedicationsUseCase>();
+builder.Services.AddScoped<GetMedicationHistoryUseCase>();
+builder.Services.AddScoped<GetMedicationByIdUseCase>();
+
+// MedicalCard use cases (MedicalCardController) — public + private card, QR, PDF.
+builder.Services.AddScoped<GetPublicMedicalCardUseCase>();
+builder.Services.AddScoped<GetPrivateMedicalCardUseCase>();
+builder.Services.AddScoped<GenerateQrCodeUseCase>();
+builder.Services.AddScoped<GenerateMedicalCardPdfUseCase>();
+
+// Admin dashboard cache — shared between background warmer and the controller.
+// Singleton so both sides read/write the same IMemoryCache-backed view.
+builder.Services.AddMemoryCache();
+builder.Services.AddSingleton<SafeDose.Application.Caching.DashboardCache>();
+builder.Services.AddHostedService<SafeDose.Application.BackgroundJobs.DashboardCacheRefreshService>();
 
 // CriticalPair seeder runs on startup
 builder.Services.AddScoped<CriticalPairSeeder>();

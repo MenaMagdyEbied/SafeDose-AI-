@@ -7,10 +7,8 @@ export const guestGuard: CanActivateFn = (route, state) => {
   const router = inject(Router);
   if (!auth.isLoggedIn) return true;
 
-  if (auth.isAdmin) {
-    router.createUrlTree(['/admin']);
-  } else {
-    router.createUrlTree(['/home']);
-  }
-  return false;
+  // Already logged in — bounce to the right home instead of letting login/register show.
+  return auth.isAdmin
+    ? router.createUrlTree(['/admin'])
+    : router.createUrlTree(['/home']);
 };

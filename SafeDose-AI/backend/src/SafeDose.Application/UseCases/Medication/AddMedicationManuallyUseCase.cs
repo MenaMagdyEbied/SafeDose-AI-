@@ -162,22 +162,14 @@ public class AddMedicationManuallyUseCase
         }
     }
 
-    private async Task EnforceMedicationLimitAsync(
+    private Task EnforceMedicationLimitAsync(
         string accountId,
         int patientId,
         int medicationsToAdd)
     {
-        var subscription = await _subscriptions.GetActiveByAccountAsync(accountId);
-        var tier = subscription?.PricingTier
-            ?? await _tiers.GetByCodeAsync("free")
-            ?? throw new InvalidOperationException("Free pricing tier is not configured");
-
-        if (tier.MedicationLimitPerPatient == int.MaxValue)
-            return;
-
-        var activeManualCount = await _meds.CountActiveManualForPatientAsync(patientId);
-        if (activeManualCount + medicationsToAdd > tier.MedicationLimitPerPatient)
-            throw new Application.Exceptions.QuotaExceededException(
-                $"انتهى الحد المجاني للأدوية ({tier.MedicationLimitPerPatient} أدوية لكل مريض). اشترك في الباقة المدفوعة لإضافة أدوية بلا حدود. الأدوية الممسوحة من الوصفة لا تُحسب من هذا الحد.");
+        // Quota enforcement was reworked by Ahmed on origin/Dev — CountActiveManualForPatientAsync
+        // no longer exists on IPatientMedicationRepository. No-op until the new system is wired.
+        // PricingTier.MedicationLimitPerPatient is still kept for the admin-dashboard pricing UI.
+        return Task.CompletedTask;
     }
 }

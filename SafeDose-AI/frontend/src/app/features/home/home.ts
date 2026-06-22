@@ -27,38 +27,23 @@ export class Home {
   activityIcon = Activity;
   alertIcon = TriangleAlert;
   heartIcon = Heart;
+  plusIcon = Plus;
+
   goToPatient(): void {
-    this.router.navigate(['/auth'], {
-      queryParams: { role: 'patient' },
-    });
+    this.router.navigate(['/auth'], { queryParams: { role: 'patient' } });
   }
 
   goToCaregiver(): void {
-    this.router.navigate(['/auth'], {
-      queryParams: { role: 'caregiver' },
-    });
+    this.router.navigate(['/auth'], { queryParams: { role: 'caregiver' } });
   }
 
-  plusIcon = Plus;
-
+  // IDs MUST be unique — Angular @for track uses them to identify rows.
   reviews = [
-    {
-      id: 1,
-      name: 'د. أحمد كمال',
-      rating: 5,
-      text: 'لقد غير هذا التطبيق تماماً أسلوب متابعتي لأدوية والديّ المسنين.',
-    },
-    {
-      id: 2,
-      name: 'سارة محمود',
-      rating: 5,
-      text: 'تطبيق ممتاز! ساعدني كتير في متابعة أدوية أمي. التنبيهات دايماً في وقتها.',
-    },
-    { id: 3, name: 'محمد علي', rating: 4, text: 'واجهة سهلة وبسيطة، وفحص التداخلات دقيق جداً.' },
-    { id: 3, name: 'محمد علي', rating: 4, text: 'واجهة سهلة وبسيطة، وفحص التداخلات دقيق جداً.' },
-    { id: 3, name: 'خلف علي', rating: 4, text: 'واجهة سهلة وبسيطة، وفحص التداخلات دقيق جداً.' },
-    { id: 3, name: 'محمد علي', rating: 4, text: 'واجهة سهلة وبسيطة، وفحص التداخلات دقيق جداً.' },
-    { id: 3, name: 'محمد علي', rating: 4, text: 'واجهة سهلة وبسيطة، وفحص التداخلات دقيق جداً.' },
+    { id: 1, name: 'د. أحمد كمال', rating: 5, text: 'لقد غير هذا التطبيق تماماً أسلوب متابعتي لأدوية والديّ المسنين.' },
+    { id: 2, name: 'سارة محمود',   rating: 5, text: 'تطبيق ممتاز! ساعدني كتير في متابعة أدوية أمي. التنبيهات دايماً في وقتها.' },
+    { id: 3, name: 'محمد علي',     rating: 4, text: 'واجهة سهلة وبسيطة، وفحص التداخلات دقيق جداً.' },
+    { id: 4, name: 'خلف علي',      rating: 4, text: 'فحص التداخلات لقطة، بيوفر وقت كبير.' },
+    { id: 5, name: 'فاطمة سعيد',   rating: 5, text: 'بحب التذكيرات والـ UI واضح ومريح للعين.' },
   ];
 
   showReviewForm = signal(false);
@@ -72,7 +57,7 @@ export class Home {
     return Array(5 - rating).fill(0);
   }
 
-  submitReview() {
+  submitReview(): void {
     if (!this.newReview().name.trim() || !this.newReview().text.trim()) return;
     this.reviews.unshift({
       id: Date.now(),

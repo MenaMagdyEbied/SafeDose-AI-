@@ -10,6 +10,11 @@ namespace SafeDose.Application.DTOs
         public byte? Gender { get; set; }
         public Guid MedicalCardToken { get; set; }
 
+        // Doctor name shown on the printed card. Pulled from the first active medication
+        // that has DoctorName set, since SafeDose doesn't store a primary-doctor field
+        // on Patient. Null when no medication has a doctor recorded.
+        public string? DoctorName { get; set; }
+
         public List<MedicalCardDrugDto> CurrentMedications { get; set; } = new List<MedicalCardDrugDto>();
     }
 

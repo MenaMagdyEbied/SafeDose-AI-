@@ -6,13 +6,12 @@ import { environment } from '../../../../environments/environment';
 import { LoginResponse, MessageResponse } from '../../models/login-response';
 import { SessionUser, UserRole } from '../../models/session-user';
 import { UserProfileData } from '../../models/user-profile';
+
 const TOKEN_KEY = 'safedose_jwt';
 const USER_KEY = 'safedose_user';
 const COOKIE_DAYS = 30;
 
-@Injectable({
-  providedIn: 'root',
-})
+@Injectable({ providedIn: 'root' })
 export class Auth {
   private readonly apiUrl = environment.apiUrl;
   private readonly http = inject(HttpClient);
@@ -22,53 +21,28 @@ export class Auth {
   public user$ = this.userSubject.asObservable();
   showLoginModal = signal(false);
 
-  get user(): SessionUser | null {
-    return this.userSubject.value;
-  }
-
-  get token(): string | null {
-    return this.cookieService.get(TOKEN_KEY) || null;
-  }
-
-  get isLoggedIn(): boolean {
-    return !!this.token;
-  }
-
-  get role(): UserRole | null {
-    return this.userSubject.value?.role ?? null;
-  }
-
-  get isUser(): boolean {
-    return this.role === 'User';
-  }
-
-  get isAdmin(): boolean {
-    return this.role === 'Admin' || this.role === 'SuperAdmin';
-  }
-
-  get isSuperAdmin(): boolean {
-    return this.role === 'SuperAdmin';
-  }
+  get user(): SessionUser | null { return this.userSubject.value; }
+  get token(): string | null { return this.cookieService.get(TOKEN_KEY) || null; }
+  get isLoggedIn(): boolean { return !!this.token; }
+  get role(): UserRole | null { return this.userSubject.value?.role ?? null; }
+  get isUser(): boolean { return this.role === 'User'; }
+  get isAdmin(): boolean { return this.role === 'Admin' || this.role === 'SuperAdmin'; }
+  get isSuperAdmin(): boolean { return this.role === 'SuperAdmin'; }
 
   private decodeToken(token: string): Record<string, any> | null {
     try {
       const payload = token.split('.')[1];
       const decoded = atob(payload.replace(/-/g, '+').replace(/_/g, '/'));
       return JSON.parse(decoded);
-    } catch {
-      return null;
-    }
+    } catch { return null; }
   }
 
   private extractRole(token: string): UserRole {
     const claims = this.decodeToken(token);
     if (!claims) return 'User';
-
     const role =
       claims['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] ||
-      claims['role'] ||
-      'User';
-
+      claims['role'] || 'User';
     return role as UserRole;
   }
 
@@ -86,11 +60,7 @@ export class Auth {
   private readUserFromCookie(): SessionUser | null {
     const raw = this.cookieService.get(USER_KEY);
     if (!raw) return null;
-    try {
-      return JSON.parse(raw);
-    } catch {
-      return null;
-    }
+    try { return JSON.parse(raw); } catch { return null; }
   }
 
   private setSession(user: SessionUser, token: string): void {
@@ -103,16 +73,14 @@ export class Auth {
   logout(): void {
     this.cookieService.delete(TOKEN_KEY, '/');
     this.cookieService.delete(USER_KEY, '/');
+    try { localStorage.removeItem('safedose_pending_patient'); } catch {}
     this.userSubject.next(null);
   }
 
-
   login(payload: { userName: string; password: string }): Observable<SessionUser> {
-    return this.http.post<LoginResponse>(`${this.apiUrl}/Auth/login`, payload).pipe(
+    return this.http.post<LoginResponse>(this.apiUrl + '/Auth/login', payload).pipe(
       switchMap((res) => {
-        if (!res.isAuthenticated) {
-          throw new Error('Authentication failed');
-        }
+        if (!res.isAuthenticated) throw new Error('Authentication failed');
 
         const role = this.extractRole(res.token);
         const fallbackEmail = res.email || this.extractEmail(res.token);
@@ -124,8 +92,7 @@ export class Auth {
         };
         this.setSession(fallbackUser, res.token);
 
-        // دلوقتي نجيب بيانات الـ profile الكاملة ونحدث الجلسة بيها
-        return this.http.get<UserProfileData>(`${this.apiUrl}/UserProfile/userProfile`).pipe(
+        return this.http.get<UserProfileData>(this.apiUrl + '/UserProfile/userProfile').pipe(
           tap((profile) => {
             const fullUser: SessionUser = {
               userName: profile.userName,
@@ -136,10 +103,11 @@ export class Auth {
               roles: profile.roles as UserRole[],
             };
             this.setSession(fullUser, res.token);
+            this.ensurePrimaryPatient(profile.name || fullUser.userName);
           }),
           switchMap(() => of(this.userSubject.value as SessionUser)),
           catchError(() => {
-            // لو فشل جلب الـ profile، نفضل بالـ fallback اللي خزناه فوق
+            this.ensurePrimaryPatient(fallbackUser.userName);
             return of(fallbackUser);
           }),
         );
@@ -147,24 +115,69 @@ export class Auth {
     );
   }
 
+  // EVERY login checks /patients/my. If the account has no patient row yet,
+  // we create a minimal one so the medications + medical-card + interaction-check
+  // flows all have a valid PatientId to work with.
+  // Step-2 registration data (age, conditions) is layered on top when available.
+  private ensurePrimaryPatient(fallbackName: string): void {
+    this.http.get<any[]>(this.apiUrl + '/patients/my').subscribe({
+      next: (existing) => {
+        if (existing && existing.length > 0) {
+          try { localStorage.removeItem('safedose_pending_patient'); } catch {}
+          return;
+        }
+
+        let pending: any = null;
+        try {
+          const raw = localStorage.getItem('safedose_pending_patient');
+          if (raw) pending = JSON.parse(raw);
+        } catch { /* ignore */ }
+
+        const age = Number(pending?.age);
+        let dateOfBirth: string | null = null;
+        if (Number.isFinite(age) && age > 0 && age < 130) {
+          const birthYear = new Date().getFullYear() - Math.floor(age);
+          dateOfBirth = birthYear + '-01-01';
+        }
+
+        const body = {
+          fullName: pending?.fullName || fallbackName || 'مريض',
+          dateOfBirth,
+          gender: null,
+          bloodType: null,
+          chronicConditions: Array.isArray(pending?.chronicConditions) ? pending.chronicConditions : [],
+          allergies: [],
+        };
+
+        this.http.post(this.apiUrl + '/patients', body).subscribe({
+          next: () => {
+            try { localStorage.removeItem('safedose_pending_patient'); } catch {}
+          },
+          error: () => { /* retried on next login */ },
+        });
+      },
+      error: () => { /* skip — backend probably 500 (run the SQL fix) */ },
+    });
+  }
+
   register(payload: Record<string, unknown>): Observable<MessageResponse> {
-    return this.http.post<MessageResponse>(`${this.apiUrl}/Auth/register`, payload);
+    return this.http.post<MessageResponse>(this.apiUrl + '/Auth/register', payload);
   }
 
   registerAdmin(payload: Record<string, unknown>): Observable<MessageResponse> {
-    return this.http.post<MessageResponse>(`${this.apiUrl}/Auth/registerAdmin`, payload);
+    return this.http.post<MessageResponse>(this.apiUrl + '/Auth/registerAdmin', payload);
   }
 
   confirmEmail(payload: Record<string, unknown>): Observable<MessageResponse> {
-    return this.http.post<MessageResponse>(`${this.apiUrl}/Auth/emailConfirmation`, payload);
+    return this.http.post<MessageResponse>(this.apiUrl + '/Auth/emailConfirmation', payload);
   }
 
   forgotPassword(payload: Record<string, unknown>): Observable<MessageResponse> {
-    return this.http.post<MessageResponse>(`${this.apiUrl}/Auth/forgotPassword`, payload);
+    return this.http.post<MessageResponse>(this.apiUrl + '/Auth/forgotPassword', payload);
   }
 
   resetPassword(payload: Record<string, unknown>): Observable<MessageResponse> {
-    return this.http.post<MessageResponse>(`${this.apiUrl}/Auth/resetPassword`, payload);
+    return this.http.post<MessageResponse>(this.apiUrl + '/Auth/resetPassword', payload);
   }
 
   updateProfile(updates: Partial<SessionUser>): void {

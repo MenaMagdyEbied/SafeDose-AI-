@@ -20,6 +20,7 @@ import {
 } from 'lucide-angular';
 import { Auth } from '../../../../core/auth/services/auth';
 import { UserProfile } from '../../../../core/auth/services/user-profile';
+import { Subscription } from '../../../../core/services/subscription';
 
 @Component({
   selector: 'app-header',
@@ -30,6 +31,7 @@ import { UserProfile } from '../../../../core/auth/services/user-profile';
 export class Header {
   private readonly router = inject(Router);
   protected readonly authService = inject(Auth);
+  protected readonly subscriptionService = inject(Subscription);
 
   showLogoutConfirm = false;
   accountMenu = false;
@@ -122,12 +124,20 @@ export class Header {
   logout(): void {
     this.showLogoutConfirm = false;
     this.authService.logout();
+    this.subscriptionService.clear();
     this.router.navigate(['/home']);
   }
 
   ngOnInit(): void {
     this.authService.user$.subscribe((user) => {
       this.userName = user?.name || user?.userName || '';
+      // Whenever a user appears or changes, refresh the cached subscription state
+      // so the nav can hide /pricing for paid users immediately.
+      if (user) {
+        this.subscriptionService.refresh();
+      } else {
+        this.subscriptionService.clear();
+      }
     });
   }
 }

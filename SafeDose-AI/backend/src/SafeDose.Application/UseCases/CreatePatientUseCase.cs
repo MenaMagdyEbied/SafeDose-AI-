@@ -9,19 +9,11 @@ public class CreatePatientUseCase
 {
     private readonly IPatientRepository _patients;
     private readonly IAuditLogService _audit;
-    private readonly ISubscriptionRepository _subscriptions;
-    private readonly IPricingTierRepository _tiers;
 
-    public CreatePatientUseCase(
-        IPatientRepository patients,
-        IAuditLogService audit,
-        ISubscriptionRepository subscriptions,
-        IPricingTierRepository tiers)
+    public CreatePatientUseCase(IPatientRepository patients, IAuditLogService audit)
     {
         _patients = patients;
         _audit = audit;
-        _subscriptions = subscriptions;
-        _tiers = tiers;
     }
 
     public async Task<PatientResponseDto> ExecuteAsync(
@@ -39,7 +31,6 @@ public class CreatePatientUseCase
         ValidateDob(dto.DateOfBirth);
         ValidateGender(dto.Gender);
         ValidateBloodType(dto.BloodType);
-        await EnforcePatientLimitAsync(accountId);
 
         var patient = new Patient
         {
@@ -116,20 +107,4 @@ public class CreatePatientUseCase
         => string.IsNullOrWhiteSpace(csv)
             ? Array.Empty<string>()
             : csv.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-
-    private async Task EnforcePatientLimitAsync(string accountId)
-    {
-        var subscription = await _subscriptions.GetActiveByAccountAsync(accountId);
-        var tier = subscription?.PricingTier
-            ?? await _tiers.GetByCodeAsync("free")
-            ?? throw new InvalidOperationException("Free pricing tier is not configured");
-
-        if (tier.PatientLimit == int.MaxValue)
-            return;
-
-        var currentPatients = await _patients.CountByAccountIdAsync(accountId);
-        if (currentPatients >= tier.PatientLimit)
-            throw new ArgumentException(
-                $"Patient profile limit reached for your plan ({tier.PatientLimit} patient profiles).");
-    }
 }

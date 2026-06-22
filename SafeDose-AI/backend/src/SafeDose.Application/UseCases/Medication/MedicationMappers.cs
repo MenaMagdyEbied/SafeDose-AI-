@@ -1,8 +1,9 @@
-using SafeDose.Application.DTOs;
+﻿using SafeDose.Application.DTOs;
 using SafeDose.Domain.Entities;
 
 namespace SafeDose.Application.UseCases.Medication;
 
+// Shared mapping + Arabic label resolvers - used by all medication use cases.
 internal static class MedicationMappers
 {
     public static MedicationResponseDto ToDto(PatientMedication pm)

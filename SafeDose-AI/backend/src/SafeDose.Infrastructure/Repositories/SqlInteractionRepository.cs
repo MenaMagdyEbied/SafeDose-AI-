@@ -65,8 +65,4 @@ public class SqlInteractionRepository : IInteractionRepository
 
     public Task<int> CountForPatientAsync(int patientId)
         => _db.InteractionChecks.CountAsync(c => c.PatientId == patientId);
-
-    public Task<int> CountForAccountSinceAsync(string accountId, DateTime sinceUtc)
-        => _db.InteractionChecks
-            .CountAsync(c => c.AccountId == accountId && c.CheckedAt >= sinceUtc);
 }

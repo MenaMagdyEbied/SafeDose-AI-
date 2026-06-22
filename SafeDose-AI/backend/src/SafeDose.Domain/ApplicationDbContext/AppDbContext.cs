@@ -91,6 +91,7 @@ namespace SafeDose.Domain.ApplicationDbContext
         public DbSet<ConsentRecord> ConsentRecords { get; set; }
         public DbSet<FreeTierUsage> FreeTierUsages { get; set; }
         public DbSet<PricingTier> PricingTiers { get; set; }
+        public DbSet<PricingTierFeature> PricingTierFeatures { get; set; }
         public DbSet<PricingChangeHistory> PricingChangeHistories { get; set; }
         public DbSet<Subscription> Subscriptions { get; set; }
         public DbSet<Payment> Payments { get; set; }
@@ -107,7 +108,6 @@ namespace SafeDose.Domain.ApplicationDbContext
         public DbSet<ReminderResponse> ReminderResponses { get; set; }
         public DbSet<AuditLog> AuditLogs { get; set; }
 
-        public DbSet<PushSubscription> PushSubscription { get; set; }
 
     }
 }

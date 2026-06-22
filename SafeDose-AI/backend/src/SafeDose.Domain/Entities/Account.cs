@@ -20,7 +20,5 @@ namespace SafeDose.Domain.Entities
         public ICollection<Patient> Patients { get; set; } = [];
         public ICollection<AuditLog> AuditLogs { get; set; } = [];
         public ICollection<PricingChangeHistory> PricingChangeHistories { get; set; } = [];
-        public ICollection<PushSubscription> PushSubscriptions { get; set; } = [];
-
     }
 }

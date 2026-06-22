@@ -55,7 +55,7 @@ public class InteractionsController : ControllerBase
         catch (SafeDose.Application.Exceptions.QuotaExceededException ex)
         {
             return BadRequest(new ErrorResponse(
-                "QUOTA_EXCEEDED", ex.MessageArabic, ex.MessageEnglish));
+                "QUOTA_EXCEEDED", ex.MessageArabic));
         }
         catch (ArgumentException ex)
         {

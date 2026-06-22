@@ -6,8 +6,8 @@ namespace SafeDose.Domain.Entities
     {
         public int PrescriptionId { get; set; }
         public int PatientId { get; set; }
-        public string PrescriptionName { get; set; }
-        public byte SourceType { get; set; }
+        public string? PrescriptionName { get; set; }
+        public byte? SourceType { get; set; }
         public string? ImageUrl { get; set; }
         public string? OCRText { get; set; }
         public byte OCRStatus { get; set; }

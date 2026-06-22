@@ -52,13 +52,11 @@ public class ParsePrescriptionUseCase
             cycleStart = GetCurrentCycleStart(createdAt, DateTime.UtcNow);
         }
 
+        // 2. Limit check
         var limit = tier.PrescriptionParseLimit;
-
-        // 2. Count parsed prescriptions in this cycle
-        if (limit != int.MaxValue)
+        if (limit != int.MaxValue && limit > 0)
         {
             var usageCount = await _prescriptionRepository.CountForAccountSinceAsync(accountId, cycleStart);
-
             if (usageCount >= limit)
             {
                 throw new Exception($"You have reached your monthly limit of {limit} prescription(s).");

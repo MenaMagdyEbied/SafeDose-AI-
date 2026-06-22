@@ -4,7 +4,6 @@ import { ChatMessage } from '../../../core/models';
 import { Activity, LucideAngularModule, MessageSquare, Mic, Send, X } from 'lucide-angular';
 import { Auth } from '../../../core/auth/services/auth';
 import { Router } from '@angular/router';
-import { ChatBotService } from '../../../core/services/chat-bot-service';
 import { FormsModule } from '@angular/forms';
 import { EMPTY, from } from 'rxjs';
 import { catchError, finalize } from 'rxjs/operators';
@@ -16,16 +15,14 @@ import { catchError, finalize } from 'rxjs/operators';
   styleUrl: './chat-bot.css',
 })
 export class ChatBot {
-  private readonly chatbotService = inject(ChatBotService);
+  // private readonly chatbotService = inject(ChatBotService);
   private readonly auth = inject(Auth);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
-
   isOpen = false;
   inputText = '';
   // Signal so flipping between true/false during async never triggers NG0100.
   loading = signal(false);
-
   messages: ChatMessage[] = [
     {
       id: 'initial',
@@ -35,20 +32,17 @@ export class ChatBot {
       severityLevel: 'info',
     },
   ];
-
   quickChips = [
     'تحقق من تداخل دوائين',
     'ما هو دواء جلوكوفاج؟',
     'هل يمكنني تغيير جرعتي؟',
     'أعراض كونكور الجانبية',
   ];
-
   messageSquareIcon = MessageSquare;
   xIcon = X;
   sendIcon = Send;
   micIcon = Mic;
   heartRateIcon = Activity;
-
   getMsgClass(msg: ChatMessage): string {
     if (msg.sender === 'user')
       return 'p-3.5 rounded-2xl text-md leading-relaxed shadow-xs bg-primary text-white rounded-br-none text-right';
@@ -64,63 +58,58 @@ export class ChatBot {
         return base + 'bg-slate-50 text-on-background border-r-4 border-primary';
     }
   }
-
   sendMessage(): void {
-    const text = this.inputText.trim();
-    if (!text) return;
-
-    this.messages = [
-      ...this.messages,
-      { id: 'user-' + Date.now(), sender: 'user', text, timestamp: new Date() },
-    ];
-    this.inputText = '';
-    this.loading.set(true);
-
-    const patientName = this.auth.user?.userName || 'أحمد';
-
-    from(this.chatbotService.sendMessage(text, this.messages, patientName))
-      .pipe(
-        catchError(() => {
-          this.messages = [
-            ...this.messages,
-            {
-              id: 'bot-' + Date.now(),
-              sender: 'bot',
-              text: 'حدث خطأ أثناء معالجة الرسالة. حاول مرة أخرى.',
-              timestamp: new Date(),
-              severityLevel: 'info',
-            },
-          ];
-          return EMPTY;
-        }),
-        finalize(() => {
-          this.loading.set(false);
-        }),
-        takeUntilDestroyed(this.destroyRef),
-      )
-      .subscribe((result) => {
-        this.messages = [
-          ...this.messages,
-          {
-            id: 'bot-' + Date.now(),
-            sender: 'bot',
-            text: result.reply,
-            timestamp: new Date(),
-            severityLevel: result.severityLevel,
-          },
-        ];
-      });
+    //   const text = this.inputText.trim();
+    //   if (!text) return;
+    //   this.messages = [
+    //     ...this.messages,
+    //     { id: 'user-' + Date.now(), sender: 'user', text, timestamp: new Date() },
+    //   ];
+    //   this.inputText = '';
+    //   this.loading.set(true);
+    //   const patientName = this.auth.user?.userName || 'أحمد';
+    //   from(this.chatbotService.sendMessage(text, this.messages, patientName))
+    //     .pipe(
+    //       catchError(() => {
+    //         this.messages = [
+    //           ...this.messages,
+    //           {
+    //             id: 'bot-' + Date.now(),
+    //             sender: 'bot',
+    //             text: 'حدث خطأ أثناء معالجة الرسالة. حاول مرة أخرى.',
+    //             timestamp: new Date(),
+    //             severityLevel: 'info',
+    //           },
+    //         ];
+    //         return EMPTY;
+    //       }),
+    //       finalize(() => {
+    //         this.loading.set(false);
+    //       }),
+    //       takeUntilDestroyed(this.destroyRef),
+    //     )
+    //     .subscribe((result) => {
+    //       this.messages = [
+    //         ...this.messages,
+    //         {
+    //           id: 'bot-' + Date.now(),
+    //           sender: 'bot',
+    //           text: result.reply,
+    //           timestamp: new Date(),
+    //           severityLevel: result.severityLevel,
+    //           // actions: result.actions,
+    //         },
+    //       ];
+    //     });
   }
-
   sendChip(chip: string): void {
-    this.inputText = chip;
-    this.sendMessage();
+    //   this.inputText = chip;
+    //   this.sendMessage();
   }
-
-  triggerAction(action: string): void {
-    if (action === 'digital-card') this.router.navigate(['/digital-card']);
-    else if (action === 'call-doctor') alert('جاري الاتصال بالطبيب المناوب...');
-    else if (action === 'report-symptoms') alert('تم فتح تقرير تسجيل الأعراض.');
-    this.isOpen = false;
-  }
+  // triggerAction(action: string): void {
+  //   if (action === 'digital-card') this.router.navigate(['/digital-card']);
+  //   else if (action === 'call-doctor') alert('جاري الاتصال بالطبيب المناوب...');
+  //   else if (action === 'report-symptoms') alert('تم فتح تقرير تسجيل الأعراض.');
+  //   this.isOpen = false;
+  // }
 }

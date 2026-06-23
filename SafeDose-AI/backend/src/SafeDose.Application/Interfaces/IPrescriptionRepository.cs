@@ -15,4 +15,5 @@ public interface IPrescriptionRepository
     // Hard delete — used by the prescription list "remove" action. Drugs/PatientMedications
     // cascade per EF model relationships. Returns false if the row was already gone.
     Task<bool> DeletePrescriptionAsync(int prescriptionId);
+    Task<int> CountForAccountSinceAsync(string accountId, DateTime sinceUtc);
 }

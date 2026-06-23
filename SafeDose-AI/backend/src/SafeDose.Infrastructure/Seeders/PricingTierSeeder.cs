@@ -36,7 +36,7 @@ public class PricingTierSeeder : IPricingTierSeeder
                 MonthlyPrice = 0m,
                 Currency = "EGP",
                 PatientLimit = 1,
-                PrescriptionParseLimit = 1,
+                PrescriptionParseLimit = 3,
                 BillingCycleDays = 0,         // no expiry
                 IsActive = true,
             },
@@ -47,7 +47,7 @@ public class PricingTierSeeder : IPricingTierSeeder
                 MonthlyPrice = 30m,
                 Currency = "EGP",
                 PatientLimit = 5,
-                PrescriptionParseLimit = 5,
+                PrescriptionParseLimit = 10,
                 BillingCycleDays = 30,
                 IsActive = true,
             },
@@ -55,10 +55,10 @@ public class PricingTierSeeder : IPricingTierSeeder
             {
                 TierCode = "premium-annual",
                 TierName = "بريميوم سنوي",
-                MonthlyPrice = 300m,          // 2 months free vs monthly
+                MonthlyPrice = 300m,          
                 Currency = "EGP",
                 PatientLimit = 5,
-                PrescriptionParseLimit = 5,
+                PrescriptionParseLimit = 10,
                 BillingCycleDays = 365,
                 IsActive = true,
             },

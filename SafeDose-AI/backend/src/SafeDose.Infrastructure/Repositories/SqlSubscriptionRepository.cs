@@ -48,4 +48,12 @@ public class SqlSubscriptionRepository : ISubscriptionRepository
         _db.Subscriptions.Update(subscription);
         await _db.SaveChangesAsync();
     }
+
+    public Task<DateTime?> GetAccountCreatedAtAsync(string accountId)
+    {
+        return _db.Users
+            .Where(u => u.Id == accountId)
+            .Select(u => (DateTime?)u.CreatedAt)
+            .FirstOrDefaultAsync();
+    }
 }

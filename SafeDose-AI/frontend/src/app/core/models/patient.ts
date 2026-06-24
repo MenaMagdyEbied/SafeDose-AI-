@@ -9,4 +9,11 @@ export interface Patient {
   allergies: string[];
   isActive?: boolean;
   createdAt?: string;
+
+  // Extended profile fields. All optional.
+  emergencyContactName?: string | null;
+  emergencyContactPhone?: string | null;
+  doctorName?: string | null;
+  // self | son | daughter | father | mother | brother | sister | husband | wife | other
+  relationship?: string | null;
 }

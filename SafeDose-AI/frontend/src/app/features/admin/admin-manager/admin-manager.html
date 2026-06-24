@@ -1,9 +1,10 @@
 <div class="px-4 pt-20 pb-12 sm:px-6 lg:pt-12 space-y-6 p-60" dir="rtl">
-  <!-- Header -->
   <div class="flex items-center justify-between">
     <div>
       <h2 class="text-2xl font-extrabold text-on-background">إدارة المشرفين</h2>
-      <p class="text-sm text-outline mt-0.5">إجمالي {{ admins.length }} مشرف مسجل</p>
+      <p class="text-sm text-outline mt-0.5">
+        {{ isLoading ? 'جارٍ التحميل...' : 'إجمالي ' + admins.length + ' مشرف مسجل' }}
+      </p>
     </div>
     <button
       (click)="openAdd()"
@@ -14,7 +15,6 @@
     </button>
   </div>
 
-  <!-- Table -->
   <div class="bg-white rounded-2xl border border-outline-variant shadow-sm overflow-hidden">
     <div class="overflow-x-auto">
       <table class="w-full min-w-170 text-right">
@@ -30,7 +30,6 @@
         <tbody class="divide-y divide-outline-variant/40">
           @for (admin of admins; track admin.id) {
             <tr class="hover:bg-surface-container-low/50 transition-colors">
-              <!-- Admin Info -->
               <td class="px-5 py-4">
                 <div class="flex items-center gap-3">
                   <div
@@ -45,7 +44,6 @@
                 </div>
               </td>
 
-              <!-- Role -->
               <td class="px-5 py-4">
                 <span
                   [class]="
@@ -61,7 +59,6 @@
                 </span>
               </td>
 
-              <!-- Status -->
               <td class="px-5 py-4">
                 <span
                   [class]="
@@ -77,19 +74,26 @@
                         : 'w-1.5 h-1.5 rounded-full bg-outline'
                     "
                   ></span>
-                  {{ admin.status === 'active' ? 'نشط' : 'غير نشط' }}
+                  {{ getStatusLabel(admin.status) }}
                 </span>
               </td>
 
-              <!-- Date -->
               <td class="px-5 py-4">
-                <span class="text-xs text-outline">{{ admin.createdAt }}</span>
+                <span class="text-xs text-outline">{{ admin.createdAt || '—' }}</span>
               </td>
 
-              <!-- Actions -->
               <td class="px-5 py-4">
                 <div class="flex items-center gap-2">
                   <button
+                    type="button"
+                    (click)="toggleStatus(admin)"
+                    [disabled]="isTogglingStatus"
+                    class="h-8 rounded-lg px-3 text-xs font-bold border border-outline-variant text-outline hover:bg-surface-container transition-all cursor-pointer"
+                  >
+                    {{ admin.status === 'active' ? 'إلغاء التفعيل' : 'تفعيل' }}
+                  </button>
+                  <button
+                    type="button"
                     (click)="openEdit(admin)"
                     [disabled]="admin.role === 'super-admin'"
                     [class]="
@@ -101,6 +105,7 @@
                     <lucide-icon [img]="editIcon" class="w-4 h-4"></lucide-icon>
                   </button>
                   <button
+                    type="button"
                     (click)="confirmDelete(admin)"
                     [disabled]="admin.role === 'super-admin'"
                     [class]="
@@ -120,19 +125,18 @@
     </div>
   </div>
 
-  <!-- Add/Edit Modal -->
   @if (showForm) {
     <div
       class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-neutral-dark/60 backdrop-blur-xs animate-fade-in"
       dir="rtl"
     >
       <div class="w-full max-w-md bg-white rounded-3xl shadow-2xl p-6 space-y-5">
-        <!-- Modal Header -->
         <div class="flex items-center justify-between">
           <h3 class="text-lg font-extrabold text-on-background">
             {{ isEditing ? 'تعديل المشرف' : 'إضافة مشرف جديد' }}
           </h3>
           <button
+            type="button"
             (click)="showForm = false"
             class="w-8 h-8 rounded-lg hover:bg-surface-container flex items-center justify-center text-outline transition-all cursor-pointer"
           >
@@ -140,7 +144,6 @@
           </button>
         </div>
 
-        <!-- Fields -->
         <div class="space-y-4">
           <div class="space-y-1.5">
             <label class="text-sm font-bold text-on-background">الاسم</label>
@@ -163,56 +166,59 @@
             />
           </div>
 
-          <div class="space-y-1.5">
-            <label class="text-sm font-bold text-on-background">الدور</label>
-            <select
-              [(ngModel)]="form.role"
-              class="w-full h-11 px-4 border border-outline-variant rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none text-sm font-medium transition-all cursor-pointer"
-            >
-              @for (role of availableRoles; track role.value) {
-                <option [value]="role.value">{{ role.label }}</option>
-              }
-            </select>
-          </div>
-
-          <div class="space-y-1.5">
-            <label class="text-sm font-bold text-on-background">الحالة</label>
-            <div class="flex gap-3">
-              <button
-                (click)="form.status = 'active'"
-                [class]="
-                  form.status === 'active'
-                    ? 'flex-1 h-11 rounded-xl text-sm font-bold border-2 border-primary bg-primary/5 text-primary transition-all cursor-pointer'
-                    : 'flex-1 h-11 rounded-xl text-sm font-bold border border-outline-variant text-outline hover:bg-surface-container transition-all cursor-pointer'
-                "
+          @if (isEditing) {
+            <div class="space-y-1.5">
+              <label class="text-sm font-bold text-on-background">الدور</label>
+              <select
+                [(ngModel)]="form.role"
+                class="w-full h-11 px-4 border border-outline-variant rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none text-sm font-medium transition-all cursor-pointer"
               >
-                نشط
-              </button>
-              <button
-                (click)="form.status = 'inactive'"
-                [class]="
-                  form.status === 'inactive'
-                    ? 'flex-1 h-11 rounded-xl text-sm font-bold border-2 border-danger bg-danger-container/30 text-danger transition-all cursor-pointer'
-                    : 'flex-1 h-11 rounded-xl text-sm font-bold border border-outline-variant text-outline hover:bg-surface-container transition-all cursor-pointer'
-                "
-              >
-                غير نشط
-              </button>
+                @for (role of availableRoles; track role.value) {
+                  <option [value]="role.value">{{ role.label }}</option>
+                }
+              </select>
             </div>
-          </div>
+          }
+
+          @if (!isEditing) {
+            <div class="space-y-1.5">
+              <label class="text-sm font-bold text-on-background">كلمة المرور</label>
+              <input
+                type="password"
+                [(ngModel)]="form.password"
+                placeholder="أدخل كلمة المرور"
+                class="w-full h-11 px-4 bg-white border border-outline-variant rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none text-sm font-medium transition-all"
+              />
+            </div>
+          }
+
+          @if (isEditing) {
+            <div class="space-y-1.5">
+              <label class="text-sm font-bold text-on-background"
+                >كلمة المرور الجديدة (اختيارية)</label
+              >
+              <input
+                type="password"
+                [(ngModel)]="form.newPassword"
+                placeholder="اتركها فارغة إذا لم ترغب in تغييرها"
+                class="w-full h-11 px-4 bg-white border border-outline-variant rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none text-sm font-medium transition-all"
+              />
+            </div>
+          }
         </div>
 
-        <!-- Actions -->
         <div class="flex gap-3 pt-2">
           <button
+            type="button"
             (click)="showForm = false"
             class="flex-1 h-11 rounded-xl border border-outline-variant text-outline font-bold text-sm hover:bg-surface-container transition-all cursor-pointer"
           >
             إلغاء
           </button>
           <button
+            type="button"
             (click)="save()"
-            [disabled]="!form.name || !form.email"
+            [disabled]="!form.name || !form.email || (!isEditing && !form.password) || isSaving"
             class="flex-2 h-11 rounded-xl bg-primary hover:bg-primary-dark disabled:bg-slate-200 disabled:text-outline text-white font-bold text-sm flex items-center justify-center gap-2 transition-all cursor-pointer"
           >
             <lucide-icon [img]="checkIcon" class="w-4 h-4"></lucide-icon>
@@ -223,7 +229,6 @@
     </div>
   }
 
-  <!-- Delete Dialog -->
   @if (showDeleteDialog) {
     <div
       class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-neutral-dark/60 backdrop-blur-xs animate-fade-in"
@@ -245,12 +250,14 @@
         </div>
         <div class="flex gap-3">
           <button
+            type="button"
             (click)="showDeleteDialog = false"
             class="flex-1 h-11 rounded-xl border border-outline-variant text-outline font-bold text-sm hover:bg-surface-container transition-all cursor-pointer"
           >
             إلغاء
           </button>
           <button
+            type="button"
             (click)="executeDelete()"
             class="flex-1 h-11 rounded-xl bg-danger hover:bg-red-700 text-white font-bold text-sm transition-all cursor-pointer"
           >

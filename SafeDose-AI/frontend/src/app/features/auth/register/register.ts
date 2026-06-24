@@ -120,7 +120,7 @@ export class Register {
       '',
       [Validators.required, Validators.minLength(3), this.englishOnlyValidator.bind(this)],
     ],
-    phone: ['', [Validators.required, Validators.pattern(/^01[0125][0-9]{8}$/)]],
+    phone: ['', [Validators.required, Validators.pattern(/^\+[1-9]\d{6,14}$/)]],
     email: ['', [Validators.required, Validators.email]],
   });
   step2Form: FormGroup = this.fb.group({

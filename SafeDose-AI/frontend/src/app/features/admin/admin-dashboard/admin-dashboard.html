@@ -15,7 +15,7 @@
 
   <!-- KPI Cards -->
   <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-    @for (kpi of kpis; track kpi.label) {
+    @for (kpi of kpis(); track kpi.label) {
       <div
         class="bg-white rounded-2xl border border-outline-variant p-4 sm:p-5 shadow-sm space-y-3"
       >
@@ -100,10 +100,12 @@
       </div>
 
       <div class="h-40 sm:h-48 flex items-end gap-1 sm:gap-2 mt-6">
-        @for (bar of revenueData; track $index) {
+        @for (bar of revenueData(); track $index) {
           <div class="flex-1 flex flex-col items-center gap-2 group">
             <div class="w-full flex flex-col items-center justify-end h-32 sm:h-40 relative">
               <div
+
+              
                 class="absolute -top-6 opacity-0 group-hover:opacity-100 transition-opacity text-[10px] font-bold text-on-background bg-white border border-outline-variant rounded px-1.5 py-0.5 whitespace-nowrap z-10"
               >
                 {{ bar.value }} ج.م
@@ -148,7 +150,7 @@
               stroke="var(--color-primary)"
               stroke-width="14"
               stroke-dasharray="251.2"
-              [attr.stroke-dashoffset]="251.2 - (251.2 * genderSplit.female) / 100"
+              [attr.stroke-dashoffset]="251.2 - (251.2 * genderSplit().female) / 100"
               stroke-linecap="round"
             />
             <circle
@@ -159,14 +161,14 @@
               stroke="var(--color-secondary)"
               stroke-width="14"
               stroke-dasharray="251.2"
-              [attr.stroke-dashoffset]="251.2 - (251.2 * genderSplit.male) / 100"
-              [style.transform]="'rotate(' + genderSplit.female * 3.6 + 'deg)'"
+              [attr.stroke-dashoffset]="251.2 - (251.2 * genderSplit().male) / 100"
+              [style.transform]="'rotate(' + genderSplit().female * 3.6 + 'deg)'"
               style="transform-origin: 50% 50%"
               stroke-linecap="round"
             />
           </svg>
           <div class="absolute inset-0 flex flex-col items-center justify-center">
-            <span class="text-xl sm:text-2xl font-black text-on-background">{{ totalUsers }}</span>
+            <span class="text-xl sm:text-2xl font-black text-on-background">{{ totalUsers() }}</span>
             <span class="text-[10px] text-outline font-bold">مستخدم</span>
           </div>
         </div>
@@ -177,14 +179,14 @@
             <span class="w-3 h-3 rounded-full bg-primary"></span>
             <span class="text-xs font-bold text-on-surface-variant">نساء</span>
           </div>
-          <span class="text-xs font-black text-on-background">{{ genderSplit.female }}%</span>
+          <span class="text-xs font-black text-on-background">{{ genderSplit().female }}%</span>
         </div>
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-2">
             <span class="w-3 h-3 rounded-full bg-secondary"></span>
             <span class="text-xs font-bold text-on-surface-variant">رجال</span>
           </div>
-          <span class="text-xs font-black text-on-background">{{ genderSplit.male }}%</span>
+          <span class="text-xs font-black text-on-background">{{ genderSplit().male }}%</span>
         </div>
       </div>
     </div>
@@ -200,7 +202,7 @@
         <div>
           <div class="flex items-center justify-between mb-1.5">
             <span class="text-xs font-bold text-on-surface-variant">مجاني</span>
-            <span class="text-sm font-black text-on-background">{{ usersStats.free }}</span>
+            <span class="text-sm font-black text-on-background">{{ usersStats().free }}</span>
           </div>
           <div class="h-2.5 bg-surface-container rounded-full overflow-hidden">
             <div class="h-full bg-outline-variant rounded-full" [style.width.%]="freePercent"></div>
@@ -209,7 +211,7 @@
         <div>
           <div class="flex items-center justify-between mb-1.5">
             <span class="text-xs font-bold text-on-surface-variant">مدفوع (العائلي)</span>
-            <span class="text-sm font-black text-secondary">{{ usersStats.paid }}</span>
+            <span class="text-sm font-black text-secondary">{{ usersStats().paid }}</span>
           </div>
           <div class="h-2.5 bg-surface-container rounded-full overflow-hidden">
             <div class="h-full bg-secondary rounded-full" [style.width.%]="100 - freePercent"></div>
@@ -225,7 +227,7 @@
     <div class="bg-white rounded-2xl border border-outline-variant p-4 sm:p-5 shadow-sm">
       <h3 class="font-extrabold text-on-background mb-4 text-sm sm:text-base">فريق العمل</h3>
       <div class="space-y-3">
-        @for (role of staffRoles; track role.label) {
+        @for (role of staffRoles(); track role.label) {
           <div class="flex items-center justify-between p-3 bg-surface-container-low rounded-xl">
             <div class="flex items-center gap-2.5">
               <div [class]="'w-8 h-8 rounded-lg flex items-center justify-center ' + role.bg">
@@ -255,17 +257,17 @@
           ></lucide-icon>
         </div>
         <div>
-          <p class="text-xl sm:text-2xl font-black text-on-background">{{ cardsIssued }}</p>
+          <p class="text-xl sm:text-2xl font-black text-on-background">{{ cardsIssued() }}</p>
           <p class="text-xs text-outline">كرت صادر</p>
         </div>
       </div>
       <div class="grid grid-cols-2 gap-3">
         <div class="bg-surface-container-low rounded-xl p-3 text-center">
-          <p class="text-lg font-black text-on-background">{{ cardsActive }}</p>
+          <p class="text-lg font-black text-on-background">{{ cardsActive() }}</p>
           <p class="text-[10px] text-outline font-bold mt-0.5">نشط</p>
         </div>
         <div class="bg-surface-container-low rounded-xl p-3 text-center">
-          <p class="text-lg font-black text-on-background">{{ cardsExpired }}</p>
+          <p class="text-lg font-black text-on-background">{{ cardsExpired() }}</p>
           <p class="text-[10px] text-outline font-bold mt-0.5">منتهي</p>
         </div>
       </div>
@@ -279,7 +281,7 @@
       <span class="text-xs font-bold text-primary cursor-pointer hover:underline">عرض الكل</span>
     </div>
     <div class="divide-y divide-outline-variant/20">
-      @for (activity of recentActivity; track $index) {
+      @for (activity of recentActivity(); track $index) {
         <div class="p-3 sm:p-4 flex items-center gap-3">
           <div
             [class]="

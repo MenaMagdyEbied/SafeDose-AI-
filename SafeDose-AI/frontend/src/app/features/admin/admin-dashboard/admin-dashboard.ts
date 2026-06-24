@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import {
   LucideAngularModule,
   Users,
@@ -14,6 +14,7 @@ import {
   UserPlus,
   FileText,
 } from 'lucide-angular';
+import {AdminDashboard as AdminDashboardService } from '../services/admin-dashboard';
 
 @Component({
   selector: 'app-admin-dashboard',
@@ -22,141 +23,210 @@ import {
   styleUrl: './admin-dashboard.css',
 })
 export class AdminDashboard {
+  private readonly api = inject(AdminDashboardService);
+
   calendarIcon = Calendar;
   trendUpIcon = TrendingUp;
   trendDownIcon = TrendingDown;
   creditCardIcon = CreditCard;
 
   revenuePeriod: 'monthly' | 'yearly' = 'monthly';
+  loading = signal(true);
+  loadError = signal('');
 
-  kpis = [
-    {
-      label: 'إجمالي المستخدمين',
-      value: '12,480',
-      trend: 8.2,
-      icon: Users,
-      bg: 'bg-primary-container',
-      iconColor: 'text-primary',
-    },
-    {
-      label: 'مستخدمين نشطين',
-      value: '9,104',
-      trend: 4.1,
-      icon: UserCheck,
-      bg: 'bg-tertiary-container',
-      iconColor: 'text-tertiary',
-    },
-    {
-      label: 'إيرادات الشهر',
-      value: '48,250 ج.م',
-      trend: 12.4,
-      icon: Wallet,
-      bg: 'bg-secondary-container',
-      iconColor: 'text-on-secondary-container',
-    },
-    {
-      label: 'إيرادات السنة',
-      value: '512,400 ج.م',
-      trend: -2.3,
-      icon: TrendingUp,
-      bg: 'bg-danger-container',
-      iconColor: 'text-danger',
-    },
-  ];
+  // KPI cards. Defaults so the layout doesn't jump while loading.
+  kpis = signal<any[]>([]);
+  revenueData = signal<{ label: string; value: string; percent: number; subPercent: number }[]>([]);
+  genderSplit = signal<{ female: number; male: number }>({ female: 0, male: 0 });
+  totalUsers = signal('0');
+  usersStats = signal<{ free: number; paid: number }>({ free: 0, paid: 0 });
+  staffRoles = signal<any[]>([]);
+  cardsIssued = signal(0);
+  cardsActive = signal(0);
+  cardsExpired = signal(0);
+  recentActivity = signal<any[]>([]);
 
-  revenueData = [
-    { label: 'يناير', value: '32,100', percent: 60, subPercent: 38 },
-    { label: 'فبراير', value: '35,400', percent: 65, subPercent: 40 },
-    { label: 'مارس', value: '31,200', percent: 58, subPercent: 35 },
-    { label: 'أبريل', value: '38,900', percent: 72, subPercent: 45 },
-    { label: 'مايو', value: '41,000', percent: 76, subPercent: 48 },
-    { label: 'يونيو', value: '37,500', percent: 70, subPercent: 42 },
-    { label: 'يوليو', value: '43,200', percent: 80, subPercent: 50 },
-    { label: 'أغسطس', value: '45,800', percent: 85, subPercent: 53 },
-    { label: 'سبتمبر', value: '42,100', percent: 78, subPercent: 47 },
-    { label: 'أكتوبر', value: '46,700', percent: 87, subPercent: 55 },
-    { label: 'نوفمبر', value: '44,300', percent: 82, subPercent: 51 },
-    { label: 'ديسمبر', value: '48,250', percent: 90, subPercent: 58 },
-  ];
+  async ngOnInit(): Promise<void> {
+    await this.refresh();
+  }
 
-  genderSplit = {
-    female: 58,
-    male: 42,
-  };
+  async setPeriod(p: 'monthly' | 'yearly'): Promise<void> {
+    this.revenuePeriod = p;
+    try {
+      const rev = await this.api.revenue(p);
+      this.revenueData.set(
+        (rev.buckets || []).map((b) => ({
+          label: b.label,
+          value: this.fmt(b.value),
+          percent: b.percent,
+          subPercent: b.subPercent ?? 0,
+        })),
+      );
+    } catch {
+      /* keep previous */
+    }
+  }
 
-  totalUsers = '12.4k';
+  async refresh(): Promise<void> {
+    this.loading.set(true);
+    this.loadError.set('');
+    try {
+      const [k, rev, g, c, t, fp, acts] = await Promise.all([
+        this.api.kpis(),
+        this.api.revenue(this.revenuePeriod),
+        this.api.gender(),
+        this.api.treatmentCards(),
+        this.api.team(),
+        this.api.freeVsPaid(),
+        this.api.recentActivities(8),
+      ]);
 
-  usersStats = {
-    free: 10620,
-    paid: 1860,
-  };
+      this.kpis.set([
+        {
+          label: 'إجمالي المستخدمين',
+          value: this.fmt(k.totalUsers),
+          trend: k.totalUsersTrendPercent,
+          icon: Users,
+          bg: 'bg-primary-container',
+          iconColor: 'text-primary',
+        },
+        {
+          label: 'مستخدمين نشطين',
+          value: this.fmt(k.activeUsers),
+          trend: k.activeUsersTrendPercent,
+          icon: UserCheck,
+          bg: 'bg-tertiary-container',
+          iconColor: 'text-tertiary',
+        },
+        {
+          label: 'إيرادات الشهر',
+          value: this.fmt(k.monthlyRevenue) + ' ' + (k.currency || 'ج.م'),
+          trend: k.monthlyRevenueTrendPercent,
+          icon: Wallet,
+          bg: 'bg-secondary-container',
+          iconColor: 'text-on-secondary-container',
+        },
+        {
+          label: 'إيرادات السنة',
+          value: this.fmt(k.yearlyRevenue) + ' ' + (k.currency || 'ج.م'),
+          trend: k.yearlyRevenueTrendPercent,
+          icon: TrendingUp,
+          bg: 'bg-danger-container',
+          iconColor: 'text-danger',
+        },
+      ]);
 
+      this.revenueData.set(
+        (rev.buckets || []).map((b) => ({
+          label: b.label,
+          value: this.fmt(b.value),
+          percent: b.percent,
+          subPercent: b.subPercent ?? 0,
+        })),
+      );
+
+      this.genderSplit.set({ female: g.femalePercent, male: g.malePercent });
+      this.totalUsers.set(g.totalUsersLabel || this.fmt(k.totalUsers));
+
+      this.cardsIssued.set(c.issued);
+      this.cardsActive.set(c.active);
+      this.cardsExpired.set(c.expired);
+
+      this.staffRoles.set([
+        {
+          label: 'مدراء النظام (Admins)',
+          count: t.admins,
+          icon: UserCog,
+          bg: 'bg-primary-container',
+          color: 'text-primary',
+        },
+        {
+          label: 'الطاقم الطبي (Caregivers)',
+          count: t.caregivers,
+          icon: Stethoscope,
+          bg: 'bg-tertiary-container',
+          color: 'text-tertiary',
+        },
+        {
+          label: 'مراجعين',
+          count: t.reviewers,
+          icon: ShieldCheck,
+          bg: 'bg-secondary-container',
+          color: 'text-on-secondary-container',
+        },
+      ]);
+
+      this.usersStats.set({ free: fp.free, paid: fp.paid });
+
+      // Map activity type -> icon + colour. Falls back gracefully on unknown types.
+      const iconFor = (type: string) => {
+        switch (type) {
+          case 'signup':
+            return { icon: UserPlus, bg: 'bg-primary-container', color: 'text-primary' };
+          case 'subscription':
+            return {
+              icon: Wallet,
+              bg: 'bg-secondary-container',
+              color: 'text-on-secondary-container',
+            };
+          case 'treatment_card':
+            return { icon: CreditCard, bg: 'bg-tertiary-container', color: 'text-tertiary' };
+          case 'pricing_change':
+            return { icon: FileText, bg: 'bg-danger-container', color: 'text-danger' };
+          case 'payment':
+            return {
+              icon: Wallet,
+              bg: 'bg-secondary-container',
+              color: 'text-on-secondary-container',
+            };
+          default:
+            return { icon: FileText, bg: 'bg-surface-container', color: 'text-outline' };
+        }
+      };
+      this.recentActivity.set(
+        (acts || []).map((a) => ({
+          title: a.title,
+          time: this.timeAgo(a.atUtc),
+          ...iconFor(a.type),
+        })),
+      );
+    } catch (err: any) {
+      this.loadError.set(
+        (err && err.error && err.error.message) || 'تعذر تحميل بيانات لوحة التحكم',
+      );
+    } finally {
+      this.loading.set(false);
+    }
+  }
+
+  // Existing template getters expect these names.
   get freePercent(): number {
-    const total = this.usersStats.free + this.usersStats.paid;
-    return Math.round((this.usersStats.free / total) * 100);
+    const s = this.usersStats();
+    const total = s.free + s.paid;
+    return total === 0 ? 0 : Math.round((s.free / total) * 100);
   }
-
   get conversionRate(): number {
-    const total = this.usersStats.free + this.usersStats.paid;
-    return Math.round((this.usersStats.paid / total) * 1000) / 10;
+    const s = this.usersStats();
+    const total = s.free + s.paid;
+    return total === 0 ? 0 : Math.round((s.paid / total) * 1000) / 10;
   }
 
-  staffRoles = [
-    {
-      label: 'مدراء النظام (Admins)',
-      count: 4,
-      icon: UserCog,
-      bg: 'bg-primary-container',
-      color: 'text-primary',
-    },
-    {
-      label: 'الطاقم الطبي (Caregivers)',
-      count: 27,
-      icon: Stethoscope,
-      bg: 'bg-tertiary-container',
-      color: 'text-tertiary',
-    },
-    {
-      label: 'مراجعين',
-      count: 9,
-      icon: ShieldCheck,
-      bg: 'bg-secondary-container',
-      color: 'text-on-secondary-container',
-    },
-  ];
+  private fmt(n: number | null | undefined): string {
+    if (n == null || !Number.isFinite(n)) return '0';
+    if (n >= 1000) return new Intl.NumberFormat('ar-EG').format(n);
+    return String(n);
+  }
 
-  cardsIssued = 8240;
-  cardsActive = 7615;
-  cardsExpired = 625;
-
-  recentActivity = [
-    {
-      title: 'انضم مستخدم جديد: محمد أحمد',
-      time: 'منذ ٥ دقائق',
-      icon: UserPlus,
-      bg: 'bg-primary-container',
-      color: 'text-primary',
-    },
-    {
-      title: 'ترقية باقة: سارة علي اشتركت في الباقة العائلية',
-      time: 'منذ ١٢ دقيقة',
-      icon: Wallet,
-      bg: 'bg-secondary-container',
-      color: 'text-on-secondary-container',
-    },
-    {
-      title: 'تم إصدار كرت علاج جديد لـ: كريم محمود',
-      time: 'منذ ٣٠ دقيقة',
-      icon: CreditCard,
-      bg: 'bg-tertiary-container',
-      color: 'text-tertiary',
-    },
-    {
-      title: 'تم تعديل أسعار الباقة العائلية',
-      time: 'منذ ساعة',
-      icon: FileText,
-      bg: 'bg-danger-container',
-      color: 'text-danger',
-    },
-  ];
+  private timeAgo(iso: string): string {
+    if (!iso) return '';
+    const then = new Date(iso).getTime();
+    if (!Number.isFinite(then)) return '';
+    const diffMin = Math.floor((Date.now() - then) / 60000);
+    if (diffMin < 1) return 'الآن';
+    if (diffMin < 60) return 'منذ ' + diffMin + ' دقيقة';
+    const h = Math.floor(diffMin / 60);
+    if (h < 24) return 'منذ ' + h + ' ساعة';
+    const d = Math.floor(h / 24);
+    return 'منذ ' + d + ' يوم';
+  }
 }

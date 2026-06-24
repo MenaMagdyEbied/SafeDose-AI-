@@ -12,8 +12,8 @@ using SafeDose.Domain.ApplicationDbContext;
 namespace SafeDose.Domain.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260616133846_seedingAccountSuperAdmin")]
-    partial class seedingAccountSuperAdmin
+    [Migration("20260624211922_init")]
+    partial class init
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -284,7 +284,7 @@ namespace SafeDose.Domain.Migrations
                             Id = "1",
                             AccessFailedCount = 0,
                             AccountStatus = (byte)0,
-                            ConcurrencyStamp = "b17214fe-29e5-4f82-85d3-e4154c93c56a",
+                            ConcurrencyStamp = "9587c422-9e3f-47b3-9044-24359386d00b",
                             CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Email = "superadmin@gmail.com",
                             EmailConfirmed = true,
@@ -293,9 +293,9 @@ namespace SafeDose.Domain.Migrations
                             Name = "superadmin",
                             NormalizedEmail = "SUPERADMIN@GMAIL.COM",
                             NormalizedUserName = "SUPERADMIN",
-                            PasswordHash = "AQAAAAIAAYagAAAAEPO1TOtZZUk0lmS0chNC6PGOvxqnKGw6APQfT8J8QFj98bAZWqEnnWN/RfWIOoQRmQ==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEDNWowuvzhvoccubJgIBxkfOXJ+oc0pAlnCwvmYZ80QmEawsJWIlMFc5dPEQlLf77Q==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "2b5c2514-e302-469c-a4ab-7fd7c47bf641",
+                            SecurityStamp = "1155c830-97f0-4882-a1a2-78d979622bb4",
                             TwoFactorEnabled = false,
                             UserName = "superadmin"
                         });
@@ -810,6 +810,9 @@ namespace SafeDose.Domain.Migrations
                         .HasColumnType("bit")
                         .HasDefaultValue(true);
 
+                    b.Property<Guid>("MedicalCardToken")
+                        .HasColumnType("uniqueidentifier");
+
                     b.HasKey("PatientId");
 
                     b.HasIndex("AccountId");
@@ -970,11 +973,10 @@ namespace SafeDose.Domain.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("PrescriptionName")
-                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
-                    b.Property<byte>("SourceType")
+                    b.Property<byte?>("SourceType")
                         .HasColumnType("tinyint");
 
                     b.HasKey("PrescriptionId");
@@ -1031,6 +1033,11 @@ namespace SafeDose.Domain.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("PricingTierId"));
 
+                    b.Property<int>("BillingCycleDays")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime2")
@@ -1041,13 +1048,22 @@ namespace SafeDose.Domain.Migrations
                         .HasMaxLength(3)
                         .HasColumnType("nvarchar(3)");
 
+                    b.Property<int>("InteractionCheckLimitPerDay")
+                        .HasColumnType("int");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
+
+                    b.Property<int>("MedicationLimitPerPatient")
+                        .HasColumnType("int");
 
                     b.Property<decimal>("MonthlyPrice")
                         .HasColumnType("decimal(10,2)");
 
                     b.Property<int>("PatientLimit")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PrescriptionParseLimit")
                         .HasColumnType("int");
 
                     b.Property<string>("TierCode")
@@ -1060,12 +1076,45 @@ namespace SafeDose.Domain.Migrations
                         .HasMaxLength(80)
                         .HasColumnType("nvarchar(80)");
 
+                    b.Property<string>("TierNameArabic")
+                        .HasMaxLength(120)
+                        .HasColumnType("nvarchar(120)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
                     b.HasKey("PricingTierId");
 
                     b.HasIndex("TierCode")
                         .IsUnique();
 
                     b.ToTable("PricingTiers");
+                });
+
+            modelBuilder.Entity("SafeDose.Domain.Entities.PricingTierFeature", b =>
+                {
+                    b.Property<int>("PricingTierFeatureId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("PricingTierFeatureId"));
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("int");
+
+                    b.Property<string>("LabelArabic")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<int>("PricingTierId")
+                        .HasColumnType("int");
+
+                    b.HasKey("PricingTierFeatureId");
+
+                    b.HasIndex("PricingTierId");
+
+                    b.ToTable("PricingTierFeatures");
                 });
 
             modelBuilder.Entity("SafeDose.Domain.Entities.ReminderResponse", b =>
@@ -1425,6 +1474,17 @@ namespace SafeDose.Domain.Migrations
                     b.Navigation("PricingTier");
                 });
 
+            modelBuilder.Entity("SafeDose.Domain.Entities.PricingTierFeature", b =>
+                {
+                    b.HasOne("SafeDose.Domain.Entities.PricingTier", "PricingTier")
+                        .WithMany("Features")
+                        .HasForeignKey("PricingTierId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("PricingTier");
+                });
+
             modelBuilder.Entity("SafeDose.Domain.Entities.ReminderResponse", b =>
                 {
                     b.HasOne("SafeDose.Domain.Entities.PatientMedication", "PatientMedication")
@@ -1515,6 +1575,8 @@ namespace SafeDose.Domain.Migrations
 
             modelBuilder.Entity("SafeDose.Domain.Entities.PricingTier", b =>
                 {
+                    b.Navigation("Features");
+
                     b.Navigation("PricingChangeHistories");
 
                     b.Navigation("Subscriptions");

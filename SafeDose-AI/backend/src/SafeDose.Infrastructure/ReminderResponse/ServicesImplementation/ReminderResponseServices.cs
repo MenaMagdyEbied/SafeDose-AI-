@@ -54,7 +54,7 @@ namespace SafeDose.Infrastructure.ReminderResponse.ServicesImplementation
             Account account = await _userGlobalServices.GetUser();
             bool flag = await _context.Patients.AnyAsync(p => p.PatientId == PatientId && p.AccountId == account.Id);
             if (flag == false)
-                throw new Exception($"لهذا المستخدم {PatientId} لا يوجد مريض بالرمز");
+                throw new Exception($"لهذا المستخدم {PatientId} لا يوجد مريض برقم التعريف");
 
             var obj = await _context.ReminderResponses.Where(r => r.PatientMedication.Patient.PatientId == PatientId).Select(r => new { DrugName = r.DrugName, ResponsedAt = r.RespondedAt, ResponseType = r.ResponseType , DrugTime = r.TimeDrug}).Take(50).ToListAsync();
 

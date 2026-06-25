@@ -99,7 +99,7 @@ namespace SafeDose.Infrastructure.UserProfile.ServicesImplementation
             Account account = await _userGlobalServices.GetUser();
             Patient? patient = await _context.Patients.SingleOrDefaultAsync(p => p.PatientId == patientId && p.AccountId == account.Id);
             if (patient == null)
-                throw new Exception($"لهذا المستخدم {patientId} لا يوجد مريض بالرمز");
+                throw new Exception($"لهذا المستخدم {patientId} لا يوجد مريض  ب الرقم التعريف هزا ");
 
             List<Patient> patients = await _context.Patients.Where(p=>p.AccountId == account.Id).ToListAsync();
             foreach(var p in  patients)

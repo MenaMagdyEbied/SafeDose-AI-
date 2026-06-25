@@ -3,7 +3,18 @@
     <h2 class="text-2xl font-extrabold text-primary">بطاقة الأدوية الرقمية</h2>
     <p class="text-sm text-outline">بطاقة طبية إلكترونية آمنة لمشاركتها مع طبيبك</p>
   </div>
-
+  <!-- جوه Header component، بس لو فيه أكتر من patient -->
+  @if (patientService.patients().length > 1) {
+    <select
+      class="text-xs font-bold px-3 py-1.5 rounded-xl border border-outline-variant bg-white outline-none"
+      [value]="patientService.currentPatientId"
+      (change)="changePatient(+$any($event.target).value)"
+    >
+      @for (p of patientService.patients(); track p.patientId ?? p.id) {
+        <option [value]="p.patientId ?? p.id">{{ p.fullName }}</option>
+      }
+    </select>
+  }
   @if (loading()) {
     <div class="rounded-2xl bg-white p-6 text-center text-sm text-outline">
       جاري تحميل البطاقة...

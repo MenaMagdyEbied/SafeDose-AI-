@@ -39,7 +39,7 @@ import {
 export class DigitalCard implements AfterViewInit {
   private readonly auth = inject(Auth);
   private readonly medicalCardService = inject(MedicalCardService);
-  private readonly patientService = inject(PatientService);
+  protected readonly patientService = inject(PatientService);
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly destroyRef = inject(DestroyRef);
 
@@ -67,16 +67,10 @@ export class DigitalCard implements AfterViewInit {
     qrUrl: '',
   });
 
-  // Backend MedicalCard endpoints expect a Patient INT id, NOT the Account GUID.
-  // Pull it from /patients/my[0], not the user profile.
+  patientId = this.patientService.currentPatientId;
   private resolvePatientId() {
-    return from(this.patientService.getMyPatients()).pipe(
-      map((patients) => {
-        if (!patients || patients.length === 0) return '';
-        const p = patients[0] as any;
-        const id = p.patientId ?? p.id ?? null;
-        return id != null ? String(id).trim() : '';
-      }),
+    return from(this.patientService.getPrimaryPatientId()).pipe(
+      map((id) => (id != null ? String(id).trim() : '')),
       catchError(() => of('')),
     );
   }
@@ -168,5 +162,8 @@ export class DigitalCard implements AfterViewInit {
       .subscribe((qrImage) => {
         this.qrImage.set(qrImage);
       });
+  }
+  async changePatient(patientId: number): Promise<void> {
+    await this.patientService.setRunningPatient(patientId);
   }
 }

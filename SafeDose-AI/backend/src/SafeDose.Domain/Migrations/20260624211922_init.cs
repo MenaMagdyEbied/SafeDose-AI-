@@ -1,6 +1,9 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+﻿using System;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
+
+#pragma warning disable CA1814 // Prefer jagged arrays over multidimensional
 
 namespace SafeDose.Domain.Migrations
 {
@@ -55,6 +58,25 @@ namespace SafeDose.Domain.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "DrugCatalogs",
+                columns: table => new
+                {
+                    DrugCatalogId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    CommercialNameEn = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
+                    CommercialNameAr = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    ScientificName = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    Manufacturer = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    DrugClass = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    Route = table.Column<string>(type: "nvarchar(80)", maxLength: 80, nullable: true),
+                    PriceEgp = table.Column<decimal>(type: "decimal(10,2)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_DrugCatalogs", x => x.DrugCatalogId);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "PricingTiers",
                 columns: table => new
                 {
@@ -65,8 +87,14 @@ namespace SafeDose.Domain.Migrations
                     MonthlyPrice = table.Column<decimal>(type: "decimal(10,2)", nullable: false),
                     Currency = table.Column<string>(type: "nvarchar(3)", maxLength: 3, nullable: false),
                     PatientLimit = table.Column<int>(type: "int", nullable: false),
+                    PrescriptionParseLimit = table.Column<int>(type: "int", nullable: false),
+                    InteractionCheckLimitPerDay = table.Column<int>(type: "int", nullable: false),
+                    MedicationLimitPerPatient = table.Column<int>(type: "int", nullable: false),
+                    BillingCycleDays = table.Column<int>(type: "int", nullable: false, defaultValue: 0),
                     IsActive = table.Column<bool>(type: "bit", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETDATE()")
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETDATE()"),
+                    TierNameArabic = table.Column<string>(type: "nvarchar(120)", maxLength: 120, nullable: true),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -282,14 +310,17 @@ namespace SafeDose.Domain.Migrations
                 {
                     PatientId = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    AccountId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    AccountId = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: false),
                     FullName = table.Column<string>(type: "nvarchar(150)", maxLength: 150, nullable: false),
                     DateOfBirth = table.Column<DateOnly>(type: "date", nullable: true),
                     Gender = table.Column<byte>(type: "tinyint", nullable: true),
                     BloodType = table.Column<string>(type: "nvarchar(5)", maxLength: 5, nullable: true),
                     ChronicConditions = table.Column<string>(type: "nvarchar(MAX)", nullable: true),
                     Allergies = table.Column<string>(type: "nvarchar(MAX)", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETDATE()")
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETDATE()"),
+                    MedicalCardToken = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false, defaultValue: true),
+                    DeactivatedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -330,6 +361,27 @@ namespace SafeDose.Domain.Migrations
                         principalTable: "PricingTiers",
                         principalColumn: "PricingTierId",
                         onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "PricingTierFeatures",
+                columns: table => new
+                {
+                    PricingTierFeatureId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    PricingTierId = table.Column<int>(type: "int", nullable: false),
+                    LabelArabic = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                    DisplayOrder = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_PricingTierFeatures", x => x.PricingTierFeatureId);
+                    table.ForeignKey(
+                        name: "FK_PricingTierFeatures_PricingTiers_PricingTierId",
+                        column: x => x.PricingTierId,
+                        principalTable: "PricingTiers",
+                        principalColumn: "PricingTierId",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -375,7 +427,8 @@ namespace SafeDose.Domain.Migrations
                     Description = table.Column<string>(type: "nvarchar(MAX)", nullable: true),
                     IsVisit = table.Column<bool>(type: "bit", nullable: false),
                     VisitDateTime = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETDATE()")
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETDATE()"),
+                    AccountId = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -394,24 +447,45 @@ namespace SafeDose.Domain.Migrations
                 {
                     InteractionCheckId = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    PatientId = table.Column<int>(type: "int", nullable: false),
+                    PatientId = table.Column<int>(type: "int", nullable: true),
                     TriggerType = table.Column<byte>(type: "tinyint", nullable: false),
-                    SeverityLevel = table.Column<byte>(type: "tinyint", nullable: true),
-                    ArabicExplanation = table.Column<string>(type: "nvarchar(MAX)", nullable: true),
-                    RecommendationAction = table.Column<string>(type: "nvarchar(MAX)", nullable: true),
-                    SourceCitation = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
-                    SafetyDisclaimer = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
-                    CheckedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETDATE()")
+                    DrugCount = table.Column<byte>(type: "tinyint", nullable: false),
+                    CheckedDrugsJson = table.Column<string>(type: "nvarchar(MAX)", nullable: false),
+                    SeverityLevel = table.Column<byte>(type: "tinyint", nullable: false),
+                    LabelArabic = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    TitleArabic = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
+                    ExplanationArabic = table.Column<string>(type: "nvarchar(MAX)", nullable: false),
+                    RecommendedActionArabic = table.Column<string>(type: "nvarchar(MAX)", nullable: false),
+                    ConflictingPairsJson = table.Column<string>(type: "nvarchar(MAX)", nullable: true),
+                    SourcesJson = table.Column<string>(type: "nvarchar(MAX)", nullable: true),
+                    SafetyDisclaimerArabic = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
+                    ModelVersion = table.Column<string>(type: "nvarchar(80)", maxLength: 80, nullable: true),
+                    PineconeIndexVersion = table.Column<string>(type: "nvarchar(80)", maxLength: 80, nullable: true),
+                    CacheKey = table.Column<string>(type: "nvarchar(64)", maxLength: 64, nullable: true),
+                    ConsentRecordId = table.Column<int>(type: "int", nullable: true),
+                    IsAcknowledged = table.Column<bool>(type: "bit", nullable: false),
+                    AcknowledgedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    AcknowledgedByAccountId = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    DeletedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    CheckedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETDATE()"),
+                    AccountId = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_InteractionChecks", x => x.InteractionCheckId);
                     table.ForeignKey(
+                        name: "FK_InteractionChecks_ConsentRecords_ConsentRecordId",
+                        column: x => x.ConsentRecordId,
+                        principalTable: "ConsentRecords",
+                        principalColumn: "ConsentRecordId",
+                        onDelete: ReferentialAction.SetNull);
+                    table.ForeignKey(
                         name: "FK_InteractionChecks_Patients_PatientId",
                         column: x => x.PatientId,
                         principalTable: "Patients",
                         principalColumn: "PatientId",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.SetNull);
                 });
 
             migrationBuilder.CreateTable(
@@ -421,11 +495,12 @@ namespace SafeDose.Domain.Migrations
                     PrescriptionId = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     PatientId = table.Column<int>(type: "int", nullable: false),
-                    PrescriptionName = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
-                    SourceType = table.Column<byte>(type: "tinyint", nullable: false),
+                    PrescriptionName = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    SourceType = table.Column<byte>(type: "tinyint", nullable: true),
                     ImageUrl = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
                     OCRText = table.Column<string>(type: "nvarchar(MAX)", nullable: true),
                     OCRStatus = table.Column<byte>(type: "tinyint", nullable: false),
+                    AccountId = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     ConfirmedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETDATE()")
                 },
@@ -453,7 +528,8 @@ namespace SafeDose.Domain.Migrations
                     ClassificationLevel = table.Column<byte>(type: "tinyint", nullable: true),
                     ArabicExplanation = table.Column<string>(type: "nvarchar(MAX)", nullable: true),
                     RecommendationAction = table.Column<string>(type: "nvarchar(MAX)", nullable: true),
-                    ReportedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETDATE()")
+                    ReportedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETDATE()"),
+                    AccountId = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -501,17 +577,58 @@ namespace SafeDose.Domain.Migrations
                     DrugName = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
                     Route = table.Column<byte>(type: "tinyint", nullable: true),
                     Dose = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
-                    DoctorName = table.Column<string>(type: "nvarchar(150)", maxLength: 150, nullable: true)
+                    DoctorName = table.Column<string>(type: "nvarchar(150)", maxLength: 150, nullable: true),
+                    IsVerified = table.Column<bool>(type: "bit", nullable: false),
+                    DrugCatalogId = table.Column<int>(type: "int", nullable: true),
+                    AccountId = table.Column<string>(type: "nvarchar(450)", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Drugs", x => x.DrugId);
+                    table.ForeignKey(
+                        name: "FK_Drugs_DrugCatalogs_DrugCatalogId",
+                        column: x => x.DrugCatalogId,
+                        principalTable: "DrugCatalogs",
+                        principalColumn: "DrugCatalogId",
+                        onDelete: ReferentialAction.SetNull);
                     table.ForeignKey(
                         name: "FK_Drugs_Prescriptions_PrescriptionId",
                         column: x => x.PrescriptionId,
                         principalTable: "Prescriptions",
                         principalColumn: "PrescriptionId",
                         onDelete: ReferentialAction.SetNull);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "CriticalPairs",
+                columns: table => new
+                {
+                    CriticalPairId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    DrugIdA = table.Column<int>(type: "int", nullable: true),
+                    DrugIdB = table.Column<int>(type: "int", nullable: true),
+                    ScientificNameA = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    ScientificNameB = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    DefaultLevel = table.Column<byte>(type: "tinyint", nullable: false),
+                    ReasonArabic = table.Column<string>(type: "nvarchar(MAX)", nullable: false),
+                    ReasonEnglish = table.Column<string>(type: "nvarchar(MAX)", nullable: false),
+                    Source = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETDATE()")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_CriticalPairs", x => x.CriticalPairId);
+                    table.ForeignKey(
+                        name: "FK_CriticalPairs_Drugs_DrugIdA",
+                        column: x => x.DrugIdA,
+                        principalTable: "Drugs",
+                        principalColumn: "DrugId");
+                    table.ForeignKey(
+                        name: "FK_CriticalPairs_Drugs_DrugIdB",
+                        column: x => x.DrugIdB,
+                        principalTable: "Drugs",
+                        principalColumn: "DrugId");
                 });
 
             migrationBuilder.CreateTable(
@@ -528,7 +645,8 @@ namespace SafeDose.Domain.Migrations
                     StartDate = table.Column<DateOnly>(type: "date", nullable: true),
                     EndDate = table.Column<DateOnly>(type: "date", nullable: true),
                     MealTiming = table.Column<byte>(type: "tinyint", nullable: true),
-                    Status = table.Column<byte>(type: "tinyint", nullable: false)
+                    Status = table.Column<byte>(type: "tinyint", nullable: false),
+                    AccountId = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -538,7 +656,7 @@ namespace SafeDose.Domain.Migrations
                         column: x => x.DrugId,
                         principalTable: "Drugs",
                         principalColumn: "DrugId",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_PatientMedications_Patients_PatientId",
                         column: x => x.PatientId,
@@ -554,7 +672,8 @@ namespace SafeDose.Domain.Migrations
                     PatientMedicationTimeId = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     PatientMedicationId = table.Column<int>(type: "int", nullable: false),
-                    Time = table.Column<TimeOnly>(type: "time", nullable: false)
+                    Time = table.Column<TimeOnly>(type: "time", nullable: false),
+                    AccountId = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -577,7 +696,8 @@ namespace SafeDose.Domain.Migrations
                     ScheduleDateTime = table.Column<DateTime>(type: "datetime2", nullable: false),
                     ResponseType = table.Column<byte>(type: "tinyint", nullable: false),
                     SnoozeMinutes = table.Column<int>(type: "int", nullable: true),
-                    RespondedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
+                    RespondedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    AccountId = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -589,6 +709,26 @@ namespace SafeDose.Domain.Migrations
                         principalColumn: "PatientMedicationId",
                         onDelete: ReferentialAction.Cascade);
                 });
+
+            migrationBuilder.InsertData(
+                table: "AspNetRoles",
+                columns: new[] { "Id", "ConcurrencyStamp", "Name", "NormalizedName" },
+                values: new object[,]
+                {
+                    { "1", null, "Admin", "ADMIN" },
+                    { "2", null, "User", "USER" },
+                    { "3", null, "SuperAdmin", "SUPERADMIN" }
+                });
+
+            migrationBuilder.InsertData(
+                table: "AspNetUsers",
+                columns: new[] { "Id", "AccessFailedCount", "AccountStatus", "ConcurrencyStamp", "Email", "EmailConfirmed", "IsDeleted", "LockoutEnabled", "LockoutEnd", "Name", "NormalizedEmail", "NormalizedUserName", "PasswordHash", "PhoneNumber", "PhoneNumberConfirmed", "PreferredLanguage", "SecurityStamp", "TwoFactorEnabled", "UserName" },
+                values: new object[] { "1", 0, (byte)0, "9587c422-9e3f-47b3-9044-24359386d00b", "superadmin@gmail.com", true, false, false, null, "superadmin", "SUPERADMIN@GMAIL.COM", "SUPERADMIN", "AQAAAAIAAYagAAAAEDNWowuvzhvoccubJgIBxkfOXJ+oc0pAlnCwvmYZ80QmEawsJWIlMFc5dPEQlLf77Q==", null, false, null, "1155c830-97f0-4882-a1a2-78d979622bb4", false, "superadmin" });
+
+            migrationBuilder.InsertData(
+                table: "AspNetUserRoles",
+                columns: new[] { "RoleId", "UserId" },
+                values: new object[] { "3", "1" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_AspNetRoleClaims_RoleId",
@@ -654,6 +794,51 @@ namespace SafeDose.Domain.Migrations
                 column: "AccountId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_CriticalPairs_DrugIdA_DrugIdB",
+                table: "CriticalPairs",
+                columns: new[] { "DrugIdA", "DrugIdB" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CriticalPairs_DrugIdB",
+                table: "CriticalPairs",
+                column: "DrugIdB");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CriticalPairs_IsActive",
+                table: "CriticalPairs",
+                column: "IsActive");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_DrugCatalogs_CommercialNameAr",
+                table: "DrugCatalogs",
+                column: "CommercialNameAr");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_DrugCatalogs_CommercialNameEn",
+                table: "DrugCatalogs",
+                column: "CommercialNameEn");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_DrugCatalogs_ScientificName",
+                table: "DrugCatalogs",
+                column: "ScientificName");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Drugs_AccountId",
+                table: "Drugs",
+                column: "AccountId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Drugs_AccountId_IsVerified",
+                table: "Drugs",
+                columns: new[] { "AccountId", "IsVerified" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Drugs_DrugCatalogId",
+                table: "Drugs",
+                column: "DrugCatalogId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Drugs_PrescriptionId",
                 table: "Drugs",
                 column: "PrescriptionId");
@@ -665,9 +850,29 @@ namespace SafeDose.Domain.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "IX_InteractionChecks_AcknowledgedByAccountId",
+                table: "InteractionChecks",
+                column: "AcknowledgedByAccountId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_InteractionChecks_CacheKey",
+                table: "InteractionChecks",
+                column: "CacheKey");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_InteractionChecks_ConsentRecordId",
+                table: "InteractionChecks",
+                column: "ConsentRecordId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_InteractionChecks_PatientId",
                 table: "InteractionChecks",
                 column: "PatientId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_InteractionChecks_PatientId_CheckedAt",
+                table: "InteractionChecks",
+                columns: new[] { "PatientId", "CheckedAt" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_OTPRequests_AccountId",
@@ -677,8 +882,7 @@ namespace SafeDose.Domain.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_PatientMedications_DrugId",
                 table: "PatientMedications",
-                column: "DrugId",
-                unique: true);
+                column: "DrugId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_PatientMedications_PatientId",
@@ -694,6 +898,11 @@ namespace SafeDose.Domain.Migrations
                 name: "IX_Patients_AccountId",
                 table: "Patients",
                 column: "AccountId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Patients_AccountId_IsActive",
+                table: "Patients",
+                columns: new[] { "AccountId", "IsActive" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_Payments_SubscriptionId",
@@ -713,6 +922,11 @@ namespace SafeDose.Domain.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_PricingChangeHistories_PricingTierId",
                 table: "PricingChangeHistories",
+                column: "PricingTierId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PricingTierFeatures_PricingTierId",
+                table: "PricingTierFeatures",
                 column: "PricingTierId");
 
             migrationBuilder.CreateIndex(
@@ -767,7 +981,7 @@ namespace SafeDose.Domain.Migrations
                 name: "ClinicDescriptionReminders");
 
             migrationBuilder.DropTable(
-                name: "ConsentRecords");
+                name: "CriticalPairs");
 
             migrationBuilder.DropTable(
                 name: "FreeTierUsages");
@@ -788,6 +1002,9 @@ namespace SafeDose.Domain.Migrations
                 name: "PricingChangeHistories");
 
             migrationBuilder.DropTable(
+                name: "PricingTierFeatures");
+
+            migrationBuilder.DropTable(
                 name: "ReminderResponses");
 
             migrationBuilder.DropTable(
@@ -795,6 +1012,9 @@ namespace SafeDose.Domain.Migrations
 
             migrationBuilder.DropTable(
                 name: "AspNetRoles");
+
+            migrationBuilder.DropTable(
+                name: "ConsentRecords");
 
             migrationBuilder.DropTable(
                 name: "Subscriptions");
@@ -807,6 +1027,9 @@ namespace SafeDose.Domain.Migrations
 
             migrationBuilder.DropTable(
                 name: "Drugs");
+
+            migrationBuilder.DropTable(
+                name: "DrugCatalogs");
 
             migrationBuilder.DropTable(
                 name: "Prescriptions");

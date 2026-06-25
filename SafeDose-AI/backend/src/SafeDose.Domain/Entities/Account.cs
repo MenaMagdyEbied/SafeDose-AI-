@@ -11,6 +11,7 @@ namespace SafeDose.Domain.Entities
         public string? PreferredLanguage { get; set; }
         public bool IsDeleted { get; set; }
         public DateTime CreatedAt { get; set; }
+        public bool TermsAndConditions { get; set; }
 
         // Navigation
         public ICollection<OTPRequest> OTPRequests { get; set; } = [];
@@ -20,5 +21,6 @@ namespace SafeDose.Domain.Entities
         public ICollection<Patient> Patients { get; set; } = [];
         public ICollection<AuditLog> AuditLogs { get; set; } = [];
         public ICollection<PricingChangeHistory> PricingChangeHistories { get; set; } = [];
+        public ICollection<PushSubscription> PushSubscriptions { get; set; } = [];
     }
 }

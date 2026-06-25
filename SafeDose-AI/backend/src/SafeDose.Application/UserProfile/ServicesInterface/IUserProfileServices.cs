@@ -13,6 +13,7 @@ namespace SafeDose.Application.UserProfile.ServicesInterface
         Task<string> UpdateName(UserUpdateNameDTO userUpdateName);
         Task<string> UpdateEmail(UserUpdateEmailDTO userUpdateEmail);
         Task<string> UpdatePhone(UserUpdatePhoneDTO  userUpdatePhone);
-
+        Task<string> SetRunningPatient(int patientId);
+        Task<int> GetRunningPatient();
     }
 }

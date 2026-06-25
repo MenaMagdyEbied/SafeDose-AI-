@@ -40,21 +40,22 @@ namespace SafeDose.Infrastructure.Auth
         public async Task<AuthModelDTO> RegisterAdminAsync(RegisterDTO model)
         {
             if (await _userManager.FindByEmailAsync(model.Email) is not null)
-                return new AuthModelDTO { Message = "Email is already registerd!" };
+                return new AuthModelDTO { Message = "الأيميل مسجل  بالفعل" };
 
             if (await _userManager.FindByNameAsync(model.UserName) is not null)
-                return new AuthModelDTO { Message = "UserName is already registerd!" };
+                return new AuthModelDTO { Message = "اسم المستخدم مسجل بالفعل" };
 
 
             List<Account>? accounts = await _userManager.Users.Where(u => u.PhoneNumber == model.PhoneNumber).ToListAsync();
             if (accounts.Count() > 0)
-                return new AuthModelDTO { Message = "PhoneNumber is already registerd!" };
+                return new AuthModelDTO { Message = "رقم الهاتف مسجل بالفعل" };
 
             Account account = new Account();
             account.Name = model.FullName;
             account.Email = model.Email;
             account.UserName = model.UserName;
             account.PhoneNumber = model.PhoneNumber;
+            account.TermsAndConditions = true;
 
             IdentityResult result = await _userManager.CreateAsync(account, model.Password);
 
@@ -78,29 +79,33 @@ namespace SafeDose.Infrastructure.Auth
                 // confirm email
                 await _userManager.ConfirmEmailAsync(account, token);
 
-                return new AuthModelDTO { Message = "Account created successfuly" };
+                return new AuthModelDTO { Message = "تم التسجيل بنجاح" };
             }
         }
 
         public async Task<AuthModelDTO> RegisterAsync(RegisterDTO model)
         {
             if (await _userManager.FindByEmailAsync(model.Email) is not null)
-                return new AuthModelDTO { Message = "Email is already registerd!" };
+                return new AuthModelDTO { Message = "الأيميل مسجل  بالفعل" };
 
             if (await _userManager.FindByNameAsync(model.UserName) is not null)
-                return new AuthModelDTO { Message = "UserName is already registerd!" };
+                return new AuthModelDTO { Message = "اسم المستخدم مسجل بالفعل" };
 
-            
+
             List<Account>? accounts = await _userManager.Users.Where(u => u.PhoneNumber == model.PhoneNumber).ToListAsync();
-            if(accounts.Count() > 0)
-                return new AuthModelDTO { Message = "PhoneNumber is already registerd!" };
+            if (accounts.Count() > 0)
+                return new AuthModelDTO { Message = "رقم الهاتف مسجل بالفعل" };
 
-            Account account = new Account();    
+
+            if (model.TermsAndConditions == false)
+                return new AuthModelDTO { Message = "يجب الموافقه علي الشروط و الاحكام" };
+
+            Account account = new Account();
             account.Name = model.FullName;
             account.Email = model.Email;
             account.UserName = model.UserName;
             account.PhoneNumber = model.PhoneNumber;
-
+            account.TermsAndConditions = model.TermsAndConditions;
             IdentityResult result = await _userManager.CreateAsync(account, model.Password);
 
             if (!result.Succeeded)
@@ -126,7 +131,7 @@ namespace SafeDose.Infrastructure.Auth
                 await _emailSender.SendEmailAsync(account.Email, "Email Confirmation",
                 $"<p>Code : {encodedToken} </p>");
 
-                return new AuthModelDTO { Message = "Account created successfuly and waiting to Confirmation by email" };
+                return new AuthModelDTO { Message = "تم تسجيل المستخدم بنجاح . تم ارسال الرمز تأكيدي ألي الايميل" };
             }
 
         }
@@ -134,23 +139,23 @@ namespace SafeDose.Infrastructure.Auth
         public async Task<string> ConfrimEmail(EmailConfirmationDTO EmailConfirmationModel)
         {
             if (EmailConfirmationModel.Email == null || EmailConfirmationModel.Code == null)
-                return "email or code equal null";
+                return "الأيميل او الرمز بقيمه فارغه";
 
             Account? account = await _userManager.FindByEmailAsync(EmailConfirmationModel.Email);
             if (account == null)
-                return "Email is not registerd!";
+                return "الأيميل لم يتم تسجيله";
 
-            if(await _userManager.IsEmailConfirmedAsync(account) == true)
-                return "Email is already confirmed!";
+            if (await _userManager.IsEmailConfirmedAsync(account) == true)
+                return "الأيميل موئكد  بالفعل";
 
             var decodedToken = HttpUtility.UrlDecode(EmailConfirmationModel.Code);
 
             var result = await _userManager.ConfirmEmailAsync(account, decodedToken);
             if (result.Succeeded)
-                return "Email Confirmed";
+                return "تم التأكيد";
 
 
-            return "something went wrong";
+            return "حدث خطأ";
         }
 
         public async Task<AuthModelDTO> GetTokenAsync(LoginDTO model)
@@ -160,14 +165,14 @@ namespace SafeDose.Infrastructure.Auth
             var user = await _userManager.FindByNameAsync(model.UserName);
             if (user is null || !await _userManager.CheckPasswordAsync(user, model.Password))
             {
-                authModel.Message = "username or password is wrong!";
+                authModel.Message = "اسم المستخدم او الباسورد خطأ";
                 return authModel;
             }
 
             if (await _userManager.IsEmailConfirmedAsync(user) == false)
             {
-                authModel.Message = "Email is not confirmed please confirm your email address";
-                return authModel;   
+                authModel.Message = "الأيميل غير موئكد من فضلك اكد الأيميل  ";
+                return authModel;
             }
 
             var jwtSecurityToken = await CreateJwtToken(user);
@@ -216,13 +221,13 @@ namespace SafeDose.Infrastructure.Auth
             return jwtSecurityToken;
         }
 
-      
+
 
         public async Task<string> ForgotPass(ForgotPasswordDto ForgotPasswordModel)
         {
             var user = await _userManager.FindByEmailAsync(ForgotPasswordModel.Email);
             if (user == null)
-                throw new Exception("Invalid Email");
+                throw new Exception("الأيميل غير موجود");
 
             var token = await _userManager.GeneratePasswordResetTokenAsync(user);
             var encodedToken = HttpUtility.UrlEncode(token);
@@ -235,14 +240,14 @@ namespace SafeDose.Infrastructure.Auth
             await _emailSender.SendEmailAsync(user.Email, "Reset Password",
                 $"<p>Code : {encodedToken}</p>");
 
-            return "email sent check your email";
+            return "تم ارسال الرمز افحص الايميل";
         }
 
         public async Task<string> ResetPass(ResetPasswordDto ResetPasswordModel)
         {
             var user = await _userManager.FindByEmailAsync(ResetPasswordModel.Email);
             if (user == null)
-                throw new Exception("Invalid Email");
+                throw new Exception("الايميل غير موجود");
 
             var decodedToken = HttpUtility.UrlDecode(ResetPasswordModel.Code);
 
@@ -250,7 +255,7 @@ namespace SafeDose.Infrastructure.Auth
             if (!result.Succeeded)
                 throw new Exception(result.Errors.ToString());
 
-            return "Password reset successfully.";
+            return "تمت إعادة تعيين كلمة المرور بنجاح";
         }
 
 

@@ -338,7 +338,7 @@ namespace SafeDose.Domain.Migrations
 
                     b.HasIndex("AccountId");
 
-                    b.ToTable("AuditLogs");
+                    b.ToTable("AuditLogs", (string)null);
                 });
 
             modelBuilder.Entity("SafeDose.Domain.Entities.ClinicDescriptionReminder", b =>
@@ -381,7 +381,7 @@ namespace SafeDose.Domain.Migrations
 
                     b.HasIndex("PatientId");
 
-                    b.ToTable("ClinicDescriptionReminders");
+                    b.ToTable("ClinicDescriptionReminders", (string)null);
                 });
 
             modelBuilder.Entity("SafeDose.Domain.Entities.ConsentRecord", b =>
@@ -416,7 +416,7 @@ namespace SafeDose.Domain.Migrations
 
                     b.HasIndex("AccountId");
 
-                    b.ToTable("ConsentRecords");
+                    b.ToTable("ConsentRecords", (string)null);
                 });
 
             modelBuilder.Entity("SafeDose.Domain.Entities.CriticalPair", b =>
@@ -473,7 +473,7 @@ namespace SafeDose.Domain.Migrations
 
                     b.HasIndex("DrugIdA", "DrugIdB");
 
-                    b.ToTable("CriticalPairs");
+                    b.ToTable("CriticalPairs", (string)null);
                 });
 
             modelBuilder.Entity("SafeDose.Domain.Entities.Drug", b =>
@@ -522,7 +522,7 @@ namespace SafeDose.Domain.Migrations
 
                     b.HasIndex("AccountId", "IsVerified");
 
-                    b.ToTable("Drugs");
+                    b.ToTable("Drugs", (string)null);
                 });
 
             modelBuilder.Entity("SafeDose.Domain.Entities.DrugCatalog", b =>
@@ -569,7 +569,7 @@ namespace SafeDose.Domain.Migrations
 
                     b.HasIndex("ScientificName");
 
-                    b.ToTable("DrugCatalogs");
+                    b.ToTable("DrugCatalogs", (string)null);
                 });
 
             modelBuilder.Entity("SafeDose.Domain.Entities.FreeTierUsage", b =>
@@ -611,7 +611,7 @@ namespace SafeDose.Domain.Migrations
                     b.HasIndex("AccountId")
                         .IsUnique();
 
-                    b.ToTable("FreeTierUsages");
+                    b.ToTable("FreeTierUsages", (string)null);
                 });
 
             modelBuilder.Entity("SafeDose.Domain.Entities.InteractionCheck", b =>
@@ -718,7 +718,7 @@ namespace SafeDose.Domain.Migrations
 
                     b.HasIndex("PatientId", "CheckedAt");
 
-                    b.ToTable("InteractionChecks");
+                    b.ToTable("InteractionChecks", (string)null);
                 });
 
             modelBuilder.Entity("SafeDose.Domain.Entities.OTPRequest", b =>
@@ -761,7 +761,7 @@ namespace SafeDose.Domain.Migrations
 
                     b.HasIndex("AccountId");
 
-                    b.ToTable("OTPRequests");
+                    b.ToTable("OTPRequests", (string)null);
                 });
 
             modelBuilder.Entity("SafeDose.Domain.Entities.Patient", b =>
@@ -823,7 +823,7 @@ namespace SafeDose.Domain.Migrations
 
                     b.HasIndex("AccountId", "IsActive");
 
-                    b.ToTable("Patients");
+                    b.ToTable("Patients", (string)null);
                 });
 
             modelBuilder.Entity("SafeDose.Domain.Entities.PatientMedication", b =>
@@ -872,7 +872,7 @@ namespace SafeDose.Domain.Migrations
 
                     b.HasIndex("PatientId");
 
-                    b.ToTable("PatientMedications");
+                    b.ToTable("PatientMedications", (string)null);
                 });
 
             modelBuilder.Entity("SafeDose.Domain.Entities.PatientMedicationTime", b =>
@@ -900,7 +900,7 @@ namespace SafeDose.Domain.Migrations
 
                     b.HasIndex("PatientMedicationId");
 
-                    b.ToTable("PatientMedicationTimes");
+                    b.ToTable("PatientMedicationTimes", (string)null);
                 });
 
             modelBuilder.Entity("SafeDose.Domain.Entities.Payment", b =>
@@ -943,7 +943,7 @@ namespace SafeDose.Domain.Migrations
 
                     b.HasIndex("SubscriptionId");
 
-                    b.ToTable("Payments");
+                    b.ToTable("Payments", (string)null);
                 });
 
             modelBuilder.Entity("SafeDose.Domain.Entities.Prescription", b =>
@@ -990,7 +990,7 @@ namespace SafeDose.Domain.Migrations
 
                     b.HasIndex("PatientId");
 
-                    b.ToTable("Prescriptions");
+                    b.ToTable("Prescriptions", (string)null);
                 });
 
             modelBuilder.Entity("SafeDose.Domain.Entities.PricingChangeHistory", b =>
@@ -1029,7 +1029,7 @@ namespace SafeDose.Domain.Migrations
 
                     b.HasIndex("PricingTierId");
 
-                    b.ToTable("PricingChangeHistories");
+                    b.ToTable("PricingChangeHistories", (string)null);
                 });
 
             modelBuilder.Entity("SafeDose.Domain.Entities.PricingTier", b =>
@@ -1095,7 +1095,7 @@ namespace SafeDose.Domain.Migrations
                     b.HasIndex("TierCode")
                         .IsUnique();
 
-                    b.ToTable("PricingTiers");
+                    b.ToTable("PricingTiers", (string)null);
                 });
 
             modelBuilder.Entity("SafeDose.Domain.Entities.PricingTierFeature", b =>
@@ -1121,7 +1121,7 @@ namespace SafeDose.Domain.Migrations
 
                     b.HasIndex("PricingTierId");
 
-                    b.ToTable("PricingTierFeatures");
+                    b.ToTable("PricingTierFeatures", (string)null);
                 });
 
             modelBuilder.Entity("SafeDose.Domain.Entities.PushSubscription", b =>
@@ -1160,7 +1160,7 @@ namespace SafeDose.Domain.Migrations
                     b.HasIndex("Endpoint")
                         .IsUnique();
 
-                    b.ToTable("PushSubscription");
+                    b.ToTable("PushSubscription", (string)null);
                 });
 
             modelBuilder.Entity("SafeDose.Domain.Entities.ReminderResponse", b =>
@@ -1196,7 +1196,7 @@ namespace SafeDose.Domain.Migrations
 
                     b.HasIndex("PatientMedicationId");
 
-                    b.ToTable("ReminderResponses");
+                    b.ToTable("ReminderResponses", (string)null);
                 });
 
             modelBuilder.Entity("SafeDose.Domain.Entities.Subscription", b =>
@@ -1235,7 +1235,7 @@ namespace SafeDose.Domain.Migrations
 
                     b.HasIndex("PricingTierId");
 
-                    b.ToTable("Subscriptions");
+                    b.ToTable("Subscriptions", (string)null);
                 });
 
             modelBuilder.Entity("SafeDose.Domain.Entities.SymptomReport", b =>
@@ -1280,7 +1280,7 @@ namespace SafeDose.Domain.Migrations
 
                     b.HasIndex("PatientId");
 
-                    b.ToTable("SymptomReports");
+                    b.ToTable("SymptomReports", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>

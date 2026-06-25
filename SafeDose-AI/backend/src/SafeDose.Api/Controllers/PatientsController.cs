@@ -117,14 +117,21 @@ public class PatientsController : ControllerBase
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
     {
-        var accountId = GetAccountId();
-        if (accountId == null) return Unauth();
+        try
+        {
+            var accountId = GetAccountId();
+            if (accountId == null) return Unauth();
 
-        var ok = await _deactivate.ExecuteAsync(id, accountId, cancellationToken);
-        if (!ok)
-            return NotFound(new ErrorResponse(
-                ErrorCodes.NotFound, ArabicMessages.PatientNotFound));
-        return NoContent();
+            var ok = await _deactivate.ExecuteAsync(id, accountId, cancellationToken);
+            if (!ok)
+                return NotFound(new ErrorResponse(
+                    ErrorCodes.NotFound, ArabicMessages.PatientNotFound));
+            return NoContent();
+        }
+        catch(Exception ex)
+        {
+            return BadRequest(new {message = ex.Message});
+        }
     }
 
     private string? GetAccountId()

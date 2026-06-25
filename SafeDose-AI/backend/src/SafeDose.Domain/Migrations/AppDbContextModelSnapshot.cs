@@ -250,6 +250,9 @@ namespace SafeDose.Domain.Migrations
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<bool>("TermsAndConditions")
+                        .HasColumnType("bit");
+
                     b.Property<bool>("TwoFactorEnabled")
                         .HasColumnType("bit");
 
@@ -281,7 +284,7 @@ namespace SafeDose.Domain.Migrations
                             Id = "1",
                             AccessFailedCount = 0,
                             AccountStatus = (byte)0,
-                            ConcurrencyStamp = "6840bfa9-1901-4847-971d-b476637dd558",
+                            ConcurrencyStamp = "f3c56999-1a93-4d46-8e14-fc3924352b1f",
                             CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Email = "superadmin@gmail.com",
                             EmailConfirmed = true,
@@ -290,9 +293,10 @@ namespace SafeDose.Domain.Migrations
                             Name = "superadmin",
                             NormalizedEmail = "SUPERADMIN@GMAIL.COM",
                             NormalizedUserName = "SUPERADMIN",
-                            PasswordHash = "AQAAAAIAAYagAAAAEElYTzXKtCmIVc7lcsd7ZkQm/trrDKVyg2Xxnfb19ZYsXvU9kYzjby8glJtCG4PHqg==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEET7WjGjo+RkjEB0ux/r7JEjxBZIkWywiZlWJxGuQFIQMVx2ROvyJqOxodbmjUUl3Q==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "004405d7-f84e-4a09-8bce-7ea82dcabed5",
+                            SecurityStamp = "607ed0fd-88f4-4523-84ec-264b7352085c",
+                            TermsAndConditions = false,
                             TwoFactorEnabled = false,
                             UserName = "superadmin"
                         });
@@ -807,6 +811,9 @@ namespace SafeDose.Domain.Migrations
                         .HasColumnType("bit")
                         .HasDefaultValue(true);
 
+                    b.Property<bool>("IsRunning")
+                        .HasColumnType("bit");
+
                     b.Property<Guid>("MedicalCardToken")
                         .HasColumnType("uniqueidentifier");
 
@@ -879,6 +886,9 @@ namespace SafeDose.Domain.Migrations
                     b.Property<string>("AccountId")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateOnly>("LastReminderDate")
+                        .HasColumnType("date");
 
                     b.Property<int>("PatientMedicationId")
                         .HasColumnType("int");
@@ -970,11 +980,10 @@ namespace SafeDose.Domain.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("PrescriptionName")
-                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
-                    b.Property<byte>("SourceType")
+                    b.Property<byte?>("SourceType")
                         .HasColumnType("tinyint");
 
                     b.HasKey("PrescriptionId");
@@ -1046,8 +1055,14 @@ namespace SafeDose.Domain.Migrations
                         .HasMaxLength(3)
                         .HasColumnType("nvarchar(3)");
 
+                    b.Property<int>("InteractionCheckLimitPerDay")
+                        .HasColumnType("int");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
+
+                    b.Property<int>("MedicationLimitPerPatient")
+                        .HasColumnType("int");
 
                     b.Property<decimal>("MonthlyPrice")
                         .HasColumnType("decimal(10,2)");
@@ -1068,12 +1083,84 @@ namespace SafeDose.Domain.Migrations
                         .HasMaxLength(80)
                         .HasColumnType("nvarchar(80)");
 
+                    b.Property<string>("TierNameArabic")
+                        .HasMaxLength(120)
+                        .HasColumnType("nvarchar(120)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
                     b.HasKey("PricingTierId");
 
                     b.HasIndex("TierCode")
                         .IsUnique();
 
                     b.ToTable("PricingTiers");
+                });
+
+            modelBuilder.Entity("SafeDose.Domain.Entities.PricingTierFeature", b =>
+                {
+                    b.Property<int>("PricingTierFeatureId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("PricingTierFeatureId"));
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("int");
+
+                    b.Property<string>("LabelArabic")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<int>("PricingTierId")
+                        .HasColumnType("int");
+
+                    b.HasKey("PricingTierFeatureId");
+
+                    b.HasIndex("PricingTierId");
+
+                    b.ToTable("PricingTierFeatures");
+                });
+
+            modelBuilder.Entity("SafeDose.Domain.Entities.PushSubscription", b =>
+                {
+                    b.Property<int>("PushSubscriptionId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("PushSubscriptionId"));
+
+                    b.Property<string>("AccountId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Auth")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateOnly>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("date")
+                        .HasDefaultValueSql("GETDATE()");
+
+                    b.Property<string>("Endpoint")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("P256DH")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("PushSubscriptionId");
+
+                    b.HasIndex("AccountId");
+
+                    b.HasIndex("Endpoint")
+                        .IsUnique();
+
+                    b.ToTable("PushSubscription");
                 });
 
             modelBuilder.Entity("SafeDose.Domain.Entities.ReminderResponse", b =>
@@ -1088,7 +1175,11 @@ namespace SafeDose.Domain.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("PatientMedicationId")
+                    b.Property<string>("DrugName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("PatientMedicationId")
                         .HasColumnType("int");
 
                     b.Property<DateTime?>("RespondedAt")
@@ -1097,11 +1188,9 @@ namespace SafeDose.Domain.Migrations
                     b.Property<byte>("ResponseType")
                         .HasColumnType("tinyint");
 
-                    b.Property<DateTime>("ScheduleDateTime")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int?>("SnoozeMinutes")
-                        .HasColumnType("int");
+                    b.Property<string>("TimeDrug")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("ReminderResponseId");
 
@@ -1433,13 +1522,34 @@ namespace SafeDose.Domain.Migrations
                     b.Navigation("PricingTier");
                 });
 
+            modelBuilder.Entity("SafeDose.Domain.Entities.PricingTierFeature", b =>
+                {
+                    b.HasOne("SafeDose.Domain.Entities.PricingTier", "PricingTier")
+                        .WithMany("Features")
+                        .HasForeignKey("PricingTierId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("PricingTier");
+                });
+
+            modelBuilder.Entity("SafeDose.Domain.Entities.PushSubscription", b =>
+                {
+                    b.HasOne("SafeDose.Domain.Entities.Account", "Account")
+                        .WithMany("PushSubscriptions")
+                        .HasForeignKey("AccountId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Account");
+                });
+
             modelBuilder.Entity("SafeDose.Domain.Entities.ReminderResponse", b =>
                 {
                     b.HasOne("SafeDose.Domain.Entities.PatientMedication", "PatientMedication")
                         .WithMany("ReminderResponses")
                         .HasForeignKey("PatientMedicationId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("PatientMedication");
                 });
@@ -1488,6 +1598,8 @@ namespace SafeDose.Domain.Migrations
 
                     b.Navigation("PricingChangeHistories");
 
+                    b.Navigation("PushSubscriptions");
+
                     b.Navigation("Subscriptions");
                 });
 
@@ -1523,6 +1635,8 @@ namespace SafeDose.Domain.Migrations
 
             modelBuilder.Entity("SafeDose.Domain.Entities.PricingTier", b =>
                 {
+                    b.Navigation("Features");
+
                     b.Navigation("PricingChangeHistories");
 
                     b.Navigation("Subscriptions");

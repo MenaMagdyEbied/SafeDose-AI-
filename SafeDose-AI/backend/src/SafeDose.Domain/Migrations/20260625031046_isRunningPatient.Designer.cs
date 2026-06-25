@@ -12,8 +12,8 @@ using SafeDose.Domain.ApplicationDbContext;
 namespace SafeDose.Domain.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260607131843_addUserIdColumn")]
-    partial class addUserIdColumn
+    [Migration("20260625031046_isRunningPatient")]
+    partial class isRunningPatient
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -50,6 +50,26 @@ namespace SafeDose.Domain.Migrations
                         .HasFilter("[NormalizedName] IS NOT NULL");
 
                     b.ToTable("AspNetRoles", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = "1",
+                            Name = "Admin",
+                            NormalizedName = "ADMIN"
+                        },
+                        new
+                        {
+                            Id = "2",
+                            Name = "User",
+                            NormalizedName = "USER"
+                        },
+                        new
+                        {
+                            Id = "3",
+                            Name = "SuperAdmin",
+                            NormalizedName = "SUPERADMIN"
+                        });
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -137,6 +157,13 @@ namespace SafeDose.Domain.Migrations
                     b.HasIndex("RoleId");
 
                     b.ToTable("AspNetUserRoles", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            UserId = "1",
+                            RoleId = "3"
+                        });
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
@@ -226,6 +253,9 @@ namespace SafeDose.Domain.Migrations
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<bool>("TermsAndConditions")
+                        .HasColumnType("bit");
+
                     b.Property<bool>("TwoFactorEnabled")
                         .HasColumnType("bit");
 
@@ -250,6 +280,29 @@ namespace SafeDose.Domain.Migrations
                         .HasFilter("[PhoneNumber] IS NOT NULL");
 
                     b.ToTable("AspNetUsers", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = "1",
+                            AccessFailedCount = 0,
+                            AccountStatus = (byte)0,
+                            ConcurrencyStamp = "f3c56999-1a93-4d46-8e14-fc3924352b1f",
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Email = "superadmin@gmail.com",
+                            EmailConfirmed = true,
+                            IsDeleted = false,
+                            LockoutEnabled = false,
+                            Name = "superadmin",
+                            NormalizedEmail = "SUPERADMIN@GMAIL.COM",
+                            NormalizedUserName = "SUPERADMIN",
+                            PasswordHash = "AQAAAAIAAYagAAAAEET7WjGjo+RkjEB0ux/r7JEjxBZIkWywiZlWJxGuQFIQMVx2ROvyJqOxodbmjUUl3Q==",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "607ed0fd-88f4-4523-84ec-264b7352085c",
+                            TermsAndConditions = false,
+                            TwoFactorEnabled = false,
+                            UserName = "superadmin"
+                        });
                 });
 
             modelBuilder.Entity("SafeDose.Domain.Entities.AuditLog", b =>
@@ -299,6 +352,10 @@ namespace SafeDose.Domain.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ClinicDescriptionReminderId"));
 
+                    b.Property<string>("AccountId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime2")
@@ -319,10 +376,6 @@ namespace SafeDose.Domain.Migrations
 
                     b.Property<string>("ReminderNote")
                         .HasColumnType("nvarchar(MAX)");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("VisitDateTime")
                         .HasColumnType("datetime2");
@@ -369,6 +422,63 @@ namespace SafeDose.Domain.Migrations
                     b.ToTable("ConsentRecords");
                 });
 
+            modelBuilder.Entity("SafeDose.Domain.Entities.CriticalPair", b =>
+                {
+                    b.Property<int>("CriticalPairId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("CriticalPairId"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETDATE()");
+
+                    b.Property<byte>("DefaultLevel")
+                        .HasColumnType("tinyint");
+
+                    b.Property<int?>("DrugIdA")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("DrugIdB")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("ReasonArabic")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(MAX)");
+
+                    b.Property<string>("ReasonEnglish")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(MAX)");
+
+                    b.Property<string>("ScientificNameA")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("ScientificNameB")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.HasKey("CriticalPairId");
+
+                    b.HasIndex("DrugIdB");
+
+                    b.HasIndex("IsActive");
+
+                    b.HasIndex("DrugIdA", "DrugIdB");
+
+                    b.ToTable("CriticalPairs");
+                });
+
             modelBuilder.Entity("SafeDose.Domain.Entities.Drug", b =>
                 {
                     b.Property<int>("DrugId")
@@ -376,6 +486,9 @@ namespace SafeDose.Domain.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("DrugId"));
+
+                    b.Property<string>("AccountId")
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("DoctorName")
                         .HasMaxLength(150)
@@ -385,10 +498,16 @@ namespace SafeDose.Domain.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
+                    b.Property<int?>("DrugCatalogId")
+                        .HasColumnType("int");
+
                     b.Property<string>("DrugName")
                         .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
+
+                    b.Property<bool>("IsVerified")
+                        .HasColumnType("bit");
 
                     b.Property<int?>("PrescriptionId")
                         .HasColumnType("int");
@@ -396,15 +515,64 @@ namespace SafeDose.Domain.Migrations
                     b.Property<byte?>("Route")
                         .HasColumnType("tinyint");
 
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.HasKey("DrugId");
+
+                    b.HasIndex("AccountId");
+
+                    b.HasIndex("DrugCatalogId");
 
                     b.HasIndex("PrescriptionId");
 
+                    b.HasIndex("AccountId", "IsVerified");
+
                     b.ToTable("Drugs");
+                });
+
+            modelBuilder.Entity("SafeDose.Domain.Entities.DrugCatalog", b =>
+                {
+                    b.Property<int>("DrugCatalogId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("DrugCatalogId"));
+
+                    b.Property<string>("CommercialNameAr")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("CommercialNameEn")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("DrugClass")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("Manufacturer")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<decimal?>("PriceEgp")
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<string>("Route")
+                        .HasMaxLength(80)
+                        .HasColumnType("nvarchar(80)");
+
+                    b.Property<string>("ScientificName")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.HasKey("DrugCatalogId");
+
+                    b.HasIndex("CommercialNameAr");
+
+                    b.HasIndex("CommercialNameEn");
+
+                    b.HasIndex("ScientificName");
+
+                    b.ToTable("DrugCatalogs");
                 });
 
             modelBuilder.Entity("SafeDose.Domain.Entities.FreeTierUsage", b =>
@@ -457,41 +625,101 @@ namespace SafeDose.Domain.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("InteractionCheckId"));
 
-                    b.Property<string>("ArabicExplanation")
-                        .HasColumnType("nvarchar(MAX)");
+                    b.Property<string>("AccountId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("AcknowledgedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("AcknowledgedByAccountId")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("CacheKey")
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
 
                     b.Property<DateTime>("CheckedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime2")
                         .HasDefaultValueSql("GETDATE()");
 
-                    b.Property<int>("PatientId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("RecommendationAction")
+                    b.Property<string>("CheckedDrugsJson")
+                        .IsRequired()
                         .HasColumnType("nvarchar(MAX)");
 
-                    b.Property<string>("SafetyDisclaimer")
+                    b.Property<string>("ConflictingPairsJson")
+                        .HasColumnType("nvarchar(MAX)");
+
+                    b.Property<int?>("ConsentRecordId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<byte>("DrugCount")
+                        .HasColumnType("tinyint");
+
+                    b.Property<string>("ExplanationArabic")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(MAX)");
+
+                    b.Property<bool>("IsAcknowledged")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("LabelArabic")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("ModelVersion")
+                        .HasMaxLength(80)
+                        .HasColumnType("nvarchar(80)");
+
+                    b.Property<int?>("PatientId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("PineconeIndexVersion")
+                        .HasMaxLength(80)
+                        .HasColumnType("nvarchar(80)");
+
+                    b.Property<string>("RecommendedActionArabic")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(MAX)");
+
+                    b.Property<string>("SafetyDisclaimerArabic")
+                        .IsRequired()
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
-                    b.Property<byte?>("SeverityLevel")
+                    b.Property<byte>("SeverityLevel")
                         .HasColumnType("tinyint");
 
-                    b.Property<string>("SourceCitation")
+                    b.Property<string>("SourcesJson")
+                        .HasColumnType("nvarchar(MAX)");
+
+                    b.Property<string>("TitleArabic")
+                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
                     b.Property<byte>("TriggerType")
                         .HasColumnType("tinyint");
 
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.HasKey("InteractionCheckId");
 
+                    b.HasIndex("AcknowledgedByAccountId");
+
+                    b.HasIndex("CacheKey");
+
+                    b.HasIndex("ConsentRecordId");
+
                     b.HasIndex("PatientId");
+
+                    b.HasIndex("PatientId", "CheckedAt");
 
                     b.ToTable("InteractionChecks");
                 });
@@ -549,6 +777,7 @@ namespace SafeDose.Domain.Migrations
 
                     b.Property<string>("AccountId")
                         .IsRequired()
+                        .HasMaxLength(450)
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("Allergies")
@@ -569,6 +798,9 @@ namespace SafeDose.Domain.Migrations
                     b.Property<DateOnly?>("DateOfBirth")
                         .HasColumnType("date");
 
+                    b.Property<DateTime?>("DeactivatedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("FullName")
                         .IsRequired()
                         .HasMaxLength(150)
@@ -577,9 +809,22 @@ namespace SafeDose.Domain.Migrations
                     b.Property<byte?>("Gender")
                         .HasColumnType("tinyint");
 
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<bool>("IsRunning")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid>("MedicalCardToken")
+                        .HasColumnType("uniqueidentifier");
+
                     b.HasKey("PatientId");
 
                     b.HasIndex("AccountId");
+
+                    b.HasIndex("AccountId", "IsActive");
 
                     b.ToTable("Patients");
                 });
@@ -591,6 +836,10 @@ namespace SafeDose.Domain.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("PatientMedicationId"));
+
+                    b.Property<string>("AccountId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Dose")
                         .HasMaxLength(50)
@@ -620,14 +869,9 @@ namespace SafeDose.Domain.Migrations
                     b.Property<byte>("Status")
                         .HasColumnType("tinyint");
 
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.HasKey("PatientMedicationId");
 
-                    b.HasIndex("DrugId")
-                        .IsUnique();
+                    b.HasIndex("DrugId");
 
                     b.HasIndex("PatientId");
 
@@ -642,15 +886,18 @@ namespace SafeDose.Domain.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("PatientMedicationTimeId"));
 
+                    b.Property<string>("AccountId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateOnly>("LastReminderDate")
+                        .HasColumnType("date");
+
                     b.Property<int>("PatientMedicationId")
                         .HasColumnType("int");
 
                     b.Property<TimeOnly>("Time")
                         .HasColumnType("time");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("PatientMedicationTimeId");
 
@@ -710,6 +957,10 @@ namespace SafeDose.Domain.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("PrescriptionId"));
 
+                    b.Property<string>("AccountId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<DateTime?>("ConfirmedAt")
                         .HasColumnType("datetime2");
 
@@ -732,16 +983,11 @@ namespace SafeDose.Domain.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("PrescriptionName")
-                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
-                    b.Property<byte>("SourceType")
+                    b.Property<byte?>("SourceType")
                         .HasColumnType("tinyint");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("PrescriptionId");
 
@@ -797,6 +1043,11 @@ namespace SafeDose.Domain.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("PricingTierId"));
 
+                    b.Property<int>("BillingCycleDays")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime2")
@@ -807,13 +1058,22 @@ namespace SafeDose.Domain.Migrations
                         .HasMaxLength(3)
                         .HasColumnType("nvarchar(3)");
 
+                    b.Property<int>("InteractionCheckLimitPerDay")
+                        .HasColumnType("int");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
+
+                    b.Property<int>("MedicationLimitPerPatient")
+                        .HasColumnType("int");
 
                     b.Property<decimal>("MonthlyPrice")
                         .HasColumnType("decimal(10,2)");
 
                     b.Property<int>("PatientLimit")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PrescriptionParseLimit")
                         .HasColumnType("int");
 
                     b.Property<string>("TierCode")
@@ -826,12 +1086,84 @@ namespace SafeDose.Domain.Migrations
                         .HasMaxLength(80)
                         .HasColumnType("nvarchar(80)");
 
+                    b.Property<string>("TierNameArabic")
+                        .HasMaxLength(120)
+                        .HasColumnType("nvarchar(120)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
                     b.HasKey("PricingTierId");
 
                     b.HasIndex("TierCode")
                         .IsUnique();
 
                     b.ToTable("PricingTiers");
+                });
+
+            modelBuilder.Entity("SafeDose.Domain.Entities.PricingTierFeature", b =>
+                {
+                    b.Property<int>("PricingTierFeatureId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("PricingTierFeatureId"));
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("int");
+
+                    b.Property<string>("LabelArabic")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<int>("PricingTierId")
+                        .HasColumnType("int");
+
+                    b.HasKey("PricingTierFeatureId");
+
+                    b.HasIndex("PricingTierId");
+
+                    b.ToTable("PricingTierFeatures");
+                });
+
+            modelBuilder.Entity("SafeDose.Domain.Entities.PushSubscription", b =>
+                {
+                    b.Property<int>("PushSubscriptionId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("PushSubscriptionId"));
+
+                    b.Property<string>("AccountId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Auth")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateOnly>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("date")
+                        .HasDefaultValueSql("GETDATE()");
+
+                    b.Property<string>("Endpoint")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("P256DH")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("PushSubscriptionId");
+
+                    b.HasIndex("AccountId");
+
+                    b.HasIndex("Endpoint")
+                        .IsUnique();
+
+                    b.ToTable("PushSubscription");
                 });
 
             modelBuilder.Entity("SafeDose.Domain.Entities.ReminderResponse", b =>
@@ -842,7 +1174,15 @@ namespace SafeDose.Domain.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ReminderResponseId"));
 
-                    b.Property<int>("PatientMedicationId")
+                    b.Property<string>("AccountId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("DrugName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("PatientMedicationId")
                         .HasColumnType("int");
 
                     b.Property<DateTime?>("RespondedAt")
@@ -851,13 +1191,7 @@ namespace SafeDose.Domain.Migrations
                     b.Property<byte>("ResponseType")
                         .HasColumnType("tinyint");
 
-                    b.Property<DateTime>("ScheduleDateTime")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int?>("SnoozeMinutes")
-                        .HasColumnType("int");
-
-                    b.Property<string>("UserId")
+                    b.Property<string>("TimeDrug")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -915,6 +1249,10 @@ namespace SafeDose.Domain.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("SymptomReportId"));
 
+                    b.Property<string>("AccountId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("ArabicExplanation")
                         .HasColumnType("nvarchar(MAX)");
 
@@ -940,10 +1278,6 @@ namespace SafeDose.Domain.Migrations
 
                     b.Property<string>("TranscriptText")
                         .HasColumnType("nvarchar(MAX)");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("SymptomReportId");
 
@@ -1036,12 +1370,36 @@ namespace SafeDose.Domain.Migrations
                     b.Navigation("Account");
                 });
 
+            modelBuilder.Entity("SafeDose.Domain.Entities.CriticalPair", b =>
+                {
+                    b.HasOne("SafeDose.Domain.Entities.Drug", "DrugA")
+                        .WithMany()
+                        .HasForeignKey("DrugIdA")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("SafeDose.Domain.Entities.Drug", "DrugB")
+                        .WithMany()
+                        .HasForeignKey("DrugIdB")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.Navigation("DrugA");
+
+                    b.Navigation("DrugB");
+                });
+
             modelBuilder.Entity("SafeDose.Domain.Entities.Drug", b =>
                 {
+                    b.HasOne("SafeDose.Domain.Entities.DrugCatalog", "DrugCatalog")
+                        .WithMany()
+                        .HasForeignKey("DrugCatalogId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("SafeDose.Domain.Entities.Prescription", "Prescription")
                         .WithMany("Drugs")
                         .HasForeignKey("PrescriptionId")
                         .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("DrugCatalog");
 
                     b.Navigation("Prescription");
                 });
@@ -1059,11 +1417,17 @@ namespace SafeDose.Domain.Migrations
 
             modelBuilder.Entity("SafeDose.Domain.Entities.InteractionCheck", b =>
                 {
+                    b.HasOne("SafeDose.Domain.Entities.ConsentRecord", "ConsentRecord")
+                        .WithMany()
+                        .HasForeignKey("ConsentRecordId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("SafeDose.Domain.Entities.Patient", "Patient")
                         .WithMany("InteractionChecks")
                         .HasForeignKey("PatientId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("ConsentRecord");
 
                     b.Navigation("Patient");
                 });
@@ -1093,9 +1457,9 @@ namespace SafeDose.Domain.Migrations
             modelBuilder.Entity("SafeDose.Domain.Entities.PatientMedication", b =>
                 {
                     b.HasOne("SafeDose.Domain.Entities.Drug", "Drug")
-                        .WithOne("PatientMedication")
-                        .HasForeignKey("SafeDose.Domain.Entities.PatientMedication", "DrugId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .WithMany("PatientMedications")
+                        .HasForeignKey("DrugId")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("SafeDose.Domain.Entities.Patient", "Patient")
@@ -1161,13 +1525,34 @@ namespace SafeDose.Domain.Migrations
                     b.Navigation("PricingTier");
                 });
 
+            modelBuilder.Entity("SafeDose.Domain.Entities.PricingTierFeature", b =>
+                {
+                    b.HasOne("SafeDose.Domain.Entities.PricingTier", "PricingTier")
+                        .WithMany("Features")
+                        .HasForeignKey("PricingTierId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("PricingTier");
+                });
+
+            modelBuilder.Entity("SafeDose.Domain.Entities.PushSubscription", b =>
+                {
+                    b.HasOne("SafeDose.Domain.Entities.Account", "Account")
+                        .WithMany("PushSubscriptions")
+                        .HasForeignKey("AccountId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Account");
+                });
+
             modelBuilder.Entity("SafeDose.Domain.Entities.ReminderResponse", b =>
                 {
                     b.HasOne("SafeDose.Domain.Entities.PatientMedication", "PatientMedication")
                         .WithMany("ReminderResponses")
                         .HasForeignKey("PatientMedicationId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("PatientMedication");
                 });
@@ -1216,13 +1601,14 @@ namespace SafeDose.Domain.Migrations
 
                     b.Navigation("PricingChangeHistories");
 
+                    b.Navigation("PushSubscriptions");
+
                     b.Navigation("Subscriptions");
                 });
 
             modelBuilder.Entity("SafeDose.Domain.Entities.Drug", b =>
                 {
-                    b.Navigation("PatientMedication")
-                        .IsRequired();
+                    b.Navigation("PatientMedications");
                 });
 
             modelBuilder.Entity("SafeDose.Domain.Entities.Patient", b =>
@@ -1252,6 +1638,8 @@ namespace SafeDose.Domain.Migrations
 
             modelBuilder.Entity("SafeDose.Domain.Entities.PricingTier", b =>
                 {
+                    b.Navigation("Features");
+
                     b.Navigation("PricingChangeHistories");
 
                     b.Navigation("Subscriptions");

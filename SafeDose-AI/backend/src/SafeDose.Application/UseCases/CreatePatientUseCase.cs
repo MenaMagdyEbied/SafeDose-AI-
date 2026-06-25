@@ -1,5 +1,8 @@
+using Microsoft.EntityFrameworkCore;
+using SafeDose.Application.Auth.ServicesInterfaces;
 using SafeDose.Application.DTOs;
 using SafeDose.Application.Interfaces;
+using SafeDose.Domain.ApplicationDbContext;
 using SafeDose.Domain.Entities;
 
 namespace SafeDose.Application.UseCases;
@@ -9,11 +12,14 @@ public class CreatePatientUseCase
 {
     private readonly IPatientRepository _patients;
     private readonly IAuditLogService _audit;
-
-    public CreatePatientUseCase(IPatientRepository patients, IAuditLogService audit)
+    private readonly AppDbContext _context;
+    private readonly IUserGlobalServices _userGlobalServices;
+    public CreatePatientUseCase(IPatientRepository patients, IAuditLogService audit , AppDbContext context, IUserGlobalServices userGlobalServices)
     {
         _patients = patients;
         _audit = audit;
+        _context = context; 
+        _userGlobalServices = userGlobalServices;
     }
 
     public async Task<PatientResponseDto> ExecuteAsync(
@@ -32,6 +38,9 @@ public class CreatePatientUseCase
         ValidateGender(dto.Gender);
         ValidateBloodType(dto.BloodType);
 
+        Account account = await _userGlobalServices.GetUser();
+        bool flag = await _context.Patients.Where(p=>p.AccountId == account.Id).CountAsync() == 0 ;   
+
         var patient = new Patient
         {
             AccountId = accountId,
@@ -43,6 +52,7 @@ public class CreatePatientUseCase
             Allergies = JoinTags(dto.Allergies),
             CreatedAt = DateTime.UtcNow,
             IsActive = true,
+            IsRunning = flag
         };
 
         var newId = await _patients.CreateAsync(patient);

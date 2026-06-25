@@ -14,6 +14,9 @@ public class SqlPaymentRepository : IPaymentRepository
         _db = db;
     }
 
+    public Task<Payment?> GetByIdAsync(int paymentId)
+        => _db.Payments.FirstOrDefaultAsync(p => p.PaymentId == paymentId);
+
     public async Task<int> CreateAsync(Payment payment)
     {
         await _db.Payments.AddAsync(payment);
@@ -31,4 +34,21 @@ public class SqlPaymentRepository : IPaymentRepository
         => _db.Payments
             .FirstOrDefaultAsync(p => p.GateWay == gateway
                                    && p.GateWayReference == gatewayReference);
+
+    public Task<Payment?> GetByMerchantOrderIdAsync(string merchantOrderId)
+    {
+        if (string.IsNullOrWhiteSpace(merchantOrderId))
+        {
+            return Task.FromResult<Payment?>(null);
+        }
+
+        var candidate = merchantOrderId.Trim();
+        if (candidate.StartsWith("SD-", StringComparison.OrdinalIgnoreCase))
+            candidate = candidate[3..];
+
+        if (!int.TryParse(candidate, out var paymentId))
+            return Task.FromResult<Payment?>(null);
+
+        return GetByIdAsync(paymentId);
+    }
 }

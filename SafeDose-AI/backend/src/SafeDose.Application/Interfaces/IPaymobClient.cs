@@ -10,6 +10,9 @@ public interface IPaymobClient
         PaymobCheckoutRequest request,
         CancellationToken cancellationToken = default);
 
+    // Diagnostic: fetch a Paymob order by id (returns raw JSON string)
+    Task<string> GetOrderRawAsync(string orderId, CancellationToken cancellationToken = default);
+
     // Webhook verification. Paymob HMAC-signs each callback - we re-compute the HMAC
     // from the fields they specify and compare. Returns false on mismatch.
     bool VerifyWebhookSignature(string concatenatedFields, string receivedHmac);

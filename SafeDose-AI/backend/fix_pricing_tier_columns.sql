@@ -81,3 +81,5 @@ SELECT TOP 5 PatientId, AccountId, FullName, IsActive, MedicalCardToken FROM Pat
 SELECT TierCode, TierNameArabic, MonthlyPrice, InteractionCheckLimitPerDay, MedicationLimitPerPatient FROM PricingTiers;
 
 PRINT 'DONE. Restart the backend (Ctrl+C, then dotnet run) and hard-refresh the browser.';
+
+-- شوف الـ subscriptions الموجودة

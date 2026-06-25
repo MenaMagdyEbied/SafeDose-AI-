@@ -125,6 +125,7 @@ builder.Services.AddScoped<GetPricingTiersUseCase>();
 builder.Services.AddScoped<GetMySubscriptionUseCase>();
 builder.Services.AddScoped<InitiateCheckoutUseCase>();
 builder.Services.AddScoped<ProcessPaymobWebhookUseCase>();
+builder.Services.AddScoped<CompletePaymentUseCase>();
 builder.Services.AddScoped<CancelSubscriptionUseCase>();
 builder.Services.AddScoped<GetPaymentStatusUseCase>();
 
@@ -301,4 +302,4 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 
-app.Run();
+app.Run();app.Run();

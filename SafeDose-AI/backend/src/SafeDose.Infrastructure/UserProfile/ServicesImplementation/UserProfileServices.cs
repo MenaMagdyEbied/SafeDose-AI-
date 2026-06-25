@@ -5,6 +5,7 @@ using SafeDose.Application.Auth.ServicesInterfaces;
 using SafeDose.Application.UserProfile.DTOs;
 using SafeDose.Application.UserProfile.RepositoryInterface;
 using SafeDose.Application.UserProfile.ServicesInterface;
+using SafeDose.Domain.ApplicationDbContext;
 using SafeDose.Domain.Entities;
 using SafeDose.Infrastructure.Auth;
 using System;
@@ -17,11 +18,13 @@ namespace SafeDose.Infrastructure.UserProfile.ServicesImplementation
 {
     public class UserProfileServices : IUserProfileServices
     {
+        private readonly AppDbContext _context;
         private readonly IUserProfileRepository _userProfileRepository;
         private readonly UserManager<Account> _userManager;
         private readonly IUserGlobalServices _userGlobalServices;    
-        public UserProfileServices(IUserProfileRepository userProfileRepository , UserManager<Account> userManager , IUserGlobalServices userGlobalServices)
+        public UserProfileServices(AppDbContext context,IUserProfileRepository userProfileRepository , UserManager<Account> userManager , IUserGlobalServices userGlobalServices)
         {
+            _context = context;
             _userProfileRepository = userProfileRepository;
             _userManager = userManager;
             _userGlobalServices = userGlobalServices;   
@@ -41,6 +44,8 @@ namespace SafeDose.Infrastructure.UserProfile.ServicesImplementation
 
             return userGetProfileDTO;   
         }
+
+
 
         public async  Task<string> UpdateEmail(UserUpdateEmailDTO userUpdateEmail)
         {
@@ -88,5 +93,34 @@ namespace SafeDose.Infrastructure.UserProfile.ServicesImplementation
                 throw new Exception(result.Errors.ToString());
         }
 
+
+        public async Task<string> SetRunningPatient(int patientId)
+        {
+            Account account = await _userGlobalServices.GetUser();
+            Patient? patient = await _context.Patients.SingleOrDefaultAsync(p => p.PatientId == patientId && p.AccountId == account.Id);
+            if (patient == null)
+                throw new Exception($"لهذا المستخدم {patientId} لا يوجد مريض بالرمز");
+
+            List<Patient> patients = await _context.Patients.Where(p=>p.AccountId == account.Id).ToListAsync();
+            foreach(var p in  patients)
+            {
+                p.IsRunning = false;    
+            }
+
+            patient.IsRunning = true;
+
+
+            await _context.SaveChangesAsync();     
+            return "تم التفعيل";
+        }
+
+        public async Task<int> GetRunningPatient()
+        {
+            Account account = await _userGlobalServices.GetUser();
+            Patient? patient = await _context.Patients.SingleOrDefaultAsync(p => p.IsRunning == true && p.AccountId == account.Id);
+            if (patient == null)
+                throw new Exception("لا يوجد مريض مفعل يجب التفعيل اولا");
+            return patient.PatientId;
+        }
     }
 }

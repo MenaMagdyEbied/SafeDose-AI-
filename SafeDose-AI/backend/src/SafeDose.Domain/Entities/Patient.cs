@@ -17,6 +17,8 @@ namespace SafeDose.Domain.Entities
 
         // ── Soft delete ──
         public bool IsActive { get; set; } = true;
+
+        public bool IsRunning { get; set; } = false;
         public DateTime? DeactivatedAt { get; set; }
 
         public Account Account { get; set; } = null!;

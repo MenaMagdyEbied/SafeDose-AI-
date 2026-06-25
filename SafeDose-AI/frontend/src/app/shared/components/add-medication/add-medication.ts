@@ -6,6 +6,7 @@ import {
   OnInit,
   Output,
   computed,
+  effect,
   inject,
   signal,
 } from '@angular/core';
@@ -115,14 +116,14 @@ export class AddMedication implements OnInit {
   }
 
   ngOnInit(): void {
-    this.patientService
-      .getMyPatients()
-      .then((patients) => {
-        this.currentPatientId = patients[0]?.patientId ?? patients[0]?.id ?? null;
-      })
-      .catch(() => {
-        this.currentPatientId = null;
-      });
+    this.syncPatientContext();
+
+    effect(() => {
+      const patientId = this.patientService.currentPatientId;
+      if (patientId != null && patientId !== this.currentPatientId) {
+        this.currentPatientId = patientId;
+      }
+    });
 
     // Watch frequency changes -> keep the times FormArray in sync with the chosen count
     this.form
@@ -135,6 +136,15 @@ export class AddMedication implements OnInit {
       const id = Number(idParam);
       this.editingId.set(id);
       this.loadForEdit(id);
+    }
+  }
+
+  private async syncPatientContext(): Promise<void> {
+    try {
+      this.currentPatientId =
+        this.patientService.currentPatientId ?? (await this.patientService.getPrimaryPatientId());
+    } catch {
+      this.currentPatientId = null;
     }
   }
 

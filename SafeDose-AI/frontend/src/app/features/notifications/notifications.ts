@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, DestroyRef, OnInit, effect, inject, signal } from '@angular/core';
 import {
   Check,
   Clock,
@@ -24,6 +24,7 @@ import { PatientService } from '../../core/services/patient';
 export class Notifications implements OnInit {
   private readonly medicationsService = inject(Medications);
   private readonly patientService = inject(PatientService);
+  private readonly destroyRef = inject(DestroyRef);
 
   pillIcon = Pill;
   usersIcon = Users;
@@ -50,6 +51,13 @@ export class Notifications implements OnInit {
 
   async ngOnInit(): Promise<void> {
     await this.loadFromMedications();
+
+    effect(() => {
+      const patientId = this.patientService.currentPatientId;
+      if (patientId != null) {
+        void this.loadFromMedications();
+      }
+    });
   }
 
   private async loadFromMedications(): Promise<void> {

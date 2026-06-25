@@ -19,6 +19,7 @@ import { PatientService } from '../../core/services/patient';
 import { Card } from '../../shared/components/card/card';
 import {
   ArrowRight,
+  ChevronDown,
   Heart,
   Pill,
   Printer,
@@ -52,6 +53,7 @@ export class DigitalCard implements AfterViewInit {
   trashIcon = Trash2;
   xIcon = X;
   arrowRightIcon = ArrowRight;
+  chevronDownIcon = ChevronDown;
 
   loading = signal(false);
   error = signal('');
@@ -67,8 +69,14 @@ export class DigitalCard implements AfterViewInit {
     qrUrl: '',
   });
 
-  patientId = this.patientService.currentPatientId;
+  selectedPatientId = signal<number | null>(this.patientService.currentPatientId);
+
   private resolvePatientId() {
+    const currentId = this.patientService.currentPatientId ?? this.selectedPatientId();
+    if (currentId != null) {
+      return of(String(currentId).trim());
+    }
+
     return from(this.patientService.getPrimaryPatientId()).pipe(
       map((id) => (id != null ? String(id).trim() : '')),
       catchError(() => of('')),
@@ -78,6 +86,7 @@ export class DigitalCard implements AfterViewInit {
   loadCard(): void {
     this.error.set('');
     this.loading.set(true);
+    this.qrImage.set('');
     this.cdr.markForCheck();
 
     this.resolvePatientId()
@@ -89,12 +98,7 @@ export class DigitalCard implements AfterViewInit {
             return EMPTY;
           }
 
-          return from(
-            Promise.all([
-              this.medicalCardService.getPrivateCard(patientId),
-              this.medicalCardService.getPrivateQrCode(patientId),
-            ]),
-          );
+          return from(this.medicalCardService.getPrivateCard(patientId));
         }),
         catchError(() => {
           this.error.set('تعذر تحميل البطاقة الطبية الخاصة.');
@@ -106,9 +110,8 @@ export class DigitalCard implements AfterViewInit {
         }),
         takeUntilDestroyed(this.destroyRef),
       )
-      .subscribe(([card, qr]) => {
+      .subscribe((card) => {
         this.cardData.set(card);
-        this.qrImage.set(qr);
         this.cardLoaded.set(true);
         this.cdr.markForCheck();
       });
@@ -144,6 +147,7 @@ export class DigitalCard implements AfterViewInit {
   }
 
   generateQR(): void {
+    this.error.set('');
     this.resolvePatientId()
       .pipe(
         switchMap((patientId) => {
@@ -161,9 +165,12 @@ export class DigitalCard implements AfterViewInit {
       )
       .subscribe((qrImage) => {
         this.qrImage.set(qrImage);
+        this.cdr.markForCheck();
       });
   }
   async changePatient(patientId: number): Promise<void> {
+    this.selectedPatientId.set(patientId);
     await this.patientService.setRunningPatient(patientId);
+    this.loadCard();
   }
 }

@@ -107,6 +107,9 @@ export class PatientService {
   }
 
   async getPrimaryPatientId(): Promise<number | null> {
+    const active = this.currentPatientId;
+    if (active != null) return active;
+
     const cached = this.resolvePatientId(this.primaryPatient());
     if (cached != null) return cached;
 

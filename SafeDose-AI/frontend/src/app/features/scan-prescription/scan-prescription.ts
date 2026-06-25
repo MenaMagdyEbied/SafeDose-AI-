@@ -1,4 +1,12 @@
-import { ChangeDetectorRef, Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import {
+  ChangeDetectorRef,
+  Component,
+  DestroyRef,
+  effect,
+  inject,
+  OnInit,
+  signal,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
 import {
@@ -93,14 +101,23 @@ export class ScanPrescription implements OnInit {
   ];
 
   ngOnInit(): void {
-    this.patientService
-      .getMyPatients()
-      .then((patients) => {
-        this.currentPatientId = patients[0]?.patientId ?? patients[0]?.id ?? null;
-      })
-      .catch(() => {
-        this.currentPatientId = null;
-      });
+    this.syncPatientContext();
+
+    effect(() => {
+      const patientId = this.patientService.currentPatientId;
+      if (patientId != null && patientId !== this.currentPatientId) {
+        this.currentPatientId = patientId;
+      }
+    });
+  }
+
+  private async syncPatientContext(): Promise<void> {
+    try {
+      this.currentPatientId =
+        this.patientService.currentPatientId ?? (await this.patientService.getPrimaryPatientId());
+    } catch {
+      this.currentPatientId = null;
+    }
   }
 
   openCamera(): void {

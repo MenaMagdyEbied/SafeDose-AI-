@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, DestroyRef, effect, inject, OnInit, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import {
   Activity,
@@ -33,6 +33,7 @@ export class PatientHome implements OnInit {
   private readonly auth = inject(Auth);
   private readonly patientService = inject(PatientService);
   private readonly medicationsService = inject(Medications);
+  private readonly destroyRef = inject(DestroyRef);
 
   taken = signal(false);
   loading = signal(false);
@@ -74,6 +75,14 @@ export class PatientHome implements OnInit {
 
   ngOnInit(): void {
     this.loadPatientData();
+
+    effect(() => {
+      const patientId = this.patientService.currentPatientId;
+      if (patientId != null && patientId !== this.currentPatientId()) {
+        this.currentPatientId.set(patientId);
+        void this.loadPatientData();
+      }
+    });
   }
 
   private async loadPatientData(): Promise<void> {
@@ -81,9 +90,9 @@ export class PatientHome implements OnInit {
     this.errorText.set('');
 
     try {
-      const patients = await this.patientService.getMyPatients();
-      const patient = patients[0];
-      this.currentPatientId.set(patient?.patientId ?? patient?.id ?? null);
+      const patientId =
+        this.patientService.currentPatientId ?? (await this.patientService.getPrimaryPatientId());
+      this.currentPatientId.set(patientId);
 
       if (!this.currentPatientId()) {
         this.errorText.set('تعذر تحديد المريض الحالي.');

@@ -45,8 +45,8 @@ export class FamilyPlan implements OnInit {
 
   readonly genderOptions = [
     { value: 0, label: 'اختر النوع' },
-    { value: 1, label: 'ذكر' },
-    { value: 2, label: 'أنثى' },
+    { value: 2, label: 'ذكر' },
+    { value: 1, label: 'أنثى' },
     { value: 3, label: 'أخرى' },
   ];
 

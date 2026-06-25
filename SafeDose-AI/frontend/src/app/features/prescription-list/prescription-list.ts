@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, DestroyRef, OnInit, effect, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { CircleCheck, Eye, LucideAngularModule, Trash2, TriangleAlert } from 'lucide-angular';
 import { Prescription } from '../../core/services/prescription';
@@ -15,6 +15,7 @@ export class PrescriptionList implements OnInit {
   private readonly router = inject(Router);
   private readonly prescriptionService = inject(Prescription);
   private readonly patientService = inject(PatientService);
+  private readonly destroyRef = inject(DestroyRef);
 
   checkCircleIcon = CircleCheck;
   trashIcon = Trash2;
@@ -32,6 +33,14 @@ export class PrescriptionList implements OnInit {
 
   ngOnInit(): void {
     this.loadPrescriptions();
+
+    effect(() => {
+      const patientId = this.patientService.currentPatientId;
+      if (patientId != null && patientId !== this.currentPatientId) {
+        this.currentPatientId = patientId;
+        void this.loadPrescriptions();
+      }
+    });
   }
 
   private async loadPrescriptions(): Promise<void> {
@@ -39,8 +48,9 @@ export class PrescriptionList implements OnInit {
     this.errorText.set('');
 
     try {
-      const patients = await this.patientService.getMyPatients();
-      this.currentPatientId = patients[0]?.patientId ?? patients[0]?.id ?? null;
+      const patientId =
+        this.patientService.currentPatientId ?? (await this.patientService.getPrimaryPatientId());
+      this.currentPatientId = patientId;
 
       if (!this.currentPatientId) {
         this.errorText.set('تعذر تحديد المريض الحالي.');

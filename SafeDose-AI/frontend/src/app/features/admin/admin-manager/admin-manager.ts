@@ -94,7 +94,8 @@ export class AdminManager implements OnInit {
     this.adminService.getAdmins().subscribe({
       next: (response) => {
         const rawAdmins = this.extractAdminsFromResponse(response);
-        this.admins = rawAdmins.map((admin) => this.mapAdmin(admin));
+        const mappedAdmins = rawAdmins.map((admin) => this.mapAdmin(admin));
+        this.admins = this.sortAdmins(mappedAdmins);
         this.isLoading = false;
         this.cdr.markForCheck();
         this.cdr.detectChanges();
@@ -147,12 +148,14 @@ export class AdminManager implements OnInit {
       return;
     }
 
-    const normalizedRole = this.normalizeRole(this.isEditing ? this.form.role : 'admin');
+    const roleToSend = this.isEditing
+      ? this.normalizeRole(this.selectedAdmin?.role ?? this.form.role)
+      : this.getRoleForNewAdmin();
 
     const payload: Record<string, unknown> = {
       name: this.form.name,
       email: this.form.email,
-      role: normalizedRole,
+      role: roleToSend,
     };
 
     if (!this.isEditing) {
@@ -262,6 +265,23 @@ export class AdminManager implements OnInit {
       (currentName && targetName && currentName === targetName);
 
     return !matchesIdentity;
+  }
+
+  private getRoleForNewAdmin(): string {
+    const hasSuperAdmin = this.admins.some((admin) => admin.role === 'super-admin');
+    return hasSuperAdmin ? 'Admin' : 'SuperAdmin';
+  }
+
+  private sortAdmins(admins: Admin[]): Admin[] {
+    return [...admins].sort((a, b) => {
+      const aIsSuper = a.role === 'super-admin';
+      const bIsSuper = b.role === 'super-admin';
+
+      if (aIsSuper && !bIsSuper) return -1;
+      if (!aIsSuper && bIsSuper) return 1;
+
+      return (a.name || '').localeCompare(b.name || '', 'ar', { sensitivity: 'base' });
+    });
   }
 
   private normalizeRole(role: string): string {

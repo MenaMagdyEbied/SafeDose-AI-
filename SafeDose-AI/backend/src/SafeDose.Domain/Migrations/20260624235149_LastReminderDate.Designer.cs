@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SafeDose.Domain.ApplicationDbContext;
 
@@ -11,9 +12,11 @@ using SafeDose.Domain.ApplicationDbContext;
 namespace SafeDose.Domain.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260624235149_LastReminderDate")]
+    partial class LastReminderDate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -250,9 +253,6 @@ namespace SafeDose.Domain.Migrations
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<bool>("TermsAndConditions")
-                        .HasColumnType("bit");
-
                     b.Property<bool>("TwoFactorEnabled")
                         .HasColumnType("bit");
 
@@ -284,7 +284,7 @@ namespace SafeDose.Domain.Migrations
                             Id = "1",
                             AccessFailedCount = 0,
                             AccountStatus = (byte)0,
-                            ConcurrencyStamp = "9b99cc69-4dc4-44bf-84d0-cbd792ffc454",
+                            ConcurrencyStamp = "e44983c8-daf0-41d2-8da7-7ba3d458e2a6",
                             CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Email = "superadmin@gmail.com",
                             EmailConfirmed = true,
@@ -293,10 +293,9 @@ namespace SafeDose.Domain.Migrations
                             Name = "superadmin",
                             NormalizedEmail = "SUPERADMIN@GMAIL.COM",
                             NormalizedUserName = "SUPERADMIN",
-                            PasswordHash = "AQAAAAIAAYagAAAAEIrbMJ8O9WEO4upqN4/hcaRYv3JiMY8m2RWaJJPMMZPlE0+Yppu7D2oDGyBcWSUt/A==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEEF32sxBFUvoHZkUa4hVKNb+ZtKYUlJU+hkPprnsqagNcj/Tq+HpFlr6VyImmf9BNw==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "bb006c72-847f-454a-8d89-7219750827bc",
-                            TermsAndConditions = false,
+                            SecurityStamp = "ae30ac4d-45f2-4bde-98e1-bcefba31cc89",
                             TwoFactorEnabled = false,
                             UserName = "superadmin"
                         });

@@ -14,6 +14,7 @@ import {
   ArrowLeft,
   ArrowRight,
   Bell,
+  Camera,
   CircleCheck,
   Eye,
   EyeOff,
@@ -108,6 +109,14 @@ export class Register {
       description: 'استخدام الميكروفون لإدخال أسماء الأدوية بالصوت',
       required: false,
       icon: Mic,
+      color: 'bg-surface-container-high text-outline',
+    },
+    {
+      id: 'camera_input',
+      title: 'مسح ضوئي بالكاميرا',
+      description: 'استخدام الكاميرا لالتقاط صورة لعلبة الدواء أو الروشتة',
+      required: false,
+      icon: Camera, // تأكدي من استيراد أيقونة Camera من مكتبة الأيقونات لديك
       color: 'bg-surface-container-high text-outline',
     },
   ];

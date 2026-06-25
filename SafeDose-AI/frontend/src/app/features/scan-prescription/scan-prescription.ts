@@ -35,6 +35,7 @@ interface ReviewMed extends ParsedMedication {
   startDate: string;
   endDate: string;
   mealTiming: number;
+  resultsOpen: boolean;
 }
 @Component({
   selector: 'app-scan-prescription',
@@ -70,6 +71,7 @@ export class ScanPrescription implements OnInit {
 
   private currentPatientId: number | null = null;
   private today = new Date().toISOString().slice(0, 10);
+  private searchDebounceTimers: { [key: number]: any } = {};
 
   doctorName = signal<string | null>(null);
   reviewMeds = signal<ReviewMed[]>([]);
@@ -180,8 +182,6 @@ export class ScanPrescription implements OnInit {
         const meds = res.medications.map((m) => this.toReviewMed(m));
         this.reviewMeds.set(meds);
         this.stage.set('review');
-
-        // بحث تلقائي في الكتالوج لكل دواء بناءً على الاسم المخمّن
         meds.forEach((m, i) => this.searchForMed(i, m.resolvedName));
       });
   }
@@ -191,6 +191,7 @@ export class ScanPrescription implements OnInit {
       ...m,
       resolvedName: m.drug_name_guess ?? '',
       searchSuggestions: [],
+      resultsOpen: false,
       frequencyNumber: this.parseFrequencyNumber(m.frequency_guess),
       doctorName: this.doctorName() ?? '',
       dose: m.dose_guess ?? '',
@@ -200,7 +201,6 @@ export class ScanPrescription implements OnInit {
     };
   }
 
-  /** بيدور في /drugs/search عشان يطلع اقتراحات حقيقية من الكتالوج لكل دواء */
   private searchForMed(index: number, query: string): void {
     if (!query?.trim()) return;
 
@@ -212,22 +212,58 @@ export class ScanPrescription implements OnInit {
       .subscribe((results) => {
         const names = results.map((r) => r.commercialNameAr || r.commercialNameEn);
         this.reviewMeds.update((list) =>
-          list.map((m, i) => (i === index ? { ...m, searchSuggestions: names } : m)),
+          list.map((m, i) =>
+            i === index ? { ...m, searchSuggestions: names, resultsOpen: true } : m,
+          ),
         );
       });
   }
 
   onDrugNameInput(index: number, value: string): void {
+    // فتح الـ dropdown وتحديث الاسم فوراً
     this.reviewMeds.update((list) =>
-      list.map((m, i) => (i === index ? { ...m, resolvedName: value } : m)),
+      list.map((m, i) => (i === index ? { ...m, resolvedName: value, resultsOpen: true } : m)),
     );
-    this.searchForMed(index, value);
+
+    // debounce الـ API call
+    if (this.searchDebounceTimers[index]) {
+      clearTimeout(this.searchDebounceTimers[index]);
+    }
+
+    if (!value.trim()) {
+      this.reviewMeds.update((list) =>
+        list.map((m, i) => (i === index ? { ...m, searchSuggestions: [], resultsOpen: false } : m)),
+      );
+      return;
+    }
+
+    this.searchDebounceTimers[index] = setTimeout(() => {
+      this.searchForMed(index, value);
+    }, 300);
   }
 
+  // mousedown بيشتغل قبل blur فمش محتاجين setTimeout
   selectSuggestion(index: number, name: string): void {
     this.reviewMeds.update((list) =>
-      list.map((m, i) => (i === index ? { ...m, resolvedName: name, searchSuggestions: [] } : m)),
+      list.map((m, i) =>
+        i === index ? { ...m, resolvedName: name, searchSuggestions: [], resultsOpen: false } : m,
+      ),
     );
+
+    setTimeout(() => {
+      const inputs = document.querySelectorAll<HTMLInputElement>('.drug-name-input');
+      if (inputs[index]) {
+        inputs[index].value = name;
+      }
+    }, 0);
+  }
+
+  closeSuggestions(index: number): void {
+    setTimeout(() => {
+      this.reviewMeds.update((list) =>
+        list.map((m, i) => (i === index ? { ...m, resultsOpen: false } : m)),
+      );
+    }, 150);
   }
 
   updateMedField(index: number, field: keyof ReviewMed, value: any): void {
@@ -251,6 +287,7 @@ export class ScanPrescription implements OnInit {
         needsReview: true,
         resolvedName: '',
         searchSuggestions: [],
+        resultsOpen: false,
         frequencyNumber: 1,
         doctorName: this.doctorName() ?? '',
         dose: '',
@@ -355,6 +392,7 @@ export class ScanPrescription implements OnInit {
 
     return 1;
   }
+
   goHome(): void {
     this.router.navigate(['/patient-home']);
   }

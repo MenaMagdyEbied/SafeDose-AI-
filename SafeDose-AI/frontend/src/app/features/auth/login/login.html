@@ -153,6 +153,14 @@
       class="flex w-full lg:w-1/2 relative overflow-hidden flex-col justify-end p-8 lg:p-16 order-1 lg:order-2 min-h-55 lg:min-h-0"
       style="background: linear-gradient(135deg, #005eb8 0%, #003366 60%, #007f7c 100%)"
     >
+      <button
+        type="button"
+        routerLink="/home"
+        class="absolute top-5 left-5 z-20 inline-flex items-center gap-2 text-sm font-bold text-white/90 hover:text-white bg-white/15 hover:bg-white/25 backdrop-blur-sm px-4 py-2 rounded-xl border border-white/20 transition-all cursor-pointer"
+      >
+        <lucide-icon [img]="arrowLeftIcon" class="w-4 h-4"></lucide-icon>
+        <span>العودة إلى الصفحة الرئيسية</span>
+      </button>
       <img
         src="/images/login.png"
         alt=""

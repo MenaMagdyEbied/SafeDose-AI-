@@ -30,9 +30,10 @@ export class Payment implements OnInit {
   showFailure = false;
   showError = false;
   errorText = '';
-  planId = 'pro';
+  planId = 'premium-monthly';
   verifying = false;
   method: 'card' | 'wallet' = 'card';
+  subscribedPlanName = '';
 
   userForm = {
     fullName: '',
@@ -79,15 +80,17 @@ export class Payment implements OnInit {
     this.route.queryParams
       .pipe(
         switchMap((params: any) => {
-          this.planId = params['plan'] ?? 'pro';
+          this.planId = params['plan'] ?? 'premium-monthly';
           const merchantOrderId = params['merchant_order_id'];
+          const paymobSuccess =
+            params['success'] === undefined ? undefined : params['success'] === 'true';
 
           if (!merchantOrderId) {
             return EMPTY;
           }
 
           this.verifying = true;
-          return from(this.billingService.getPaymentStatus(merchantOrderId)).pipe(
+          return from(this.billingService.getPaymentStatus(merchantOrderId, paymobSuccess)).pipe(
             catchError(() => {
               this.errorText = 'فشل التحقق من حالة الدفع.';
               this.showError = true;
@@ -102,7 +105,8 @@ export class Payment implements OnInit {
         takeUntilDestroyed(this.destroyRef),
       )
       .subscribe((data: any) => {
-        if (data?.success) {
+        if (data?.success || data?.subscriptionActive) {
+          this.subscribedPlanName = data.tierName || this.planName;
           this.showSuccess = true;
           this.showFailure = false;
         } else if (data) {
@@ -161,7 +165,15 @@ export class Payment implements OnInit {
         takeUntilDestroyed(this.destroyRef),
       )
       .subscribe((data) => {
-        window.location.href = data.paymentUrl;
+        const paymentUrl = data.paymentUrl || data.iframeUrl;
+        if (!paymentUrl) {
+          this.errorText = 'لم يتم إنشاء رابط الدفع من Paymob.';
+          this.showError = true;
+          this.showFailure = true;
+          return;
+        }
+
+        window.location.href = paymentUrl;
       });
   }
   verifyPayment(merchantOrderId: string): void {
@@ -176,7 +188,8 @@ export class Payment implements OnInit {
         takeUntilDestroyed(this.destroyRef),
       )
       .subscribe((data) => {
-        if (data.success) {
+        if (data.success || data.subscriptionActive) {
+          this.subscribedPlanName = data.tierName || this.planName;
           this.showSuccess = true;
           this.showFailure = false;
         } else {

@@ -12,11 +12,21 @@ export interface CheckoutPayload {
 }
 
 export interface CheckoutResponse {
-  paymentUrl: string;
+  paymentUrl?: string;
+  iframeUrl?: string;
 }
 
 export interface PaymentStatusResponse {
   success: boolean;
+  status: string;
+  statusArabic: string;
+  amount: number;
+  currency: string;
+  subscriptionActive: boolean;
+  tierCode?: string;
+  tierName?: string;
+  paidAt?: string;
+  subscriptionEndAt?: string;
 }
 @Injectable({
   providedIn: 'root',
@@ -31,10 +41,15 @@ export class Billing {
     );
   }
 
-  getPaymentStatus(merchantOrderId: string): Promise<PaymentStatusResponse> {
+  getPaymentStatus(
+    merchantOrderId: string,
+    paymobSuccess?: boolean,
+  ): Promise<PaymentStatusResponse> {
+    const successQuery = paymobSuccess === undefined ? '' : `?success=${paymobSuccess}`;
+
     return firstValueFrom(
       this.http.get<PaymentStatusResponse>(
-        `${this.apiUrl}/billing/payment-status/${merchantOrderId}`,
+        `${this.apiUrl}/billing/payment-status/${merchantOrderId}${successQuery}`,
       ),
     );
   }

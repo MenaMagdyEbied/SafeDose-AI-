@@ -1,6 +1,13 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import {
-  Check, Clock, LucideAngularModule, Pill, Trash2, TriangleAlert, Users, X,
+  Check,
+  Clock,
+  LucideAngularModule,
+  Pill,
+  Trash2,
+  TriangleAlert,
+  Users,
+  X,
 } from 'lucide-angular';
 import { MedNotification } from '../../core/models/med-notification';
 import { FamilyNotification } from '../../core/models/family-notification';
@@ -48,9 +55,7 @@ export class Notifications implements OnInit {
   private async loadFromMedications(): Promise<void> {
     this.loading.set(true);
     try {
-      const patients = await this.patientService.getMyPatients();
-      const patient = patients?.[0] as any;
-      const patientId = patient?.patientId ?? patient?.id;
+      const patientId = await this.patientService.getPrimaryPatientId();
       if (!patientId) {
         this.medNotifications = [];
         return;
@@ -65,19 +70,21 @@ export class Notifications implements OnInit {
         const drugName: string = m.drugName || m.name || 'دواء';
         const dose: string = m.dose || m.drugDose || '';
         const mealTiming: string = m.mealTimingArabic || this.mealTimingLabel(m.mealTiming);
-        const times: string[] = Array.isArray(m.times) && m.times.length > 0
-          ? m.times
-          : this.fallbackTimesForFrequency(m.frequency);
+        const times: string[] =
+          Array.isArray(m.times) && m.times.length > 0
+            ? m.times
+            : this.fallbackTimesForFrequency(m.frequency);
 
         for (const t of times) {
           const tMin = this.parseTimeMin(t);
           const status: MedNotification['status'] =
-            tMin == null ? 'pending'
-            : tMin <= nowMin ? 'taken'
-            : 'pending';
-          const time = tMin == null
-            ? 'لاحقاً'
-            : status === 'taken' ? `الساعة ${this.formatTime(tMin)}` : `الساعة ${this.formatTime(tMin)}`;
+            tMin == null ? 'pending' : tMin <= nowMin ? 'taken' : 'pending';
+          const time =
+            tMin == null
+              ? 'لاحقاً'
+              : status === 'taken'
+                ? `الساعة ${this.formatTime(tMin)}`
+                : `الساعة ${this.formatTime(tMin)}`;
 
           out.push({
             id: counter++,
@@ -131,8 +138,12 @@ export class Notifications implements OnInit {
     this.familyNotifications.forEach((n) => (n.read = true));
   }
 
-  markMedRead(notif: any): void { notif.read = true; }
-  markRead(notif: any): void { notif.read = true; }
+  markMedRead(notif: any): void {
+    notif.read = true;
+  }
+  markRead(notif: any): void {
+    notif.read = true;
+  }
 
   deleteMedNotification(notif: any): void {
     this.medNotifications = this.medNotifications.filter((n) => n.id !== notif.id);
@@ -152,9 +163,13 @@ export class Notifications implements OnInit {
   executeDelete(): void {
     if (!this.pendingDeleteNotif) return;
     if (this.pendingDeleteType === 'med') {
-      this.medNotifications = this.medNotifications.filter((n) => n.id !== this.pendingDeleteNotif.id);
+      this.medNotifications = this.medNotifications.filter(
+        (n) => n.id !== this.pendingDeleteNotif.id,
+      );
     } else {
-      this.familyNotifications = this.familyNotifications.filter((n) => n.id !== this.pendingDeleteNotif.id);
+      this.familyNotifications = this.familyNotifications.filter(
+        (n) => n.id !== this.pendingDeleteNotif.id,
+      );
     }
     this.showDeleteDialog = false;
     this.pendingDeleteNotif = null;
@@ -187,7 +202,7 @@ export class Notifications implements OnInit {
     const h = Math.floor(mins / 60);
     const m = mins % 60;
     const ampm = h >= 12 ? 'م' : 'ص';
-    const h12 = h === 0 ? 12 : (h > 12 ? h - 12 : h);
+    const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
     return `${h12}:${m.toString().padStart(2, '0')} ${ampm}`;
   }
 

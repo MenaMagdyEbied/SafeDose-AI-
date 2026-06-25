@@ -334,6 +334,8 @@
   <nav
     class="md:hidden flex items-center justify-around border-t border-outline-variant/30 px-2 py-2 text-[11px] font-bold text-on-surface-variant"
   >
+    <a *ngIf="isUser && !isSubscribed" routerLink="/pricing" routerLinkActive="text-primary font-bold" class="text-on-surface hover:text-primary transition-colors text-sm font-medium flex items-center gap-1"><lucide-icon [img]="digitalCardIcon" class="w-4 h-4"></lucide-icon>الأسعار</a>
+    <a *ngIf="isUser && isSubscribed" routerLink="/profile" routerLinkActive="text-primary font-bold" class="text-primary hover:text-primary/80 transition-colors text-sm font-medium">اشتراكي</a>
     <a
       routerLink="/home"
       routerLinkActive="text-primary"
@@ -358,14 +360,25 @@
       <lucide-icon [name]="shieldAlertIcon" [size]="18"></lucide-icon>
       فحص التداخلات
     </a>
-    <a
-      routerLink="/pricing"
-      routerLinkActive="text-primary"
-      class="flex flex-col items-center gap-0.5 hover:text-primary px-2 py-1"
-    >
-      <lucide-icon name="pill" [size]="18"></lucide-icon>
-      الأسعار
-    </a>
+    @if (subscriptionService.hasActivePaidPlan()) {
+      <a
+        routerLink="/profile"
+        routerLinkActive="text-primary"
+        class="flex flex-col items-center gap-0.5 hover:text-primary px-2 py-1"
+      >
+        <lucide-icon name="crown" [size]="18"></lucide-icon>
+        اشتراكي
+      </a>
+    } @else {
+      <a
+        routerLink="/pricing"
+        routerLinkActive="text-primary"
+        class="flex flex-col items-center gap-0.5 hover:text-primary px-2 py-1"
+      >
+        <lucide-icon name="pill" [size]="18"></lucide-icon>
+        الأسعار
+      </a>
+    }
   </nav>
 </header>
 

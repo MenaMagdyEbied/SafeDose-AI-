@@ -11,6 +11,7 @@ import {
   Sparkles,
 } from 'lucide-angular';
 import { Plus } from 'lucide-angular';
+import { Auth } from '../../core/auth/services/auth';
 
 @Component({
   selector: 'app-home',
@@ -20,6 +21,7 @@ import { Plus } from 'lucide-angular';
 })
 export class Home {
   protected readonly router = inject(Router);
+  protected readonly authService = inject(Auth);
 
   shieldIcon = Shield;
   pillIcon = Pill;
@@ -39,11 +41,21 @@ export class Home {
 
   // IDs MUST be unique — Angular @for track uses them to identify rows.
   reviews = [
-    { id: 1, name: 'د. أحمد كمال', rating: 5, text: 'لقد غير هذا التطبيق تماماً أسلوب متابعتي لأدوية والديّ المسنين.' },
-    { id: 2, name: 'سارة محمود',   rating: 5, text: 'تطبيق ممتاز! ساعدني كتير في متابعة أدوية أمي. التنبيهات دايماً في وقتها.' },
-    { id: 3, name: 'محمد علي',     rating: 4, text: 'واجهة سهلة وبسيطة، وفحص التداخلات دقيق جداً.' },
-    { id: 4, name: 'خلف علي',      rating: 4, text: 'فحص التداخلات لقطة، بيوفر وقت كبير.' },
-    { id: 5, name: 'فاطمة سعيد',   rating: 5, text: 'بحب التذكيرات والـ UI واضح ومريح للعين.' },
+    {
+      id: 1,
+      name: 'د. أحمد كمال',
+      rating: 5,
+      text: 'لقد غير هذا التطبيق تماماً أسلوب متابعتي لأدوية والديّ المسنين.',
+    },
+    {
+      id: 2,
+      name: 'سارة محمود',
+      rating: 5,
+      text: 'تطبيق ممتاز! ساعدني كتير في متابعة أدوية أمي. التنبيهات دايماً في وقتها.',
+    },
+    { id: 3, name: 'محمد علي', rating: 4, text: 'واجهة سهلة وبسيطة، وفحص التداخلات دقيق جداً.' },
+    { id: 4, name: 'خلف علي', rating: 4, text: 'فحص التداخلات لقطة، بيوفر وقت كبير.' },
+    { id: 5, name: 'فاطمة سعيد', rating: 5, text: 'بحب التذكيرات والـ UI واضح ومريح للعين.' },
   ];
 
   showReviewForm = signal(false);

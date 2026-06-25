@@ -78,5 +78,37 @@ namespace SafeDose.Api.Controllers
             }
         }
 
+
+
+        [HttpPut("SetRunningPatient/{patientId}")]
+        public async Task<IActionResult> SetRunningPatient(int patientId)
+        {
+            try
+            {
+                string result = await _userProfileServices.SetRunningPatient(patientId);
+                return Ok(new { message = result });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [HttpGet("GetRunningPatient")]
+        public async Task<IActionResult> GetRunningPatient()
+        {
+            try
+            {
+                int result = await _userProfileServices.GetRunningPatient();
+                return Ok(new { PatientId = result });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+
+
     }
 }

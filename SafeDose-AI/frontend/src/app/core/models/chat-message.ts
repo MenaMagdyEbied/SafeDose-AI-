@@ -6,6 +6,6 @@ export interface ChatMessage {
   text: string;
   timestamp: Date;
   severityLevel?: 'safe' | 'caution' | 'danger' | 'info';
-  // actions?: ChatAction[];
+  patientOptions?: { patientId: number; fullName: string }[];
   isPlayingSpeech?: boolean;
 }

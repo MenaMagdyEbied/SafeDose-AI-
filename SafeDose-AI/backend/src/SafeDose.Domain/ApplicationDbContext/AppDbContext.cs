@@ -108,6 +108,7 @@ namespace SafeDose.Domain.ApplicationDbContext
         public DbSet<ReminderResponse> ReminderResponses { get; set; }
         public DbSet<AuditLog> AuditLogs { get; set; }
 
+        public DbSet<PushSubscription> PushSubscription { get; set; }
 
     }
 }

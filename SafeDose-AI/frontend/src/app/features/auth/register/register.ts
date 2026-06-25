@@ -86,18 +86,18 @@ export class Register {
       icon: Bell,
       color: 'bg-secondary-container text-secondary-dark',
     },
-    {
-      id: 'doctor_share',
-      title: 'مشاركة الطبيب',
-      description: 'السماح بمشاركة تقارير الأعراض مع طبيبك المعالج فقط',
-      required: false,
-      icon: Share2,
-      color: 'bg-tertiary-container text-tertiary',
-    },
+    // {
+    //   id: 'doctor_share',
+    //   title: 'مشاركة الطبيب',
+    //   description: 'السماح بمشاركة تقارير الأعراض مع طبيبك المعالج فقط',
+    //   required: false,
+    //   icon: Share2,
+    //   color: 'bg-tertiary-container text-tertiary',
+    // },
     {
       id: 'prescription_scan',
       title: 'تخزين الوصفات الطبية',
-      description: 'حفظ صور الوصفات الطبية المُمسوحة ضوئياً لمدة ٩٠ يوماً',
+      description: 'حفظ صور الوصفات الطبية المُمسوحة ضوئياً',
       required: false,
       icon: Stethoscope,
       color: 'bg-surface-container-high text-outline',
@@ -120,7 +120,7 @@ export class Register {
       '',
       [Validators.required, Validators.minLength(3), this.englishOnlyValidator.bind(this)],
     ],
-    phone: ['', [Validators.required, Validators.pattern(/^01[0125][0-9]{8}$/)]],
+    phone: ['', [Validators.required, Validators.pattern(/^\+[1-9]\d{6,14}$/)]],
     email: ['', [Validators.required, Validators.email]],
   });
   step2Form: FormGroup = this.fb.group({

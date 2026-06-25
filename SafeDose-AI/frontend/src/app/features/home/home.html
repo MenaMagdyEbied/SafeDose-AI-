@@ -21,20 +21,22 @@
         وتناول الأدوية بأمن وسلامة تامة عبر فحص فوري وذكي.
       </p>
 
-      <div class="flex flex-col sm:flex-row-reverse gap-4">
-        <a
-          routerLink="/register"
-          class="bg-primary sm:flex-1 hover:bg-primary-dark text-white px-8 py-4 rounded-xl text-md font-bold transition-all shadow-lg active:scale-95 text-center"
-        >
-          سجّل حسابك مجاناً
-        </a>
-        <a
-          routerLink="/login"
-          class="border-2 sm:flex-1 border-primary text-primary hover:bg-primary/5 px-8 py-4 rounded-xl text-md font-bold transition-all text-center"
-        >
-          تسجيل الدخول
-        </a>
-      </div>
+      @if (!authService.isLoggedIn) {
+        <div class="flex flex-col sm:flex-row-reverse gap-4">
+          <a
+            routerLink="/register"
+            class="bg-primary sm:flex-1 hover:bg-primary-dark text-white px-8 py-4 rounded-xl text-md font-bold transition-all shadow-lg active:scale-95 text-center"
+          >
+            سجّل حسابك مجاناً
+          </a>
+          <a
+            routerLink="/login"
+            class="border-2 sm:flex-1 border-primary text-primary hover:bg-primary/5 px-8 py-4 rounded-xl text-md font-bold transition-all text-center"
+          >
+            تسجيل الدخول
+          </a>
+        </div>
+      }
     </div>
 
     <div class="order-1 lg:order-2 flex justify-center animate-fade-in">

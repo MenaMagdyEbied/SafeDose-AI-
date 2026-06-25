@@ -6,6 +6,15 @@
       class="w-full lg:w-1/2 flex flex-col justify-center items-center px-8 py-10 order-2 lg:order-1"
     >
       <div class="max-w-120 w-full">
+        <button
+          type="button"
+          routerLink="/home"
+          class="mb-6 inline-flex items-center gap-2 text-sm font-bold text-primary hover:text-primary-dark transition-colors cursor-pointer"
+        >
+          <lucide-icon [img]="arrowLeftIcon" class="w-4 h-4"></lucide-icon>
+          <span>العودة إلى الصفحة الرئيسية</span>
+        </button>
+
         <!-- Brand -->
         <div class="mb-10 text-right">
           <h1 class="text-3xl font-extrabold text-primary mb-1">SafeDose AI</h1>
@@ -104,7 +113,7 @@
                   @if (phone?.errors?.['required']) {
                     رقم الهاتف مطلوب
                   } @else if (phone?.errors?.['pattern']) {
-                    رقم الهاتف غير صحيح (يجيب أن يكون 11 رقم يبدا ب 010 او 011 او 015 او012 )
+                    رقم الهاتف غير صحيح (يجب أن يبدأ بكود الدولة مثل +20 أو +966)
                   }
                 </p>
               }
@@ -436,6 +445,14 @@
       class="flex w-full lg:w-1/2 order-1 lg:order-2 relative overflow-hidden flex-col justify-center items-center text-center p-8 lg:p-16 min-h-70 lg:min-h-0"
       style="background: linear-gradient(135deg, #005eb8 0%, #003366 60%, #007f7c 100%)"
     >
+      <button
+        type="button"
+        routerLink="/home"
+        class="absolute top-5 left-5 z-20 inline-flex items-center gap-2 text-sm font-bold text-white/90 hover:text-white bg-white/15 hover:bg-white/25 backdrop-blur-sm px-4 py-2 rounded-xl border border-white/20 transition-all cursor-pointer"
+      >
+        <lucide-icon [img]="arrowLeftIcon" class="w-4 h-4"></lucide-icon>
+        <span>العودة إلى الصفحة الرئيسية</span>
+      </button>
       <img
         src="/images/register.png"
         alt=""

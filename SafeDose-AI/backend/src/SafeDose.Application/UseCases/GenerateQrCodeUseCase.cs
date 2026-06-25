@@ -29,10 +29,10 @@ namespace SafeDose.Application.UseCases
 
             // Build the Public Emergency URL
             // Read the base URL from appsettings, or fallback to a placeholder for Swagger testing
-            var frontendBaseUrl = _configuration["FrontendUrl"] ?? "http://localhost:3000";
-            var emergencyUrl = $"{frontendBaseUrl.TrimEnd('/')}/emergency-card/{patient.MedicalCardToken}";
+            var frontendBaseUrl = _configuration["http://localhost:4200"] ?? "http://localhost:4200";
+            var emergencyUrl = $"{frontendBaseUrl.TrimEnd('/')}/#/card/{patient.MedicalCardToken}";
 
-            
+
             using var qrGenerator = new QRCodeGenerator();
             using var qrCodeData = qrGenerator.CreateQrCode(emergencyUrl, QRCodeGenerator.ECCLevel.Q);
             using var qrCode = new PngByteQRCode(qrCodeData);

@@ -7,6 +7,7 @@ import { EMPTY, from } from 'rxjs';
 import { catchError, finalize, switchMap } from 'rxjs/operators';
 import { Billing } from '../../core/services/billing';
 import { Auth } from '../../core/auth/services/auth';
+import { Subscription } from '../../core/services/subscription';
 
 @Component({
   selector: 'app-payment',
@@ -19,6 +20,7 @@ export class Payment implements OnInit {
   private readonly router = inject(Router);
   private readonly billingService = inject(Billing);
   private readonly authService = inject(Auth);
+  private readonly subscriptionService = inject(Subscription);
   private readonly destroyRef = inject(DestroyRef);
 
   lockIcon = Lock;
@@ -30,10 +32,9 @@ export class Payment implements OnInit {
   showFailure = false;
   showError = false;
   errorText = '';
-  planId = 'premium-monthly';
+  planId = 'pro';
   verifying = false;
   method: 'card' | 'wallet' = 'card';
-  subscribedPlanName = '';
 
   userForm = {
     fullName: '',
@@ -74,23 +75,35 @@ export class Payment implements OnInit {
   get paymentMethodValue(): string {
     return this.method === 'card' ? 'card' : 'wallet';
   }
+
   ngOnInit(): void {
     this.prefillUserData();
+
+    if (this.authService.isLoggedIn) {
+      this.subscriptionService.refresh().then((sub) => {
+        if (sub?.isActive && sub.tierCode !== 'free') {
+          this.router.navigate(['/profile']);
+        }
+      });
+    }
 
     this.route.queryParams
       .pipe(
         switchMap((params: any) => {
-          this.planId = params['plan'] ?? 'premium-monthly';
+          this.planId = params['plan'] ?? 'pro';
           const merchantOrderId = params['merchant_order_id'];
-          const paymobSuccess =
-            params['success'] === undefined ? undefined : params['success'] === 'true';
+          const paymobSuccess = String(params['success']).toLowerCase() === 'true';
 
           if (!merchantOrderId) {
             return EMPTY;
           }
 
           this.verifying = true;
-          return from(this.billingService.getPaymentStatus(merchantOrderId, paymobSuccess)).pipe(
+          const statusPromise = paymobSuccess
+            ? this.billingService.waitForPaymentConfirmation(merchantOrderId)
+            : this.billingService.getPaymentStatus(merchantOrderId);
+
+          return from(statusPromise).pipe(
             catchError(() => {
               this.errorText = 'فشل التحقق من حالة الدفع.';
               this.showError = true;
@@ -104,9 +117,9 @@ export class Payment implements OnInit {
         }),
         takeUntilDestroyed(this.destroyRef),
       )
-      .subscribe((data: any) => {
+      .subscribe(async (data: any) => {
         if (data?.success || data?.subscriptionActive) {
-          this.subscribedPlanName = data.tierName || this.planName;
+          await this.subscriptionService.refresh();
           this.showSuccess = true;
           this.showFailure = false;
         } else if (data) {
@@ -133,6 +146,12 @@ export class Payment implements OnInit {
       !this.userForm.phoneNumber.trim()
     ) {
       this.errorText = 'يرجى ملء جميع البيانات';
+      this.showError = true;
+      return;
+    }
+
+    if (this.method === 'wallet' && this.userForm.phoneNumber.replace(/\D/g, '').length < 10) {
+      this.errorText = 'أدخل رقم فودافون كاش صحيح (مثال: 01012345678)';
       this.showError = true;
       return;
     }
@@ -165,38 +184,14 @@ export class Payment implements OnInit {
         takeUntilDestroyed(this.destroyRef),
       )
       .subscribe((data) => {
-        const paymentUrl = data.paymentUrl || data.iframeUrl;
-        if (!paymentUrl) {
-          this.errorText = 'لم يتم إنشاء رابط الدفع من Paymob.';
+        const url = data.paymentUrl ?? data.iframeUrl;
+        if (!url) {
+          this.errorText = 'لم يُرجع الخادم رابط الدفع. حاول مرة أخرى.';
           this.showError = true;
           this.showFailure = true;
           return;
         }
-
-        window.location.href = paymentUrl;
-      });
-  }
-  verifyPayment(merchantOrderId: string): void {
-    from(this.billingService.getPaymentStatus(merchantOrderId))
-      .pipe(
-        catchError(() => {
-          this.errorText = 'فشل التحقق من حالة الدفع.';
-          this.showError = true;
-          this.showFailure = true;
-          return EMPTY;
-        }),
-        takeUntilDestroyed(this.destroyRef),
-      )
-      .subscribe((data) => {
-        if (data.success || data.subscriptionActive) {
-          this.subscribedPlanName = data.tierName || this.planName;
-          this.showSuccess = true;
-          this.showFailure = false;
-        } else {
-          this.errorText = 'لم يتم تأكيد الدفع. إذا تم خصم المبلغ، تواصل مع الدعم.';
-          this.showError = true;
-          this.showFailure = true;
-        }
+        window.location.href = url;
       });
   }
 
@@ -204,8 +199,9 @@ export class Payment implements OnInit {
     this.showFailure = false;
   }
 
-  goHome(): void {
+  async goHome(): Promise<void> {
     this.showSuccess = false;
-    this.router.navigate(['/home']);
+    await this.subscriptionService.refresh();
+    this.router.navigate(['/profile']);
   }
 }

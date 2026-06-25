@@ -91,6 +91,19 @@
               <div [class]="getMsgClass(msg)">
                 <p class="whitespace-pre-wrap">{{ msg.text }}</p>
               </div>
+              @if (msg.patientOptions && msg.patientOptions.length > 0) {
+                <div class="flex flex-wrap gap-2 justify-start pt-1">
+                  @for (opt of msg.patientOptions; track opt.patientId) {
+                    <button
+                      type="button"
+                      (click)="selectPatient(opt.patientId, opt.fullName)"
+                      class="bg-white hover:bg-primary/5 text-on-background border border-outline-variant font-bold text-xs px-3 py-2 rounded-xl transition-all shadow-xs cursor-pointer"
+                    >
+                      {{ opt.fullName }}
+                    </button>
+                  }
+                </div>
+              }
               <!-- @if (msg.sender === 'bot' && msg.actions && msg.actions.length > 0) {
                 <div class="flex flex-wrap gap-2 justify-start pt-1">
                   @for (act of msg.actions; track act.action) {

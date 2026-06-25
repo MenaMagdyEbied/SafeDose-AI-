@@ -470,7 +470,7 @@ public class ReminderResponseConfiguration : IEntityTypeConfiguration<ReminderRe
         b.HasOne(x => x.PatientMedication)
             .WithMany(m => m.ReminderResponses)
             .HasForeignKey(x => x.PatientMedicationId)
-            .OnDelete(DeleteBehavior.Cascade);
+            .OnDelete(DeleteBehavior.SetNull);
     }
 }
 
@@ -493,5 +493,26 @@ public class AuditLogConfiguration : IEntityTypeConfiguration<AuditLog>
             .WithMany(a => a.AuditLogs)
             .HasForeignKey(x => x.AccountId)
             .OnDelete(DeleteBehavior.Restrict); // keep audit rows even if account deleted
+    }
+}
+
+
+
+
+
+public class PushSubscriptionConfiguration : IEntityTypeConfiguration<PushSubscription>
+{
+    public void Configure(EntityTypeBuilder<PushSubscription> b)
+    {
+
+        b.HasKey(x => x.PushSubscriptionId);
+        b.Property(x => x.CreatedAt).HasDefaultValueSql("GETDATE()");
+        b.HasIndex(x => x.Endpoint).IsUnique();
+
+        // FK to Account (string PK) - AccountId must be string in entity
+        b.HasOne(x => x.Account)
+            .WithMany(a => a.PushSubscriptions)
+            .HasForeignKey(x => x.AccountId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

@@ -41,15 +41,32 @@ export class PatientService {
   async loadRunningPatient(): Promise<Patient | null> {
     try {
       const patient = await firstValueFrom(
-        this.http.get<Patient>(`${this.apiUrl}/UserProfile/GetRunningPatient`),
+        this.http.get<Patient | null>(`${this.apiUrl}/UserProfile/GetRunningPatient`),
       );
-      this.runningPatient.set(patient);
-      return patient;
+      if (patient) {
+        this.runningPatient.set(patient);
+        return patient;
+      }
     } catch {
-      const fallback = this.patients()[0] ?? null;
-      this.runningPatient.set(fallback);
-      return fallback;
+      // ignore and fall back to auto-activation below
     }
+
+    const fallback = this.patients()[0] ?? null;
+    if (fallback) {
+      const id = this.resolvePatientId(fallback);
+      if (id != null) {
+        try {
+          await firstValueFrom(
+            this.http.put(`${this.apiUrl}/UserProfile/SetRunningPatient/${id}`, {}),
+          );
+        } catch {
+          // keep using the fallback patient locally even if activation fails
+        }
+      }
+    }
+
+    this.runningPatient.set(fallback);
+    return fallback;
   }
 
   async setRunningPatient(patientId: number): Promise<void> {

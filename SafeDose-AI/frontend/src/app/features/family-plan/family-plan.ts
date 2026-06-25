@@ -139,7 +139,7 @@ export class FamilyPlan implements OnInit {
   }
 
   confirmDeleteMember(member: Patient): void {
-    const memberId = (member as Patient & { patientId?: number }).patientId ?? member.id;
+    const memberId = this.patientService.resolvePatientId(member);
     this.pendingDeleteMemberId = memberId ?? null;
     this.pendingDeleteMemberName = member.fullName;
     this.showConfirmDelete.set(true);
@@ -180,12 +180,7 @@ export class FamilyPlan implements OnInit {
   }
 
   editMember(member: Patient): void {
-    console.log('editing member:', member);
-    console.log('editingId before:', this.editingId());
-    const memberId = (member as any).patientId ?? member.id ?? null;
-    this.editingId.set(memberId);
-    console.log('editingId after:', this.editingId());
-
+    const memberId = this.patientService.resolvePatientId(member) ?? null;
     this.editingId.set(memberId);
     this.error = '';
     this.form.reset({

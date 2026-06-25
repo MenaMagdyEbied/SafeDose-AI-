@@ -29,19 +29,30 @@ export class PrescriptionDetail implements OnInit {
   showDeleteConfirm = false;
 
   ngOnInit(): void {
-    const id = Number(this.route.snapshot.paramMap.get('id'));
-    if (id) {
-      this.loadPrescription(id);
-    } else {
-      this.errorText = 'رقم الوصفة غير صالح.';
-    }
+    this.route.paramMap.subscribe((params) => {
+      const rawId = params.get('id');
+      const id = Number(rawId);
+
+      if (Number.isFinite(id) && id > 0) {
+        void this.loadPrescription(id);
+      } else {
+        this.selectedPrescription = null;
+        this.loading = false;
+        this.errorText = 'رقم الوصفة غير صالح.';
+      }
+    });
   }
 
   private async loadPrescription(id: number): Promise<void> {
     this.loading = true;
     this.errorText = '';
+    this.editMode = false;
+    this.showDeleteConfirm = false;
+
     try {
-      this.selectedPrescription = await this.prescriptionService.getById(id);
+      const prescription = await this.prescriptionService.getById(id);
+      this.selectedPrescription = prescription;
+      this.errorText = '';
     } catch {
       this.selectedPrescription = null;
       this.errorText = 'تعذر تحميل تفاصيل الوصفة. حاول مرة أخرى.';

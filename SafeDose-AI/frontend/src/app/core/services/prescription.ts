@@ -1,5 +1,5 @@
 import { inject, Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import {
@@ -37,7 +37,9 @@ export class Prescription {
   /** GET /api/Prescriptions/Patient/{patientId}/Summary */
   async getByPatient(patientId: number): Promise<PrescriptionListItem[]> {
     const res = await firstValueFrom(
-      this.http.get<ApiEnvelope<any[]>>(`${this.baseUrl}/Patient/${patientId}/Summary`),
+      this.http.get<ApiEnvelope<any[]>>(`${this.baseUrl}/Patient/${patientId}/Summary`, {
+        headers: new HttpHeaders({ 'X-Skip-Loader': 'true' }),
+      }),
     );
     return res.data.map((item) => ({
       id: item.prescriptionId,
@@ -51,7 +53,9 @@ export class Prescription {
   /** GET /api/Prescriptions/{prescriptionId}/Details */
   async getById(prescriptionId: number): Promise<PrescriptionDetail> {
     const res = await firstValueFrom(
-      this.http.get<ApiEnvelope<any>>(`${this.baseUrl}/${prescriptionId}/Details`),
+      this.http.get<ApiEnvelope<any>>(`${this.baseUrl}/${prescriptionId}/Details`, {
+        headers: new HttpHeaders({ 'X-Skip-Loader': 'true' }),
+      }),
     );
     const d = res.data;
     return {

@@ -1,6 +1,13 @@
-import { ChangeDetectionStrategy, Component, inject, OnInit } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  inject,
+  OnInit,
+} from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Check, LucideAngularModule, Pencil, Plus, Shield, Trash2, User, X } from 'lucide-angular';
+import { Auth } from '../../../core/auth/services/auth';
 import { Admin } from '../../../core/models/admin';
 import { AdminManagement } from '../services/admin-management';
 
@@ -21,6 +28,8 @@ interface AdminFormState {
 })
 export class AdminManager implements OnInit {
   private readonly adminService = inject(AdminManagement);
+  private readonly authService = inject(Auth);
+  private readonly cdr = inject(ChangeDetectorRef);
 
   plusIcon = Plus;
   editIcon = Pencil;
@@ -69,27 +78,32 @@ export class AdminManager implements OnInit {
   }
 
   canEdit(admin: Admin) {
-    return admin.role !== 'super-admin';
+    return this.canManageAdmin(admin);
   }
 
   canDelete(admin: Admin) {
-    return admin.role !== 'super-admin';
+    return this.canManageAdmin(admin);
+  }
+
+  canToggleStatus(admin: Admin) {
+    return this.canManageAdmin(admin);
   }
 
   loadAdmins() {
     this.isLoading = true;
     this.adminService.getAdmins().subscribe({
       next: (response) => {
-        const rawAdmins = Array.isArray(response.items)
-          ? response.items
-          : Array.isArray(response.data)
-            ? response.data
-            : [];
+        const rawAdmins = this.extractAdminsFromResponse(response);
         this.admins = rawAdmins.map((admin) => this.mapAdmin(admin));
         this.isLoading = false;
+        this.cdr.markForCheck();
+        this.cdr.detectChanges();
       },
       error: () => {
         this.isLoading = false;
+        this.admins = [];
+        this.cdr.markForCheck();
+        this.cdr.detectChanges();
       },
     });
   }
@@ -102,7 +116,7 @@ export class AdminManager implements OnInit {
   }
 
   openEdit(admin: Admin) {
-    if (admin.role === 'super-admin') {
+    if (!this.canManageAdmin(admin)) {
       return;
     }
     this.isEditing = true;
@@ -118,6 +132,13 @@ export class AdminManager implements OnInit {
   }
 
   save() {
+    if (this.selectedAdmin && !this.canManageAdmin(this.selectedAdmin)) {
+      this.showForm = false;
+      this.selectedAdmin = null;
+      this.isEditing = false;
+      return;
+    }
+
     if (!this.form.name || !this.form.email) {
       return;
     }
@@ -126,10 +147,12 @@ export class AdminManager implements OnInit {
       return;
     }
 
+    const normalizedRole = this.normalizeRole(this.isEditing ? this.form.role : 'admin');
+
     const payload: Record<string, unknown> = {
       name: this.form.name,
       email: this.form.email,
-      role: this.isEditing ? this.form.role : 'admin',
+      role: normalizedRole,
     };
 
     if (!this.isEditing) {
@@ -149,16 +172,22 @@ export class AdminManager implements OnInit {
       next: () => {
         this.isSaving = false;
         this.showForm = false;
+        this.selectedAdmin = null;
+        this.isEditing = false;
         this.loadAdmins();
+        this.cdr.markForCheck();
+        this.cdr.detectChanges();
       },
       error: () => {
         this.isSaving = false;
+        this.cdr.markForCheck();
+        this.cdr.detectChanges();
       },
     });
   }
 
   confirmDelete(admin: Admin) {
-    if (admin.role === 'super-admin') {
+    if (!this.canManageAdmin(admin)) {
       return;
     }
     this.selectedAdmin = admin;
@@ -185,6 +214,10 @@ export class AdminManager implements OnInit {
   }
 
   toggleStatus(admin: Admin) {
+    if (!this.canManageAdmin(admin)) {
+      return;
+    }
+
     this.isTogglingStatus = true;
     this.adminService.toggleAdminStatus(admin.id, admin.status !== 'active').subscribe({
       next: () => {
@@ -209,20 +242,87 @@ export class AdminManager implements OnInit {
     return status === 'active' ? 'نشط' : 'غير نشط';
   }
 
+  private canManageAdmin(admin: Admin): boolean {
+    if (!this.authService.isSuperAdmin) {
+      return true;
+    }
+
+    const currentUser = this.authService.user;
+    const currentEmail = currentUser?.email?.trim().toLowerCase();
+    const currentUserName = currentUser?.userName?.trim().toLowerCase();
+    const currentName = currentUser?.name?.trim().toLowerCase();
+
+    const targetEmail = admin.email?.trim().toLowerCase();
+    const targetUserName = (admin as Admin & { userName?: string }).userName?.trim().toLowerCase();
+    const targetName = admin.name?.trim().toLowerCase();
+
+    const matchesIdentity =
+      (currentEmail && targetEmail && currentEmail === targetEmail) ||
+      (currentUserName && targetUserName && currentUserName === targetUserName) ||
+      (currentName && targetName && currentName === targetName);
+
+    return !matchesIdentity;
+  }
+
+  private normalizeRole(role: string): string {
+    const normalized = role?.trim().toLowerCase().replace(/\s+/g, '-');
+    if (normalized.includes('super')) {
+      return 'SuperAdmin';
+    }
+    if (normalized.includes('admin') || normalized.includes('administrator')) {
+      return 'Admin';
+    }
+    return 'Admin';
+  }
+
+  private normalizeUiRole(role: string): Admin['role'] {
+    const normalized = role?.trim().toLowerCase().replace(/\s+/g, '-');
+    if (normalized.includes('super')) {
+      return 'super-admin';
+    }
+    if (normalized.includes('moderator')) {
+      return 'moderator';
+    }
+    if (normalized.includes('admin') || normalized.includes('administrator')) {
+      return 'admin';
+    }
+    return 'admin';
+  }
+
+  private extractAdminsFromResponse(response: unknown): unknown[] {
+    if (Array.isArray(response)) {
+      return response;
+    }
+
+    const queue: unknown[] = [response];
+    const visited = new Set<unknown>();
+
+    while (queue.length) {
+      const current = queue.shift();
+      if (Array.isArray(current)) {
+        return current;
+      }
+
+      if (current && typeof current === 'object' && !visited.has(current)) {
+        visited.add(current);
+        queue.push(...Object.values(current as Record<string, unknown>));
+      }
+    }
+
+    return [];
+  }
+
   private mapAdmin(admin: unknown): Admin {
     const source = admin as Record<string, unknown>;
-    const role = String(source['role'] ?? 'admin');
+    const role = String(source['role'] ?? source['roleName'] ?? source['userRole'] ?? 'admin');
     const status =
       source['isActive'] === false || source['status'] === 'inactive' ? 'inactive' : 'active';
 
     return {
-      id: String(source['id'] ?? ''),
-      name: String(source['name'] ?? ''),
-      email: String(source['email'] ?? ''),
-      role:
-        role === 'super-admin' || role === 'admin' || role === 'moderator'
-          ? (role as Admin['role'])
-          : 'admin',
+      id: String(source['id'] ?? source['adminId'] ?? ''),
+      name: String(source['name'] ?? source['fullName'] ?? source['userName'] ?? ''),
+      email: String(source['email'] ?? source['emailAddress'] ?? ''),
+      role: this.normalizeUiRole(role),
       status: status as Admin['status'],
       createdAt: String(source['createdAt'] ?? source['created_at'] ?? ''),
     };

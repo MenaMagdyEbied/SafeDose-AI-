@@ -123,6 +123,21 @@
             🔴 فودافون كاش
           </button>
         </div>
+        @if (method === 'wallet') {
+          <!-- Dedicated wallet number field — Paymob charges this number, not the
+               billing phone above. In sandbox only Paymob's pre-registered test
+               wallets (e.g. 01010101010) succeed. -->
+          <div class="space-y-1 pt-1">
+            <label class="text-xs font-bold text-outline">رقم محفظة فودافون كاش</label>
+            <input
+              [(ngModel)]="userForm.walletNumber"
+              placeholder="01010101010"
+              dir="ltr"
+              maxlength="11"
+              class="w-full h-11 px-4 bg-surface-container-low border border-outline-variant rounded-xl text-sm font-bold outline-none focus:border-primary text-left transition-colors"
+            />
+          </div>
+        }
       </div>
 
       <!-- Error -->

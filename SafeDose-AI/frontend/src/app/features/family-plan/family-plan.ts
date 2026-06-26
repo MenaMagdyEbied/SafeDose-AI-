@@ -6,6 +6,7 @@ import { EMPTY, from } from 'rxjs';
 import { catchError, finalize, switchMap } from 'rxjs/operators';
 import { Patient } from '../../core/models/patient';
 import { PatientService } from '../../core/services/patient';
+import { Subscription } from '../../core/services/subscription';
 import { ConfirmDialog } from '../../shared/components/confirm-dialog/confirm-dialog';
 import { Info } from 'lucide-angular';
 import { RouterLink } from '@angular/router';
@@ -19,7 +20,14 @@ import { RouterLink } from '@angular/router';
 export class FamilyPlan implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly patientService = inject(PatientService);
+  private readonly subscriptionService = inject(Subscription);
   private readonly destroyRef = inject(DestroyRef);
+
+  // Computed: can the user add another patient?
+  // Free tier = 1; paid tiers use PricingTier.PatientLimit (cached in subscription).
+  // Defaults to 1 if subscription hasn't loaded yet.
+  readonly patientLimit = signal<number>(1);
+  readonly canAddMore = computed(() => this.members().length < this.patientLimit());
 
   readonly isEditing = computed(() => this.editingId() !== null && this.editingId() !== undefined);
   readonly modalTitle = computed(() =>
@@ -60,8 +68,24 @@ export class FamilyPlan implements OnInit {
     allergies: [''],
   });
 
-  ngOnInit(): void {
+  async ngOnInit(): Promise<void> {
     this.loadPatients();
+    await this.loadPatientLimit();
+  }
+
+  // Pull the user's current subscription + tier limit.
+  // - Paid: PricingTier.patientLimit (e.g. 5)
+  // - Free / unsubscribed: 1
+  private async loadPatientLimit(): Promise<void> {
+    try {
+      const sub = await this.subscriptionService.refresh();
+      const tiers = await this.subscriptionService.getTiers();
+      const code = sub?.tierCode || 'free';
+      const tier = tiers.find((t: any) => t.tierCode === code);
+      this.patientLimit.set(Math.max(1, (tier as any)?.patientLimit ?? 1));
+    } catch {
+      this.patientLimit.set(1);
+    }
   }
 
   loadPatients(): void {
@@ -205,16 +229,16 @@ export class FamilyPlan implements OnInit {
   }
 
   editMember(member: Patient): void {
-    const memberId = this.patientService.resolvePatientId(member) ?? null;
-    this.editingId.set(memberId);
+    const id = (member as any).patientId ?? member.id ?? null;
+    this.editingId.set(id);
     this.error = '';
     this.form.reset({
-      fullName: member.fullName,
-      dateOfBirth: member.dateOfBirth,
-      gender: member.gender,
-      bloodType: member.bloodType,
-      chronicConditions: member.chronicConditions.join('\n'),
-      allergies: member.allergies.join('\n'),
+      fullName: member.fullName || '',
+      dateOfBirth: member.dateOfBirth || '',
+      gender: member.gender ?? 0,
+      bloodType: member.bloodType || '',
+      chronicConditions: (member.chronicConditions || []).join(', '),
+      allergies: (member.allergies || []).join(', '),
     });
     this.showModal.set(true);
     document.body.style.overflow = 'hidden';
@@ -222,23 +246,14 @@ export class FamilyPlan implements OnInit {
 
   closeModal(): void {
     this.showModal.set(false);
-    this.editingId.set(null); // ✅ signal
-    this.error = '';
-    this.form.reset({
-      fullName: '',
-      dateOfBirth: '',
-      gender: 0,
-      bloodType: '',
-      chronicConditions: '',
-      allergies: '',
-    });
+    this.editingId.set(null);
     document.body.style.overflow = '';
   }
 
-  private parseList(value: string): string[] {
-    return value
-      .split(/\n|,/)
-      .map((i) => i.trim())
-      .filter((i) => i.length > 0);
+  private parseList(raw: string): string[] {
+    return (raw || '')
+      .split(/[\n,]+/)
+      .map((s) => s.trim())
+      .filter(Boolean);
   }
 }

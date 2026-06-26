@@ -21,6 +21,7 @@ import { Auth } from '../../core/auth/services/auth';
 import { Medications } from '../../core/services/medications';
 import { PatientService } from '../../core/services/patient';
 import { AddMedication } from '../../shared/components/add-medication/add-medication';
+import { Subscription as SubscriptionService } from '../../core/services/subscription';
 
 @Component({
   selector: 'app-patient-home',
@@ -33,6 +34,7 @@ export class PatientHome implements OnInit {
   private readonly auth = inject(Auth);
   private readonly patientService = inject(PatientService);
   private readonly medicationsService = inject(Medications);
+  private readonly subscriptionService = inject(SubscriptionService);
   private readonly destroyRef = inject(DestroyRef);
 
   taken = signal(false);
@@ -61,21 +63,21 @@ export class PatientHome implements OnInit {
   xIcon = X;
 
   get user() {
+    const subscription = this.subscriptionService.current();
+    const isPaid = this.subscriptionService.hasActivePaidPlan();
+
     return {
-      phone: '+201099999999',
-      name: 'دعاء أشرف',
+      phone: this.auth.user?.phone || '+201099999999',
+      name: this.auth.user?.name || this.auth.user?.userName || 'مستخدم',
       age: 30,
       conditions: ['السكري', 'الضغط', 'القلب'],
       allergies: 'لا يوجد',
       doctorName: 'د. مجدي يعقوب',
-      subscriptionPlan: 'free',
+      subscriptionPlan: isPaid ? 'pro' : (subscription?.tierCode === 'free' ? 'free' : 'pro'),
     };
-    // return this.auth.user;
   }
 
-  ngOnInit(): void {
-    this.loadPatientData();
-
+  constructor() {
     effect(() => {
       const patientId = this.patientService.currentPatientId;
       if (patientId != null && patientId !== this.currentPatientId()) {
@@ -85,6 +87,10 @@ export class PatientHome implements OnInit {
     });
   }
 
+  ngOnInit(): void {
+    void this.subscriptionService.refresh();
+    this.loadPatientData();
+  }
   private async loadPatientData(): Promise<void> {
     this.loading.set(true);
     this.errorText.set('');
@@ -134,7 +140,7 @@ export class PatientHome implements OnInit {
 
   onMedicationSaved(): void {
     this.closeEditModal();
-    this.successText.set('تمت إضافة الدواء بنجاح ✅');
+    this.successText.set('تمت إضافة الدواء بنجاح');
     this.loadPatientData();
   }
 

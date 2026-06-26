@@ -41,6 +41,11 @@ export class Payment implements OnInit {
     fullName: '',
     email: '',
     phoneNumber: '',
+    // Wallet number is entered separately when method === 'wallet'. We never
+    // pre-fill it with the profile phone, because Paymob's sandbox rejects real
+    // numbers ("Receiver is not registered") and we want the user to type the
+    // test wallet (01010101010) explicitly.
+    walletNumber: '',
   };
 
   plans: Record<string, { name: string; price: string; features: string[] }> = {};
@@ -164,10 +169,23 @@ export class Payment implements OnInit {
       this.showError = true;
       return;
     }
+    if (this.method === 'wallet' && !this.userForm.walletNumber.trim()) {
+      this.errorText = 'أدخل رقم محفظة فودافون كاش';
+      this.showError = true;
+      return;
+    }
 
     this.loading = true;
     this.showError = false;
     this.showFailure = false;
+
+    // For wallet payments, send the wallet number as the phoneNumber to backend
+    // (that's what Paymob uses as the wallet receiver). For card, the regular
+    // phoneNumber stays the billing contact.
+    const phoneForCheckout =
+      this.method === 'wallet'
+        ? this.userForm.walletNumber.trim()
+        : this.userForm.phoneNumber.trim();
 
     from(
       this.billingService.checkout({
@@ -175,7 +193,7 @@ export class Payment implements OnInit {
         paymentMethod: this.paymentMethodValue,
         fullName: this.userForm.fullName,
         email: this.userForm.email,
-        phoneNumber: this.userForm.phoneNumber,
+        phoneNumber: phoneForCheckout,
       }),
     )
       .pipe(

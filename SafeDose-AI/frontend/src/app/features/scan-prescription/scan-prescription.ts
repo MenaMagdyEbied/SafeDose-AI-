@@ -100,9 +100,7 @@ export class ScanPrescription implements OnInit {
     { value: 3, label: 'بعد الأكل' },
   ];
 
-  ngOnInit(): void {
-    this.syncPatientContext();
-
+  constructor() {
     effect(() => {
       const patientId = this.patientService.currentPatientId;
       if (patientId != null && patientId !== this.currentPatientId) {
@@ -111,6 +109,9 @@ export class ScanPrescription implements OnInit {
     });
   }
 
+  ngOnInit(): void {
+    this.syncPatientContext();
+  }
   private async syncPatientContext(): Promise<void> {
     try {
       this.currentPatientId =

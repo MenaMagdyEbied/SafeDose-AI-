@@ -64,19 +64,15 @@ export class InteractionChecker {
   alertTriangleIcon = TriangleAlert;
   chevronRightIcon = ChevronRight;
 
-  private currentPatientId: number | null = null;
-
   readonly filteredDrugs = computed(() => this.interaction.searchResults());
 
   ngOnInit(): void {
-    this.patientService
-      .getMyPatients()
-      .then((patients) => {
-        this.currentPatientId = patients[0]?.patientId ?? patients[0]?.id ?? null;
-      })
-      .catch(() => {
-        this.currentPatientId = null;
-      });
+    from(this.patientService.getMyPatients())
+      .pipe(
+        catchError(() => EMPTY),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe();
   }
 
   onSearchChange(val: string): void {
@@ -118,14 +114,15 @@ export class InteractionChecker {
   loadFromProfile(): void {
     this.showProfileMeds.set(true);
 
-    if (!this.currentPatientId) {
+    const patientId = this.patientService.currentPatientId;
+    if (!patientId) {
       this.profileMeds.set([]);
       return;
     }
 
     this.profileMedsLoading.set(true);
 
-    from(this.medicationsService.getByPatient(this.currentPatientId))
+    from(this.medicationsService.getByPatient(patientId))
       .pipe(
         catchError(() => EMPTY),
         finalize(() => this.profileMedsLoading.set(false)),
@@ -218,7 +215,8 @@ export class InteractionChecker {
     recognition.start();
   }
   runCheck(): void {
-    if (!this.currentPatientId) return;
+    const patientId = this.patientService.currentPatientId;
+    if (!patientId) return;
 
     const validDrugCatalogIds = this.selectedMeds()
       .filter((med) => med.drugCatalogId > 0)
@@ -230,7 +228,7 @@ export class InteractionChecker {
 
     const payload: CheckInteractionsPayload = {
       drugCatalogIds: validDrugCatalogIds,
-      patientId: this.currentPatientId,
+      patientId,
     };
 
     from(this.interaction.checkInteractions(payload))

@@ -27,6 +27,61 @@ export class PatientService {
 
   private ensureInFlight: Promise<Patient | null> | null = null;
 
+  readonly runningPatient = signal<Patient | null>(null);
+
+  async getMyPatients(): Promise<Patient[]> {
+    const list = await firstValueFrom(this.http.get<Patient[]>(`${this.apiUrl}/patients/my`));
+    this.patients.set(list);
+
+    await this.loadRunningPatient();
+
+    return list;
+  }
+
+  async loadRunningPatient(): Promise<Patient | null> {
+    try {
+      const patient = await firstValueFrom(
+        this.http.get<Patient | null>(`${this.apiUrl}/UserProfile/GetRunningPatient`),
+      );
+      if (patient) {
+        this.runningPatient.set(patient);
+        return patient;
+      }
+    } catch {
+      // ignore and fall back to auto-activation below
+    }
+
+    const fallback = this.patients()[0] ?? null;
+    if (fallback) {
+      const id = this.resolvePatientId(fallback);
+      if (id != null) {
+        try {
+          await firstValueFrom(
+            this.http.put(`${this.apiUrl}/UserProfile/SetRunningPatient/${id}`, {}),
+          );
+        } catch {
+          // keep using the fallback patient locally even if activation fails
+        }
+      }
+    }
+
+    this.runningPatient.set(fallback);
+    return fallback;
+  }
+
+  async setRunningPatient(patientId: number): Promise<void> {
+    await firstValueFrom(
+      this.http.put(`${this.apiUrl}/UserProfile/SetRunningPatient/${patientId}`, {}),
+    );
+    const patient = this.patients().find((p) => p.patientId === patientId || p.id === patientId);
+    this.runningPatient.set(patient ?? null);
+  }
+
+  get currentPatientId(): number | null {
+    const p = this.runningPatient();
+    return p?.patientId ?? p?.id ?? null;
+  }
+
   resolvePatientId(patient: Patient | null | undefined): number | null {
     if (!patient) return null;
     return patient.patientId ?? patient.id ?? null;
@@ -51,15 +106,10 @@ export class PatientService {
     );
   }
 
-  async getMyPatients(): Promise<Patient[]> {
-    const list = await firstValueFrom(this.http.get<Patient[]>(this.apiUrl + '/patients/my'));
-    const sorted = this.sortPatients(list);
-    this.patients.set(sorted);
-    this.primaryPatient.set(this.pickPrimaryPatient(sorted));
-    return sorted;
-  }
-
   async getPrimaryPatientId(): Promise<number | null> {
+    const active = this.currentPatientId;
+    if (active != null) return active;
+
     const cached = this.resolvePatientId(this.primaryPatient());
     if (cached != null) return cached;
 

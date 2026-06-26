@@ -59,6 +59,23 @@
           <div class="flex gap-1.5 sm:gap-2 shrink-0">
             <button
               type="button"
+              (click)="activateMember(member)"
+              [disabled]="isActiveMember(member)"
+              [attr.aria-label]="
+                isActiveMember(member) ? 'المريض النشط حاليًا' : 'تفعيل هذا المريض'
+              "
+              class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl border flex items-center justify-center transition-all cursor-pointer"
+              [class.border-primary]="isActiveMember(member)"
+              [class.bg-primary]="isActiveMember(member)"
+              [class.text-white]="isActiveMember(member)"
+              [class.border-outline-variant]="!isActiveMember(member)"
+              [class.text-outline]="!isActiveMember(member)"
+              [class.hover:bg-slate-100]="!isActiveMember(member)"
+            >
+              <lucide-icon [img]="activateIcon" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></lucide-icon>
+            </button>
+            <button
+              type="button"
               (click)="editMember(member)"
               class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl border border-outline-variant text-outline hover:bg-slate-100 flex items-center justify-center transition-all cursor-pointer"
             >

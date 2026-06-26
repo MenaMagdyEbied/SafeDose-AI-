@@ -3,7 +3,7 @@ export interface Admin {
   id: string;
   name: string;
   email: string;
-  role: 'super-admin' | 'admin' | 'moderator';
+  role: 'super-admin' | 'admin' ;
   status: 'active' | 'inactive';
   createdAt: string;
 }

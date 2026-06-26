@@ -1,8 +1,20 @@
 import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import {
-  Camera, Clock, Heart, LucideAngularModule, Pill, Plus, Save, Shield,
-  SquarePen, Stethoscope, Trash2, TriangleAlert, User, X,
+  Camera,
+  Clock,
+  Heart,
+  LucideAngularModule,
+  Pill,
+  Plus,
+  Save,
+  Shield,
+  SquarePen,
+  Stethoscope,
+  Trash2,
+  TriangleAlert,
+  User,
+  X,
 } from 'lucide-angular';
 import { firstValueFrom } from 'rxjs';
 import { UserProfileData } from '../../core/models/user-profile';
@@ -44,20 +56,48 @@ export class Profile implements OnInit {
   bloodTypes = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
   genders = ['ذكر', 'أنثى'];
 
-  private primaryPatientId: number | null = null;
-
   profile: HealthProfile = {
-    id: '', fullName: '', phone: '', email: '', age: null, gender: '',
-    bloodType: '', weight: null, height: null, conditions: [], allergies: '',
-    emergency: '', emergencyName: '', doctor: '', subscriptionPlan: 'free',
-    joinDate: '', medications: [], lastCheckup: '',
+    id: '',
+    fullName: '',
+    phone: '',
+    email: '',
+    age: null,
+    gender: '',
+    bloodType: '',
+    weight: null,
+    height: null,
+    conditions: [],
+    allergies: '',
+    emergency: '',
+    emergencyName: '',
+    doctor: '',
+    subscriptionPlan: 'free',
+    joinDate: '',
+    medications: [],
+    lastCheckup: '',
   };
 
   commonMeds = [
-    'بنادول','بنادول اكسترا','بنادول كولد','بروفين','أسبرين',
-    'أموكسيسيلين','أزيثروميسين','ميتفورمين','إنسولين','أتورفاستاتين',
-    'أملوديبين','ليزينوبريل','أوميبرازول','فلوكستين','باراسيتامول',
-    'ديكلوفيناك','كلاريتين','سيتريزين','فيتامين د','كالسيوم',
+    'بنادول',
+    'بنادول اكسترا',
+    'بنادول كولد',
+    'بروفين',
+    'أسبرين',
+    'أموكسيسيلين',
+    'أزيثروميسين',
+    'ميتفورمين',
+    'إنسولين',
+    'أتورفاستاتين',
+    'أملوديبين',
+    'ليزينوبريل',
+    'أوميبرازول',
+    'فلوكستين',
+    'باراسيتامول',
+    'ديكلوفيناك',
+    'كلاريتين',
+    'سيتريزين',
+    'فيتامين د',
+    'كالسيوم',
   ];
 
   currentSuggestionsMap = new Map<object, string[]>();
@@ -71,7 +111,9 @@ export class Profile implements OnInit {
   private readonly auth = inject(Auth);
   private readonly destroyRef = inject(DestroyRef);
 
-  ngOnInit(): void { this.fetchProfile(); }
+  ngOnInit(): void {
+    this.fetchProfile();
+  }
 
   async fetchProfile(): Promise<void> {
     this.loading.set(true);
@@ -93,7 +135,7 @@ export class Profile implements OnInit {
 
       if (patientsResult.status === 'fulfilled' && patientsResult.value.length > 0) {
         const p = patientsResult.value[0] as any;
-        this.primaryPatientId = p.patientId != null ? p.patientId : (p.id != null ? p.id : null);
+        const currentPatientId = this.patientService.currentPatientId;
         if (!this.profile.fullName) this.profile.fullName = p.fullName || '';
         this.profile.age = this.calcAge(p.dateOfBirth);
         this.profile.gender = this.genderLabel(p.gender);
@@ -102,9 +144,9 @@ export class Profile implements OnInit {
         this.profile.allergies = this.splitTags(p.allergies).join(' - ');
         this.profile.joinDate = this.formatArabicDate(p.createdAt);
 
-        if (this.primaryPatientId != null) {
+        if (currentPatientId != null) {
           try {
-            const meds = await this.medicationsService.getByPatient(this.primaryPatientId);
+            const meds = await this.medicationsService.getByPatient(currentPatientId);
             this.profile.medications = (meds || []).map((m: any) => ({
               name: m.drugName || m.name || '',
               dose: m.dose || '',
@@ -145,15 +187,22 @@ export class Profile implements OnInit {
     try {
       const tasks: Promise<unknown>[] = [];
       if (this.profile.fullName) {
-        tasks.push(firstValueFrom(this.userProfileService.updateName({ name: this.profile.fullName })));
+        tasks.push(
+          firstValueFrom(this.userProfileService.updateName({ name: this.profile.fullName })),
+        );
       }
       if (this.profile.email) {
-        tasks.push(firstValueFrom(this.userProfileService.updateEmail({ email: this.profile.email })));
+        tasks.push(
+          firstValueFrom(this.userProfileService.updateEmail({ email: this.profile.email })),
+        );
       }
       if (this.profile.phone) {
-        tasks.push(firstValueFrom(this.userProfileService.updatePhone({ phone: this.profile.phone })));
+        tasks.push(
+          firstValueFrom(this.userProfileService.updatePhone({ phone: this.profile.phone })),
+        );
       }
-      if (this.primaryPatientId != null) {
+      const currentPatientId = this.patientService.currentPatientId;
+      if (currentPatientId != null) {
         const payload: PatientPayload = {
           fullName: this.profile.fullName || 'مريض',
           dateOfBirth: this.ageToDateOfBirth(this.profile.age),
@@ -161,10 +210,13 @@ export class Profile implements OnInit {
           bloodType: this.profile.bloodType || '',
           chronicConditions: this.profile.conditions || [],
           allergies: this.profile.allergies
-            ? this.profile.allergies.split('-').map((s: string) => s.trim()).filter(Boolean)
+            ? this.profile.allergies
+                .split('-')
+                .map((s: string) => s.trim())
+                .filter(Boolean)
             : [],
         };
-        tasks.push(this.patientService.updatePatient(this.primaryPatientId, payload));
+        tasks.push(this.patientService.updatePatient(currentPatientId, payload));
       }
       await Promise.all(tasks);
       this.successText.set('تم حفظ التعديلات');
@@ -182,7 +234,11 @@ export class Profile implements OnInit {
   }
 
   get planLabel(): string {
-    const plans: Record<string, string> = { free: 'مجاني', pro: 'SafeDose Pro', family: 'خطة العيلة' };
+    const plans: Record<string, string> = {
+      free: 'مجاني',
+      pro: 'SafeDose Pro',
+      family: 'خطة العيلة',
+    };
     return plans[this.profile.subscriptionPlan] || 'مجاني';
   }
 
@@ -197,12 +253,16 @@ export class Profile implements OnInit {
 
   addMedication(): void {
     this.profile.medications.push({
-      name: '', dose: '', frequency: '',
+      name: '',
+      dose: '',
+      frequency: '',
       startDate: new Date().toLocaleDateString('ar-EG'),
     });
   }
 
-  removeMedication(index: number): void { this.profile.medications.splice(index, 1); }
+  removeMedication(index: number): void {
+    this.profile.medications.splice(index, 1);
+  }
 
   addCustomCondition(): void {
     const val = this.newConditionInput().trim();
@@ -220,18 +280,28 @@ export class Profile implements OnInit {
 
   onMedInput(med: any, event: Event): void {
     const val = (event.target as HTMLInputElement).value.trim();
-    if (val.length < 1) { this.currentSuggestionsMap.delete(med); return; }
-    this.currentSuggestionsMap.set(med, this.commonMeds.filter((m) => m.includes(val)));
+    if (val.length < 1) {
+      this.currentSuggestionsMap.delete(med);
+      return;
+    }
+    this.currentSuggestionsMap.set(
+      med,
+      this.commonMeds.filter((m) => m.includes(val)),
+    );
   }
 
-  activeSuggestions(med: any): string[] { return this.currentSuggestionsMap.get(med) || []; }
+  activeSuggestions(med: any): string[] {
+    return this.currentSuggestionsMap.get(med) || [];
+  }
 
   selectSuggestion(med: any, name: string): void {
     med.name = name;
     this.currentSuggestionsMap.delete(med);
   }
 
-  clearSuggestions(): void { setTimeout(() => this.currentSuggestionsMap.clear(), 150); }
+  clearSuggestions(): void {
+    setTimeout(() => this.currentSuggestionsMap.clear(), 150);
+  }
 
   // helpers
   private calcAge(dob: string | null | undefined): number | null {
@@ -269,7 +339,10 @@ export class Profile implements OnInit {
   private splitTags(csv: any): string[] {
     if (!csv) return [];
     if (Array.isArray(csv)) return csv.filter(Boolean);
-    return String(csv).split(',').map((s) => s.trim()).filter(Boolean);
+    return String(csv)
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean);
   }
 
   private frequencyLabel(freq: number | null | undefined): string {

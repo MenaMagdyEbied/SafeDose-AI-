@@ -9,7 +9,7 @@
       class="flex items-center gap-2 text-xs font-bold text-outline bg-white px-4 py-2 rounded-xl border border-outline-variant w-fit"
     >
       <lucide-icon [img]="calendarIcon" class="w-4 h-4"></lucide-icon>
-      آخر تحديث: اليوم 11:47 م
+      {{ lastUpdated() }}
     </div>
   </div>
 
@@ -90,7 +90,7 @@
 
       <div class="flex items-end gap-2 mb-2 flex-wrap">
         <span class="text-2xl sm:text-3xl font-black text-on-background">
-          {{ revenuePeriod === 'monthly' ? '48,250' : '512,400' }}
+          {{ currentRevenue() }}
         </span>
         <span class="text-sm text-outline mb-1">ج.م</span>
         <span class="text-xs font-bold text-emerald-600 mb-1.5 flex items-center gap-0.5">
@@ -104,8 +104,6 @@
           <div class="flex-1 flex flex-col items-center gap-2 group">
             <div class="w-full flex flex-col items-center justify-end h-32 sm:h-40 relative">
               <div
-
-              
                 class="absolute -top-6 opacity-0 group-hover:opacity-100 transition-opacity text-[10px] font-bold text-on-background bg-white border border-outline-variant rounded px-1.5 py-0.5 whitespace-nowrap z-10"
               >
                 {{ bar.value }} ج.م
@@ -168,7 +166,9 @@
             />
           </svg>
           <div class="absolute inset-0 flex flex-col items-center justify-center">
-            <span class="text-xl sm:text-2xl font-black text-on-background">{{ totalUsers() }}</span>
+            <span class="text-xl sm:text-2xl font-black text-on-background">{{
+              totalUsers()
+            }}</span>
             <span class="text-[10px] text-outline font-bold">مستخدم</span>
           </div>
         </div>

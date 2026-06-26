@@ -19,4 +19,10 @@ describe('AdminPricing', () => {
   it('should create', () => {
     expect(component).toBeTruthy();
   });
+
+  it('should include the free, monthly, and annual plans', () => {
+    const planIds = component.plans.map((plan) => plan.id);
+
+    expect(planIds).toEqual(['free', 'premium-monthly', 'premium-annual']);
+  });
 });

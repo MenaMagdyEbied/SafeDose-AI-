@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using SafeDose.Application.Auth.ServicesInterfaces;
 using SafeDose.Application.DTOs;
+using SafeDose.Application.Exceptions;
 using SafeDose.Application.Interfaces;
 using SafeDose.Domain.ApplicationDbContext;
 using SafeDose.Domain.Entities;
@@ -14,12 +15,23 @@ public class CreatePatientUseCase
     private readonly IAuditLogService _audit;
     private readonly AppDbContext _context;
     private readonly IUserGlobalServices _userGlobalServices;
-    public CreatePatientUseCase(IPatientRepository patients, IAuditLogService audit , AppDbContext context, IUserGlobalServices userGlobalServices)
+    private readonly ISubscriptionRepository _subscriptions;
+    private readonly IPricingTierRepository _tiers;
+
+    public CreatePatientUseCase(
+        IPatientRepository patients,
+        IAuditLogService audit,
+        AppDbContext context,
+        IUserGlobalServices userGlobalServices,
+        ISubscriptionRepository subscriptions,
+        IPricingTierRepository tiers)
     {
         _patients = patients;
         _audit = audit;
-        _context = context; 
+        _context = context;
         _userGlobalServices = userGlobalServices;
+        _subscriptions = subscriptions;
+        _tiers = tiers;
     }
 
     public async Task<PatientResponseDto> ExecuteAsync(
@@ -39,7 +51,25 @@ public class CreatePatientUseCase
         ValidateBloodType(dto.BloodType);
 
         Account account = await _userGlobalServices.GetUser();
-        bool flag = await _context.Patients.Where(p=>p.AccountId == account.Id).CountAsync() == 0 ;   
+
+        // ── PatientLimit enforcement per pricing tier ──────────────────────
+        // Free tier = 1 patient. Premium tiers carry their own PatientLimit value.
+        // We refuse extra inserts here so the limit can't be bypassed even if the
+        // FE button check is skipped.
+        var existingCount = await _context.Patients
+            .Where(p => p.AccountId == account.Id)
+            .CountAsync(cancellationToken);
+
+        var tier = await ResolveTierAsync(account.Id);
+        var limit = tier?.PatientLimit ?? 1;
+        if (existingCount >= limit)
+        {
+            var planLabel = tier?.TierNameArabic ?? tier?.TierName ?? "المجاني";
+            throw new QuotaExceededException(
+                $"وصلت للحد الأقصى لباقة \"{planLabel}\" ({limit} مريض). رقّي باقتك عشان تضيف المزيد.");
+        }
+
+        bool flag = existingCount == 0;
 
         var patient = new Patient
         {
@@ -66,6 +96,14 @@ public class CreatePatientUseCase
         ), cancellationToken);
 
         return MapToResponse(patient);
+    }
+
+    // Returns the active paid tier if there's a subscription, otherwise the free tier.
+    private async Task<PricingTier?> ResolveTierAsync(string accountId)
+    {
+        var sub = await _subscriptions.GetActiveByAccountAsync(accountId);
+        if (sub?.PricingTier != null) return sub.PricingTier;
+        return await _tiers.GetByCodeAsync("free");
     }
 
     private static void ValidateDob(DateOnly? dob)

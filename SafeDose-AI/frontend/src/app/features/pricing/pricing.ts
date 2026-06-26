@@ -37,7 +37,7 @@ export class Pricing implements OnInit {
   usersIcon = Users;
   zapIcon = Zap;
 
-  plans = signal<PricingTier[]>([]);
+  plans = signal<PricingTier[]>(this.subscriptionService.tiers());
   loading = signal(false);
   upgradeRequired = this.route.snapshot.queryParams['reason'] === 'upgrade-required';
 
@@ -58,12 +58,14 @@ export class Pricing implements OnInit {
   }
 
   private loadTiers(): void {
-    this.loading.set(true);
+    const cached = this.subscriptionService.tiers();
+    if (cached.length) {
+      this.plans.set(cached);
+    }
 
     from(this.subscriptionService.getTiers())
       .pipe(
         catchError(() => EMPTY),
-        finalize(() => this.loading.set(false)),
         takeUntilDestroyed(this.destroyRef),
       )
       .subscribe((result) => {
@@ -88,7 +90,15 @@ export class Pricing implements OnInit {
     return tier.tierCode === 'premium-monthly';
   }
 
+  isAnnual(tier: PricingTier): boolean {
+    return tier.tierCode === 'premium-annual';
+  }
+
   getPlanFeatures(plan: PricingTier): string[] {
+    if (plan.features?.length) {
+      return plan.features;
+    }
+
     const featuresMap: Record<string, string[]> = {
       free: [
         'إنشاء حساب مريض واحد',

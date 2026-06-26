@@ -23,7 +23,7 @@
 
         <!-- Progress Bars -->
         <div class="flex items-center gap-2 mb-10">
-          @for (step of [1, 2, 3, 4]; track step) {
+          @for (step of [1, 2, 3]; track step) {
             <div
               class="h-1.5 flex-1 rounded-full transition-all duration-300"
               [class]="currentStep >= step ? 'bg-primary' : 'bg-surface-container-high'"
@@ -154,98 +154,8 @@
           </form>
         }
 
-        <!-- Step 2: Health Details -->
+        <!-- Step 2: Consent / Permissions -->
         @if (currentStep === 2) {
-          <form [formGroup]="step2Form" class="space-y-5 animate-fade-in">
-            <h2 class="text-xs font-extrabold text-outline uppercase tracking-widest">
-              التفاصيل الصحية
-            </h2>
-
-            <div class="space-y-1">
-              <label class="text-sm font-bold text-on-background block">العمر</label>
-              <input
-                type="number"
-                formControlName="age"
-                placeholder="سنوات"
-                [class]="
-                  age?.invalid && age?.touched
-                    ? 'w-full h-12 px-4 bg-white border border-danger rounded-xl focus:ring-2 focus:ring-danger/10 outline-none text-sm font-medium transition-all'
-                    : 'w-full h-12 px-4 bg-white border border-outline-variant rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none text-sm font-medium transition-all'
-                "
-              />
-              @if (age?.invalid && age?.touched) {
-                <p class="text-xs text-danger font-bold mt-1">
-                  @if (age?.errors?.['required']) {
-                    العمر مطلوب
-                  } @else if (age?.errors?.['min'] || age?.errors?.['max']) {
-                    العمر غير صحيح
-                  }
-                </p>
-              }
-            </div>
-
-            <div class="space-y-2">
-              <label class="text-sm font-bold text-on-background block"
-                >الحالات المزمنة (اختر ما ينطبق)</label
-              >
-              <div class="flex flex-wrap gap-2">
-                @for (cond of conditions; track cond) {
-                  <button
-                    type="button"
-                    (click)="toggleCondition(cond)"
-                    [class]="
-                      selectedConditions.includes(cond)
-                        ? 'px-4 py-2 rounded-full text-xs font-bold bg-primary text-white border border-primary transition-all cursor-pointer'
-                        : 'px-4 py-2 rounded-full text-xs font-bold bg-surface-container-low border border-outline-variant text-on-background hover:bg-surface-container transition-all cursor-pointer'
-                    "
-                  >
-                    {{ cond }}
-                  </button>
-                }
-              </div>
-            </div>
-
-            <div class="space-y-1">
-              <label class="text-sm font-bold text-on-background block">رقم الطوارئ</label>
-              <input
-                type="tel"
-                formControlName="emergency"
-                placeholder="رقم شخص مقرب"
-                dir="ltr"
-                [class]="
-                  emergency?.invalid && emergency?.touched
-                    ? 'w-full h-12 px-4 bg-white border border-danger rounded-xl focus:ring-2 focus:ring-danger/10 outline-none text-sm font-medium transition-all text-left'
-                    : 'w-full h-12 px-4 bg-white border border-outline-variant rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none text-sm font-medium transition-all text-left'
-                "
-              />
-              @if (emergency?.invalid && emergency?.touched) {
-                <p class="text-xs text-danger font-bold mt-1">رقم الهاتف غير صحيح</p>
-              }
-            </div>
-
-            <div class="flex gap-3 mt-2">
-              <button
-                type="button"
-                (click)="prevStep()"
-                class="flex-1 h-14 bg-surface-container-high hover:bg-surface-container text-on-background rounded-2xl font-bold text-sm flex items-center justify-center gap-2 transition-all cursor-pointer"
-              >
-                <lucide-icon [img]="arrowRightIcon" class="w-5 h-5"></lucide-icon>
-                <span>السابق</span>
-              </button>
-              <button
-                type="button"
-                (click)="nextStep()"
-                class="flex-2 h-14 bg-primary hover:bg-primary-dark text-white rounded-2xl font-bold text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.98] shadow-md cursor-pointer"
-              >
-                <span>المتابعة</span>
-                <lucide-icon [img]="arrowLeftIcon" class="w-5 h-5"></lucide-icon>
-              </button>
-            </div>
-          </form>
-        }
-
-        <!-- Step 3: Consent / Permissions -->
-        @if (currentStep === 3) {
           <div class="space-y-5 animate-fade-in">
             <div class="text-right space-y-1">
               <h2 class="text-xs font-extrabold text-outline uppercase tracking-widest">
@@ -254,6 +164,23 @@
               <p class="text-xs text-outline leading-relaxed">
                 اختر الصلاحيات التي تمنحها للتطبيق لتحسين تجربتك الصحية
               </p>
+            </div>
+
+            <div class="rounded-2xl border border-outline-variant bg-surface-container-low p-4">
+              <label class="flex items-start gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  [checked]="step3Form.get('termsAndConditions')?.value"
+                  (change)="toggleAcceptAllPermissions($any($event.target).checked)"
+                  class="mt-0.5 w-5 h-5 accent-primary rounded shrink-0"
+                />
+                <div class="flex-1 text-right">
+                  <span class="text-sm font-bold text-on-background">الموافقة على الكل</span>
+                  <p class="text-xs text-outline leading-relaxed">
+                    سيتم اختيار جميع الصلاحيات والإقرار بالشروط والأحكام.
+                  </p>
+                </div>
+              </label>
             </div>
 
             <div class="space-y-3">
@@ -273,7 +200,7 @@
                     class="mt-0.5 w-5 h-5 accent-primary rounded shrink-0"
                   />
                   <div class="flex-1 text-right space-y-0.5">
-                    <div class="flex items-center gap-2 justify-end">
+                    <div class="flex items-center gap-2 justify-start">
                       <span class="text-sm font-bold text-on-background">{{ perm.title }}</span>
                       @if (perm.required) {
                         <span
@@ -316,8 +243,8 @@
           </div>
         }
 
-        <!-- Step 4: Password -->
-        @if (currentStep === 4) {
+        <!-- Step 3: Password -->
+        @if (currentStep === 3) {
           <form [formGroup]="step4Form" class="space-y-5 animate-fade-in">
             <h2 class="text-xs font-extrabold text-outline uppercase tracking-widest">
               الأمان والحساب

@@ -1,5 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable, inject } from '@angular/core';
+import { Injectable, effect, inject } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { Auth } from '../auth/services/auth';
@@ -37,9 +37,22 @@ export class ChatBotService {
 
   private selectedPatientId: number | null = null;
 
+  constructor() {
+    effect(() => {
+      const activePatientId = this.patientService.currentPatientId;
+      if (activePatientId != null) {
+        this.selectedPatientId = activePatientId;
+      }
+    });
+  }
+
   setPatient(patientId: number): void {
     this.selectedPatientId = patientId;
+    void this.patientService.setRunningPatient(patientId).catch(() => {
+      /* keep the local selection for the chat flow if the server update fails */
+    });
   }
+
   resetPatient(): void {
     this.selectedPatientId = null;
   }
@@ -61,7 +74,8 @@ export class ChatBotService {
     await this.syncPrimaryPatient();
 
     const payload: { message: string; patientId?: number } = { message: text };
-    if (this.selectedPatientId != null) payload.patientId = this.selectedPatientId;
+    const activePatientId = this.resolvePatientId();
+    if (activePatientId != null) payload.patientId = activePatientId;
 
     let res = await firstValueFrom(
       this.http.post<BackendChatResponse>(this.apiUrl + '/chatbot/chat', payload),
@@ -87,9 +101,19 @@ export class ChatBotService {
   }
 
   private async syncPrimaryPatient(): Promise<void> {
+    const activePatientId = this.patientService.currentPatientId;
+    if (activePatientId != null) {
+      this.selectedPatientId = activePatientId;
+      return;
+    }
+
     if (this.selectedPatientId != null) return;
     const id = await this.patientService.getPrimaryPatientId();
     if (id != null) this.selectedPatientId = id;
+  }
+
+  private resolvePatientId(): number | null {
+    return this.patientService.currentPatientId ?? this.selectedPatientId;
   }
 
   private toReply(res: BackendChatResponse): ChatBotReply {

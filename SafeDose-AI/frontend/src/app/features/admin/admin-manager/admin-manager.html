@@ -87,17 +87,21 @@
                   <button
                     type="button"
                     (click)="toggleStatus(admin)"
-                    [disabled]="isTogglingStatus"
-                    class="h-8 rounded-lg px-3 text-xs font-bold border border-outline-variant text-outline hover:bg-surface-container transition-all cursor-pointer"
+                    [disabled]="isTogglingStatus || !canToggleStatus(admin)"
+                    [class]="
+                      !canToggleStatus(admin)
+                        ? 'h-8 rounded-lg px-3 text-xs font-bold border border-outline-variant text-outline bg-surface-container cursor-not-allowed'
+                        : 'h-8 rounded-lg px-3 text-xs font-bold border border-outline-variant text-outline hover:bg-surface-container transition-all cursor-pointer'
+                    "
                   >
                     {{ admin.status === 'active' ? 'إلغاء التفعيل' : 'تفعيل' }}
                   </button>
                   <button
                     type="button"
                     (click)="openEdit(admin)"
-                    [disabled]="admin.role === 'super-admin'"
+                    [disabled]="!canEdit(admin)"
                     [class]="
-                      admin.role === 'super-admin'
+                      !canEdit(admin)
                         ? 'w-8 h-8 rounded-lg bg-surface-container text-outline flex items-center justify-center transition-all cursor-not-allowed'
                         : 'w-8 h-8 rounded-lg hover:bg-primary/10 text-outline hover:text-primary flex items-center justify-center transition-all cursor-pointer'
                     "
@@ -107,9 +111,9 @@
                   <button
                     type="button"
                     (click)="confirmDelete(admin)"
-                    [disabled]="admin.role === 'super-admin'"
+                    [disabled]="!canDelete(admin)"
                     [class]="
-                      admin.role === 'super-admin'
+                      !canDelete(admin)
                         ? 'w-8 h-8 rounded-lg bg-surface-container text-outline flex items-center justify-center transition-all cursor-not-allowed'
                         : 'w-8 h-8 rounded-lg hover:bg-danger-container text-outline hover:text-danger flex items-center justify-center transition-all cursor-pointer'
                     "
@@ -165,20 +169,6 @@
               class="w-full h-11 px-4 bg-white border border-outline-variant rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none text-sm font-medium transition-all text-left"
             />
           </div>
-
-          @if (isEditing) {
-            <div class="space-y-1.5">
-              <label class="text-sm font-bold text-on-background">الدور</label>
-              <select
-                [(ngModel)]="form.role"
-                class="w-full h-11 px-4 border border-outline-variant rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none text-sm font-medium transition-all cursor-pointer"
-              >
-                @for (role of availableRoles; track role.value) {
-                  <option [value]="role.value">{{ role.label }}</option>
-                }
-              </select>
-            </div>
-          }
 
           @if (!isEditing) {
             <div class="space-y-1.5">

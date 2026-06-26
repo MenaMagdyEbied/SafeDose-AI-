@@ -1,7 +1,7 @@
 import { Component, DestroyRef, computed, inject, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { LucideAngularModule, Plus, SquarePen, Trash2, Users, X } from 'lucide-angular';
+import { LucideAngularModule, Plus, SquarePen, Trash2, UserCheck, Users, X } from 'lucide-angular';
 import { EMPTY, from } from 'rxjs';
 import { catchError, finalize, switchMap } from 'rxjs/operators';
 import { Patient } from '../../core/models/patient';
@@ -32,6 +32,7 @@ export class FamilyPlan implements OnInit {
   trashIcon = Trash2;
   xIcon = X;
   infoIcon = Info;
+  activateIcon = UserCheck;
 
   members = signal<Patient[]>([]);
   loading = signal(false);
@@ -45,8 +46,8 @@ export class FamilyPlan implements OnInit {
 
   readonly genderOptions = [
     { value: 0, label: 'اختر النوع' },
-    { value: 1, label: 'ذكر' },
-    { value: 2, label: 'أنثى' },
+    { value: 2, label: 'ذكر' },
+    { value: 1, label: 'أنثى' },
     { value: 3, label: 'أخرى' },
   ];
 
@@ -116,6 +117,30 @@ export class FamilyPlan implements OnInit {
       });
   }
 
+  activateMember(member: Patient): void {
+    const memberId = this.patientService.resolvePatientId(member);
+    if (memberId == null) {
+      return;
+    }
+
+    this.error = '';
+
+    from(this.patientService.setRunningPatient(memberId))
+      .pipe(
+        catchError(() => {
+          this.error = 'تعذر تفعيل المريض.';
+          return EMPTY;
+        }),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe();
+  }
+
+  isActiveMember(member: Patient): boolean {
+    const memberId = this.patientService.resolvePatientId(member);
+    return memberId != null && memberId === this.patientService.currentPatientId;
+  }
+
   deleteMember(id: number): void {
     this.error = '';
 
@@ -139,7 +164,7 @@ export class FamilyPlan implements OnInit {
   }
 
   confirmDeleteMember(member: Patient): void {
-    const memberId = (member as Patient & { patientId?: number }).patientId ?? member.id;
+    const memberId = this.patientService.resolvePatientId(member);
     this.pendingDeleteMemberId = memberId ?? null;
     this.pendingDeleteMemberName = member.fullName;
     this.showConfirmDelete.set(true);
@@ -180,12 +205,7 @@ export class FamilyPlan implements OnInit {
   }
 
   editMember(member: Patient): void {
-    console.log('editing member:', member);
-    console.log('editingId before:', this.editingId());
-    const memberId = (member as any).patientId ?? member.id ?? null;
-    this.editingId.set(memberId);
-    console.log('editingId after:', this.editingId());
-
+    const memberId = this.patientService.resolvePatientId(member) ?? null;
     this.editingId.set(memberId);
     this.error = '';
     this.form.reset({

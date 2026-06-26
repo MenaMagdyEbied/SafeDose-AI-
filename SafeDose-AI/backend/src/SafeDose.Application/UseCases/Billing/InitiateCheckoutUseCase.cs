@@ -78,8 +78,13 @@ public class InitiateCheckoutUseCase
         };
         await _payments.CreateAsync(payment);
 
-        // Use our PaymentId as the merchant_order_id so the webhook can find this row
-        var merchantOrderId = $"SD-{payment.PaymentId}";
+        // Paymob requires merchant_order_id to be unique across the merchant's account
+        // FOREVER — even after we delete local rows. So we append Unix-seconds to the
+        // PaymentId. The "-" in the suffix also stops PaymobClient from parsing it as a
+        // bare int, which means Paymob auto-generates its own merchant_order_id and we
+        // never clash with an old test order. Webhook matching uses Paymob's returned
+        // order id (GateWayReference), not this string.
+        var merchantOrderId = $"SD-{payment.PaymentId}-{DateTimeOffset.UtcNow.ToUnixTimeSeconds()}";
 
         var session = await _paymob.CreateCheckoutSessionAsync(
             new PaymobCheckoutRequest(

@@ -3,6 +3,7 @@ using System.Net;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using SafeDose.Application.DTOs;
 using SafeDose.Application.UseCases.Billing;
 using SafeDose.Infrastructure.ExternalServices;
@@ -27,6 +28,7 @@ public class BillingController : ControllerBase
     private readonly IPaymentRepository _payments;
     private readonly CompletePaymentUseCase _completePayment;
     private readonly ISubscriptionRepository _subscriptions;
+    private readonly PaymobOptions _paymobOptions;
 
     public BillingController(
         GetPricingTiersUseCase getTiers,
@@ -38,7 +40,8 @@ public class BillingController : ControllerBase
         ILogger<BillingController> logger,
         CompletePaymentUseCase completePayment,
         IPaymentRepository payments,
-        ISubscriptionRepository subscriptions)
+        ISubscriptionRepository subscriptions,
+        IOptions<PaymobOptions> paymobOptions)
     {
         _getTiers = getTiers;
         _getMySub = getMySub;
@@ -48,6 +51,7 @@ public class BillingController : ControllerBase
         _paymentStatus = paymentStatus;
         _logger = logger;
         _completePayment = completePayment;
+        _paymobOptions = paymobOptions.Value;
         _payments = payments;
         _subscriptions = subscriptions;
     }
@@ -298,6 +302,12 @@ public class BillingController : ControllerBase
             merchantOrderId,
             paymobReportedSuccess);
 
+        // Home URL for the "Return to homepage" button. Uses FrontendSuccessUrl
+        // from config (e.g. "http://localhost:4200/"); falls back to local FE.
+        var homeUrl = _paymobOptions.FrontendSuccessUrl
+                      ?? _paymobOptions.FrontendReturnUrl
+                      ?? "http://localhost:4200/";
+
         var payment = await ResolvePaymentAsync(paymobOrderId, merchantOrderId);
         if (payment == null)
         {
@@ -310,12 +320,11 @@ public class BillingController : ControllerBase
                 amount: null,
                 currency: null,
                 paidAt: null,
-                endAt: null),
+                endAt: null,
+                homeUrl: homeUrl),
                 "text/html");
         }
 
-        // Do NOT complete payments from the browser return. The definitive
-        // payment result must come from the Paymob webhook (server-to-server).
         if (paymobReportedSuccess.HasValue)
         {
             _logger.LogInformation("Received browser return indicating success={Success} for paymentId={PaymentId}. Waiting for webhook confirmation.", paymobReportedSuccess.Value, payment.PaymentId);
@@ -337,7 +346,8 @@ public class BillingController : ControllerBase
             amount: payment.Amount,
             currency: payment.Currency,
             paidAt: payment.PaidAt,
-            endAt: subscription?.EndAt),
+            endAt: subscription?.EndAt,
+            homeUrl: homeUrl),
             "text/html");
     }
 
@@ -364,7 +374,8 @@ public class BillingController : ControllerBase
         decimal? amount,
         string? currency,
         DateTime? paidAt,
-        DateTime? endAt)
+        DateTime? endAt,
+        string homeUrl)
     {
         var color = success ? "#12805c" : "#b42318";
         var bg = success ? "#e9f8f2" : "#fff1f0";
@@ -375,6 +386,14 @@ public class BillingController : ControllerBase
         var safeAmount = amount.HasValue ? $"{amount.Value:0.##} {WebUtility.HtmlEncode(currency ?? "EGP")}" : "-";
         var safePaidAt = paidAt?.ToLocalTime().ToString("yyyy-MM-dd HH:mm") ?? "-";
         var safeEndAt = endAt?.ToLocalTime().ToString("yyyy-MM-dd HH:mm") ?? "-";
+        var safeHome = WebUtility.HtmlEncode(homeUrl);
+
+        // Success → one "Return to Homepage" button.
+        // Failure → "Try Again" (history.back to /payment) + "Return to Homepage".
+        var actions = success
+            ? $@"<a class=""btn primary"" href=""{safeHome}"">Return to Homepage</a>"
+            : $@"<a class=""btn primary"" href=""javascript:history.back()"">Try Again</a>
+      <a class=""btn secondary"" href=""{safeHome}"">Return to Homepage</a>";
 
         return $$"""
 <!doctype html>
@@ -389,9 +408,14 @@ public class BillingController : ControllerBase
     .badge { width:64px; height:64px; border-radius:50%; display:grid; place-items:center; background:{{bg}}; color:{{color}}; font-size:34px; font-weight:800; margin-bottom:18px; }
     h1 { margin:0 0 8px; font-size:30px; }
     p { margin:0 0 22px; color:#596579; line-height:1.6; }
-    dl { display:grid; grid-template-columns: 150px 1fr; gap:12px 16px; margin:0; padding:18px; border-radius:12px; background:#f8fafc; }
+    dl { display:grid; grid-template-columns: 150px 1fr; gap:12px 16px; margin:0 0 24px; padding:18px; border-radius:12px; background:#f8fafc; }
     dt { color:#6b7485; font-weight:700; }
     dd { margin:0; font-weight:700; }
+    .actions { display:flex; gap:10px; flex-wrap:wrap; }
+    .btn { flex:1; min-width: 180px; display:block; text-align:center; padding:13px 18px; border-radius:12px; text-decoration:none; font-weight:700; font-size:15px; transition: opacity .15s; }
+    .btn:hover { opacity:.9; }
+    .btn.primary { background:#1d4ed8; color:#fff; }
+    .btn.secondary { background:#f1f5f9; color:#172033; border:1px solid #e2e8f0; }
   </style>
 </head>
 <body>
@@ -406,6 +430,9 @@ public class BillingController : ControllerBase
       <dt>Paid at</dt><dd>{{safePaidAt}}</dd>
       <dt>Subscription ends</dt><dd>{{safeEndAt}}</dd>
     </dl>
+    <div class="actions">
+      {{actions}}
+    </div>
   </main>
 </body>
 </html>

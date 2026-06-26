@@ -14,6 +14,7 @@ import {
   ArrowLeft,
   ArrowRight,
   Bell,
+  Camera,
   CircleCheck,
   Eye,
   EyeOff,
@@ -37,6 +38,7 @@ import { passwordsMatchValidator } from '../../../shared/validators/passwords-ma
   styleUrl: './register.css',
 })
 export class Register {
+  private static readonly DRAFT_STORAGE_KEY = 'safedose_registration_draft';
   private readonly fb = inject(FormBuilder);
   private readonly authService = inject(Auth);
   private readonly router = inject(Router);
@@ -110,6 +112,14 @@ export class Register {
       icon: Mic,
       color: 'bg-surface-container-high text-outline',
     },
+    {
+      id: 'camera_input',
+      title: 'مسح ضوئي بالكاميرا',
+      description: 'استخدام الكاميرا لالتقاط صورة لعلبة الدواء أو الروشتة',
+      required: false,
+      icon: Camera, // تأكدي من استيراد أيقونة Camera من مكتبة الأيقونات لديك
+      color: 'bg-surface-container-high text-outline',
+    },
   ];
 
   features = ['تنبيهات الأدوية', 'مشاركة الطبيب', 'تنسيق عائلي', 'دعم HIPAA'];
@@ -123,13 +133,10 @@ export class Register {
     phone: ['', [Validators.required, Validators.pattern(/^\+[1-9]\d{6,14}$/)]],
     email: ['', [Validators.required, Validators.email]],
   });
-  step2Form: FormGroup = this.fb.group({
-    age: [null, [Validators.required, Validators.min(1), Validators.max(120)]],
-    conditions: this.fb.array([]),
-    emergency: ['', [Validators.pattern(/^\+?[0-9]{10,14}$/)]],
-  });
+  step2Form: FormGroup = this.fb.group({});
 
   step3Form: FormGroup = this.fb.group({
+    termsAndConditions: [false, Validators.requiredTrue],
     permissions: this.fb.array([]),
   });
 
@@ -161,12 +168,6 @@ export class Register {
   get email() {
     return this.step1Form.get('email');
   }
-  get age() {
-    return this.step2Form.get('age');
-  }
-  get emergency() {
-    return this.step2Form.get('emergency');
-  }
   get password() {
     return this.step4Form.get('password');
   }
@@ -174,19 +175,8 @@ export class Register {
     return this.step4Form.get('confirmPassword');
   }
 
-  get selectedConditions(): string[] {
-    return (this.step2Form.get('conditions') as FormArray).value;
-  }
-
   get selectedPermissions(): string[] {
     return (this.step3Form.get('permissions') as FormArray).value;
-  }
-
-  toggleCondition(cond: string): void {
-    const arr = this.step2Form.get('conditions') as FormArray;
-    const idx = arr.value.indexOf(cond);
-    if (idx === -1) arr.push(this.fb.control(cond));
-    else arr.removeAt(idx);
   }
 
   togglePermission(id: string): void {
@@ -194,6 +184,22 @@ export class Register {
     const idx = arr.value.indexOf(id);
     if (idx === -1) arr.push(this.fb.control(id));
     else arr.removeAt(idx);
+
+    const allSelected = this.permissions.every((perm) =>
+      this.selectedPermissions.includes(perm.id),
+    );
+    this.step3Form.patchValue({ termsAndConditions: allSelected });
+  }
+
+  toggleAcceptAllPermissions(checked: boolean): void {
+    const arr = this.step3Form.get('permissions') as FormArray;
+    arr.clear();
+
+    if (checked) {
+      this.permissions.forEach((perm) => arr.push(this.fb.control(perm.id)));
+    }
+
+    this.step3Form.patchValue({ termsAndConditions: checked });
   }
 
   get requiredPermissionsAccepted(): boolean {
@@ -206,6 +212,74 @@ export class Register {
     return this.step4Form.valid;
   }
 
+  ngOnInit(): void {
+    this.restoreDraft();
+  }
+
+  private saveDraft(): void {
+    const draft = {
+      currentStep: this.currentStep,
+      step1: this.step1Form.getRawValue(),
+      step3: this.step3Form.getRawValue(),
+      step4: this.step4Form.getRawValue(),
+    };
+
+    try {
+      localStorage.setItem(Register.DRAFT_STORAGE_KEY, JSON.stringify(draft));
+    } catch {
+      // Ignore storage failures in restricted environments.
+    }
+  }
+
+  private restoreDraft(): void {
+    try {
+      const raw = localStorage.getItem(Register.DRAFT_STORAGE_KEY);
+      if (!raw) return;
+
+      const draft = JSON.parse(raw) as {
+        currentStep?: number;
+        step1?: Record<string, unknown>;
+        step3?: { termsAndConditions?: boolean; permissions?: string[] };
+        step4?: Record<string, unknown>;
+      };
+
+      if (draft.currentStep) {
+        this.currentStep = draft.currentStep;
+      }
+
+      if (draft.step1) {
+        this.step1Form.patchValue(draft.step1);
+      }
+
+      if (draft.step3) {
+        this.step3Form.patchValue({
+          termsAndConditions: draft.step3.termsAndConditions ?? false,
+          permissions: draft.step3.permissions ?? [],
+        });
+
+        const permissionsControl = this.step3Form.get('permissions') as FormArray;
+        permissionsControl.clear();
+        (draft.step3.permissions ?? []).forEach((permissionId) => {
+          permissionsControl.push(this.fb.control(permissionId));
+        });
+      }
+
+      if (draft.step4) {
+        this.step4Form.patchValue(draft.step4);
+      }
+    } catch {
+      localStorage.removeItem(Register.DRAFT_STORAGE_KEY);
+    }
+  }
+
+  private clearDraft(): void {
+    try {
+      localStorage.removeItem(Register.DRAFT_STORAGE_KEY);
+    } catch {
+      // Ignore storage failures in restricted environments.
+    }
+  }
+
   nextStep(): void {
     const currentForm = this.getCurrentForm();
     if (currentForm) {
@@ -213,15 +287,28 @@ export class Register {
       if (currentForm.invalid) return;
     }
 
-    if (this.currentStep === 3 && !this.requiredPermissionsAccepted) {
+    if (this.currentStep === 2 && !this.requiredPermissionsAccepted) {
       return;
     }
 
-    if (this.currentStep < 4) this.currentStep++;
+    if (this.currentStep === 1) {
+      this.currentStep = 2;
+      return;
+    }
+
+    if (this.currentStep === 2) {
+      this.currentStep = 3;
+    }
   }
 
   prevStep(): void {
-    if (this.currentStep > 1) this.currentStep--;
+    if (this.currentStep === 3) {
+      this.currentStep = 2;
+    } else if (this.currentStep === 2) {
+      this.currentStep = 1;
+    }
+
+    this.saveDraft();
   }
 
   private getCurrentForm(): FormGroup | null {
@@ -229,10 +316,8 @@ export class Register {
       case 1:
         return this.step1Form;
       case 2:
-        return this.step2Form;
-      case 3:
         return this.step3Form;
-      case 4:
+      case 3:
         return this.step4Form;
       default:
         return null;
@@ -248,25 +333,19 @@ export class Register {
 
     const payload = {
       fullName: this.step1Form.value.fullName,
-      phoneNumber: this.step1Form.value.phone,
       userName: this.step1Form.value.userName,
+      phoneNumber: this.step1Form.value.phone,
       email: this.step1Form.value.email,
-      age: this.step2Form.value.age,
-      conditions: this.selectedConditions,
-      emergencyContact: this.step2Form.value.emergency,
-      permissions: this.selectedPermissions,
       password: this.step4Form.value.password,
       confirmPassword: this.step4Form.value.confirmPassword,
+      termsAndConditions: Boolean(this.step3Form.value.termsAndConditions),
     };
 
-    // The backend register endpoint only stores Account fields (no Patient row yet).
-    // We stash the step-2 profile here so the very first successful login can create
-    // the primary patient automatically (see Auth.login()).
+    this.saveDraft();
+
     try {
       const pending = {
         fullName: this.step1Form.value.fullName,
-        age: this.step2Form.value.age,
-        chronicConditions: this.selectedConditions,
       };
       localStorage.setItem('safedose_pending_patient', JSON.stringify(pending));
     } catch {

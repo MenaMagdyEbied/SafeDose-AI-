@@ -6,7 +6,7 @@ import { Auth } from '../../../core/auth/services/auth';
 
 @Component({
   selector: 'app-email-confirmation',
-  imports: [LucideAngularModule, FormsModule],
+  imports: [LucideAngularModule, FormsModule, RouterLink],
   templateUrl: './email-confirmation.html',
   styleUrl: './email-confirmation.css',
 })
@@ -69,6 +69,11 @@ export class EmailConfirmation implements OnInit {
     this.authService.confirmEmail({ email: this.email, code }).subscribe({
       next: () => {
         this.loading.set(false);
+        try {
+          localStorage.removeItem('safedose_registration_draft');
+        } catch {
+          // Ignore storage failures in restricted environments.
+        }
         this.router.navigate(['/login']);
       },
       error: (err) => {

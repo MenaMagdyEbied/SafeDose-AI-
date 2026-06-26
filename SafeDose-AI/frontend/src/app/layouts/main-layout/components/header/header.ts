@@ -199,4 +199,8 @@ export class Header {
       return `${slot.toString().padStart(2, '0')}:00`;
     });
   }
+
+  async changePatient(patientId: number): Promise<void> {
+    await this.patientService.setRunningPatient(patientId);
+  }
 }

@@ -227,6 +227,15 @@ public class PaymobClient : IPaymobClient
 
         payload["lock_order_when_paid"] = true;
 
+        // Override the integration's default return URL so the browser doesn't get
+        // bounced through the public webhook host (which can be an ngrok free tunnel
+        // that shows a warning interstitial). Webhook still uses PublicBaseUrl;
+        // this only affects where Paymob sends the user's browser after payment.
+        // FrontendReturnUrl should point to the LOCAL backend, e.g.
+        //   "https://localhost:54218/api/billing/paymob/return"
+        if (!string.IsNullOrWhiteSpace(_options.FrontendReturnUrl))
+            payload["redirect_url"] = _options.FrontendReturnUrl;
+
         using var resp = await PostJsonAsync(
             "https://accept.paymob.com/api/acceptance/payment_keys", payload, ct);
         var doc = await JsonDocument.ParseAsync(await resp.Content.ReadAsStreamAsync(ct), cancellationToken: ct);

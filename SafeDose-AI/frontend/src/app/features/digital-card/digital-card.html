@@ -3,7 +3,22 @@
     <h2 class="text-2xl font-extrabold text-primary">بطاقة الأدوية الرقمية</h2>
     <p class="text-sm text-outline">بطاقة طبية إلكترونية آمنة لمشاركتها مع طبيبك</p>
   </div>
-
+  @if (patientService.patients().length > 1) {
+    <div class="relative w-1/2">
+      <select
+        class="w-full appearance-none rounded-2xl border border-outline-variant bg-white px-4 py-3 pr-12 text-right text-sm font-bold text-on-surface shadow-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+        [value]="selectedPatientId()"
+        (change)="changePatient(+$any($event.target).value)"
+      >
+        @for (p of patientService.patients(); track p.patientId ?? p.id) {
+          <option [value]="p.patientId ?? p.id">{{ p.fullName }}</option>
+        }
+      </select>
+      <div class="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-outline">
+        <lucide-icon [img]="chevronDownIcon" class="h-4 w-4"></lucide-icon>
+      </div>
+    </div>
+  }
   @if (loading()) {
     <div class="rounded-2xl bg-white p-6 text-center text-sm text-outline">
       جاري تحميل البطاقة...
@@ -16,6 +31,7 @@
     </div>
   } @else if (cardLoaded()) {
     <app-card [cardData]="cardData()" />
+
     @if (qrImage()) {
       <div class="rounded-2xl bg-white p-4 text-center mt-4">
         <img [src]="qrImage()" alt="QR Code" class="mx-auto h-40 w-40 object-contain" />
@@ -23,7 +39,7 @@
     }
   }
 
-  <div class="flex flex-col sm:flex-row gap-3">
+  <div class="flex flex-col sm:flex-row gap-3 mt-4">
     <button
       (click)="printCard()"
       class="flex-1 bg-primary hover:bg-primary-dark text-white py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all cursor-pointer"

@@ -3,24 +3,6 @@ import { Injectable, inject } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 
-// Mirror backend SafeDose.Application.DTOs.Admin shapes loosely (any-typed for now).
-export interface AdminKpis {
-  totalUsers: number;
-  totalUsersTrendPercent: number;
-  activeUsers: number;
-  activeUsersTrendPercent: number;
-  monthlyRevenue: number;
-  monthlyRevenueTrendPercent: number;
-  yearlyRevenue: number;
-  yearlyRevenueTrendPercent: number;
-  currency: string;
-}
-
-export interface AdminRevenueChart {
-  period: 'monthly' | 'yearly';
-  buckets: { label: string; value: number; percent: number; subPercent?: number }[];
-}
-
 export interface AdminGenderSplit {
   femalePercent: number;
   malePercent: number;
@@ -47,6 +29,35 @@ export interface AdminActivity {
   title: string;
   atUtc: string;
 }
+export interface AdminKpis {
+  totalUsers: number;
+  totalUsersTrendPercent: number;
+  activeUsers: number;
+  activeUsersTrendPercent: number;
+  monthlyRevenue: number;
+  monthlyRevenueTrendPercent: number;
+  yearlyRevenue: number;
+  yearlyRevenueTrendPercent: number;
+  currency: string;
+}
+
+export interface AdminKpis {
+  totalUsers: number;
+  totalUsersTrendPercent: number;
+  activeUsers: number;
+  activeUsersTrendPercent: number;
+  monthlyRevenue: number;
+  monthlyRevenueTrendPercent: number;
+  yearlyRevenue: number;
+  yearlyRevenueTrendPercent: number;
+  currency: string;
+}
+
+export interface AdminRevenueChart {
+  period: 'monthly' | 'yearly';
+  currentTotal: number;
+  buckets: { label: string; value: number; percent: number; subPercent?: number }[];
+}
 
 @Injectable({
   providedIn: 'root',
@@ -54,16 +65,6 @@ export interface AdminActivity {
 export class AdminDashboard {
   private readonly apiUrl = environment.apiUrl;
   private readonly http = inject(HttpClient);
-
-  kpis(): Promise<AdminKpis> {
-    return firstValueFrom(this.http.get<AdminKpis>(this.apiUrl + '/admin/dashboard/kpis'));
-  }
-
-  revenue(period: 'monthly' | 'yearly' = 'monthly'): Promise<AdminRevenueChart> {
-    return firstValueFrom(
-      this.http.get<AdminRevenueChart>(this.apiUrl + '/admin/dashboard/revenue?period=' + period),
-    );
-  }
 
   gender(): Promise<AdminGenderSplit> {
     return firstValueFrom(
@@ -87,11 +88,49 @@ export class AdminDashboard {
     );
   }
 
-  recentActivities(limit = 20): Promise<AdminActivity[]> {
-    return firstValueFrom(
-      this.http.get<AdminActivity[]>(
-        this.apiUrl + '/admin/dashboard/activities/recent?limit=' + limit,
-      ),
+  async kpis(): Promise<AdminKpis> {
+    const raw: any = await firstValueFrom(this.http.get(this.apiUrl + '/admin/dashboard/kpis'));
+    return {
+      totalUsers: raw.totalUsers ?? 0,
+      totalUsersTrendPercent: raw.totalUsersTrendPercent ?? 0,
+      activeUsers: raw.activeUsers ?? 0,
+      activeUsersTrendPercent: raw.activeUsersTrendPercent ?? 0,
+      monthlyRevenue: raw.monthlyRevenue?.value ?? raw.monthlyRevenue ?? 0,
+      monthlyRevenueTrendPercent:
+        raw.monthlyRevenue?.trendPercent ?? raw.monthlyRevenueTrendPercent ?? 0,
+      yearlyRevenue: raw.yearlyRevenue?.value ?? raw.yearlyRevenue ?? 0,
+      yearlyRevenueTrendPercent:
+        raw.yearlyRevenue?.trendPercent ?? raw.yearlyRevenueTrendPercent ?? 0,
+      currency: raw.monthlyRevenue?.currency ?? raw.yearlyRevenue?.currency ?? 'ج.م',
+    };
+  }
+
+  async revenue(period: 'monthly' | 'yearly' = 'monthly'): Promise<AdminRevenueChart> {
+    const raw: any = await firstValueFrom(
+      this.http.get(this.apiUrl + '/admin/dashboard/revenue?period=' + period),
     );
+    const points: any[] = raw.points ?? raw.buckets ?? [];
+    const maxVal = Math.max(...points.map((p: any) => p.total ?? 0), 1);
+    return {
+      period,
+      currentTotal: raw.currentTotal ?? 0,
+      buckets: points.map((p: any) => ({
+        label: p.monthLabelArabic ?? p.label ?? '',
+        value: p.total ?? p.value ?? 0,
+        percent: Math.round(((p.total ?? p.value ?? 0) / maxVal) * 100),
+        subPercent: p.subPercent ?? 0,
+      })),
+    };
+  }
+
+  async recentActivities(limit = 20): Promise<AdminActivity[]> {
+    const raw: any[] = await firstValueFrom(
+      this.http.get<any[]>(this.apiUrl + '/admin/dashboard/activities/recent?limit=' + limit),
+    );
+    return (raw ?? []).map((a) => ({
+      type: a.type ?? '',
+      title: a.titleArabic ?? a.title ?? '',
+      atUtc: a.atUtc ?? '',
+    }));
   }
 }

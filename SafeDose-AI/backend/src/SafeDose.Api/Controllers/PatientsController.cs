@@ -47,6 +47,12 @@ public class PatientsController : ControllerBase
             var result = await _create.ExecuteAsync(accountId, dto, cancellationToken);
             return CreatedAtAction(nameof(GetById), new { id = result.PatientId }, result);
         }
+        catch (SafeDose.Application.Exceptions.QuotaExceededException ex)
+        {
+            // 402 Payment Required maps semantically to "upgrade plan" on the FE.
+            return StatusCode(StatusCodes.Status402PaymentRequired,
+                new ErrorResponse("QuotaExceeded", ex.MessageArabic, ex.MessageArabic));
+        }
         catch (ArgumentException ex)
         {
             return BadRequest(new ErrorResponse(

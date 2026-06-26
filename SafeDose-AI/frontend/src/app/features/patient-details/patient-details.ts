@@ -42,7 +42,16 @@ export class PatientDetails implements OnInit {
   ngOnInit(): void {
     this.route.paramMap
       .pipe(
-        map((params) => params.get('id')),
+        map((params) => {
+          const routeId = params.get('id');
+          if (routeId && routeId !== 'undefined') {
+            return routeId;
+          }
+
+          return this.patientService.currentPatientId != null
+            ? String(this.patientService.currentPatientId)
+            : null;
+        }),
         distinctUntilChanged(),
         filter((rawId): rawId is string => Boolean(rawId) && rawId !== 'undefined'),
         map((rawId) => Number(rawId)),

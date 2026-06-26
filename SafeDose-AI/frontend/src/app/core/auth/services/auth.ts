@@ -21,20 +21,67 @@ export class Auth {
   public user$ = this.userSubject.asObservable();
   showLoginModal = signal(false);
 
-  get user(): SessionUser | null { return this.userSubject.value; }
-  get token(): string | null { return this.cookieService.get(TOKEN_KEY) || null; }
-  get isLoggedIn(): boolean { return !!this.token; }
-  get role(): UserRole | null { return this.userSubject.value?.role ?? null; }
-  get isUser(): boolean { return this.role === 'User'; }
-  get isAdmin(): boolean { return this.role === 'Admin' || this.role === 'SuperAdmin'; }
-  get isSuperAdmin(): boolean { return this.role === 'SuperAdmin'; }
+  get user(): SessionUser | null {
+    return this.userSubject.value;
+  }
+  get token(): string | null {
+    return this.cookieService.get(TOKEN_KEY) || null;
+  }
+  get isLoggedIn(): boolean {
+    return !!this.token;
+  }
+  get role(): UserRole | null {
+    const currentRole = this.userSubject.value?.role;
+    if (currentRole) {
+      return this.normalizeRole(currentRole);
+    }
+
+    const roles = this.userSubject.value?.roles;
+    if (Array.isArray(roles) && roles.length) {
+      return roles.reduce<UserRole | null>((matched, role) => {
+        if (matched) return matched;
+        return this.normalizeRole(role);
+      }, null);
+    }
+
+    return null;
+  }
+  get isUser(): boolean {
+    return this.role === 'User';
+  }
+  get isAdmin(): boolean {
+    return this.role === 'Admin' || this.role === 'SuperAdmin';
+  }
+  get isSuperAdmin(): boolean {
+    return this.role === 'SuperAdmin';
+  }
 
   private decodeToken(token: string): Record<string, any> | null {
     try {
       const payload = token.split('.')[1];
       const decoded = atob(payload.replace(/-/g, '+').replace(/_/g, '/'));
       return JSON.parse(decoded);
-    } catch { return null; }
+    } catch {
+      return null;
+    }
+  }
+
+  private normalizeRole(role: string | null | undefined): UserRole {
+    const normalized = (role ?? '').toString().trim().toLowerCase();
+
+    if (
+      normalized === 'superadmin' ||
+      normalized === 'super-admin' ||
+      normalized === 'super admin'
+    ) {
+      return 'SuperAdmin';
+    }
+
+    if (normalized === 'admin' || normalized === 'administrator' || normalized === 'moderator') {
+      return 'Admin';
+    }
+
+    return 'User';
   }
 
   private extractRole(token: string): UserRole {
@@ -42,8 +89,9 @@ export class Auth {
     if (!claims) return 'User';
     const role =
       claims['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] ||
-      claims['role'] || 'User';
-    return role as UserRole;
+      claims['role'] ||
+      'User';
+    return this.normalizeRole(role);
   }
 
   private extractEmail(token: string): string {
@@ -60,7 +108,11 @@ export class Auth {
   private readUserFromCookie(): SessionUser | null {
     const raw = this.cookieService.get(USER_KEY);
     if (!raw) return null;
-    try { return JSON.parse(raw); } catch { return null; }
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return null;
+    }
   }
 
   private setSession(user: SessionUser, token: string): void {
@@ -73,7 +125,9 @@ export class Auth {
   logout(): void {
     this.cookieService.delete(TOKEN_KEY, '/');
     this.cookieService.delete(USER_KEY, '/');
-    try { localStorage.removeItem('safedose_pending_patient'); } catch {}
+    try {
+      localStorage.removeItem('safedose_pending_patient');
+    } catch {}
     this.userSubject.next(null);
   }
 
@@ -123,7 +177,9 @@ export class Auth {
     this.http.get<any[]>(this.apiUrl + '/patients/my').subscribe({
       next: (existing) => {
         if (existing && existing.length > 0) {
-          try { localStorage.removeItem('safedose_pending_patient'); } catch {}
+          try {
+            localStorage.removeItem('safedose_pending_patient');
+          } catch {}
           return;
         }
 
@@ -131,7 +187,9 @@ export class Auth {
         try {
           const raw = localStorage.getItem('safedose_pending_patient');
           if (raw) pending = JSON.parse(raw);
-        } catch { /* ignore */ }
+        } catch {
+          /* ignore */
+        }
 
         const age = Number(pending?.age);
         let dateOfBirth: string | null = null;
@@ -145,18 +203,26 @@ export class Auth {
           dateOfBirth,
           gender: null,
           bloodType: null,
-          chronicConditions: Array.isArray(pending?.chronicConditions) ? pending.chronicConditions : [],
+          chronicConditions: Array.isArray(pending?.chronicConditions)
+            ? pending.chronicConditions
+            : [],
           allergies: [],
         };
 
         this.http.post(this.apiUrl + '/patients', body).subscribe({
           next: () => {
-            try { localStorage.removeItem('safedose_pending_patient'); } catch {}
+            try {
+              localStorage.removeItem('safedose_pending_patient');
+            } catch {}
           },
-          error: () => { /* retried on next login */ },
+          error: () => {
+            /* retried on next login */
+          },
         });
       },
-      error: () => { /* skip — backend probably 500 (run the SQL fix) */ },
+      error: () => {
+        /* skip — backend probably 500 (run the SQL fix) */
+      },
     });
   }
 

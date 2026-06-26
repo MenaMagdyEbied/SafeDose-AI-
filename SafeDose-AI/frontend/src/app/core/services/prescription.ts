@@ -72,8 +72,8 @@ export class Prescription {
     };
   }
 
-  // مفيش delete endpoint ظاهر في Swagger لسه، سيبتها زي ما هي مؤقتًا
+  /** DELETE /api/Prescriptions/{prescriptionId} */
   async delete(id: number): Promise<void> {
-    await firstValueFrom(this.http.delete(`${this.baseUrl}/${id}`));
+    await firstValueFrom(this.http.delete(`${this.baseUrl}/${id}`, { responseType: 'text' }));
   }
 }

@@ -94,6 +94,23 @@ export class Subscription {
     return stored;
   }
 
+  async getAdminTiers(): Promise<PricingTier[]> {
+    try {
+      const remote = await firstValueFrom(
+        this.http.get<AdminPricingTierResponse[]>(`${this.apiUrl}/admin/pricing-tiers`),
+      );
+      if (remote?.length) {
+        const normalized = this.mapAdminTiers(remote);
+        this.persistTiers(normalized);
+        return normalized;
+      }
+    } catch {
+      // Fall back to the existing cached tiers if the admin endpoint is unavailable.
+    }
+
+    return this.tiers();
+  }
+
   async saveTiers(tiers: PricingTier[]): Promise<PricingTier[]> {
     const normalized = this.normalizeTiers(tiers);
     this.persistTiers(normalized);

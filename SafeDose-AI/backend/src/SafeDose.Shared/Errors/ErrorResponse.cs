@@ -24,7 +24,7 @@ public static class ArabicMessages
 {
     public const string TooManyDrugs       = "الحد الأقصى ستة أدوية في الفحص الواحد";
     public const string DrugNotFound       = "أحد الأدوية المحددة غير موجود في قاعدة البيانات";
-    public const string ValidationFailed   = "البيانات المدخلة غير صحيحة";
+    public const string ValidationFailed   = "لديك اشتراك نشط بالفعل";
     public const string CheckNotFound      = "نتيجة الفحص غير موجودة";
     public const string PatientNotFound    = "المريض غير موجود";
     public const string Unauthorized       = "يجب تسجيل الدخول أولاً";

@@ -33,6 +33,43 @@ describe('Register', () => {
     expect(component).toBeTruthy();
   });
 
+  it('should restore a previously saved registration draft', () => {
+    localStorage.setItem(
+      'safedose_registration_draft',
+      JSON.stringify({
+        currentStep: 3,
+        step1: {
+          fullName: 'Ahmed Ali',
+          userName: 'ahmedali',
+          phone: '+201234567890',
+          email: 'ahmed@example.com',
+        },
+        step3: {
+          termsAndConditions: true,
+          permissions: ['medical_data', 'notifications'],
+        },
+        step4: {
+          password: 'Password123!',
+          confirmPassword: 'Password123!',
+        },
+      }),
+    );
+
+    component.ngOnInit();
+
+    expect(component.currentStep).toBe(3);
+    expect(component.step1Form.value).toEqual(
+      jasmine.objectContaining({
+        fullName: 'Ahmed Ali',
+        userName: 'ahmedali',
+        phone: '+201234567890',
+        email: 'ahmed@example.com',
+      }),
+    );
+    expect(component.selectedPermissions).toEqual(['medical_data', 'notifications']);
+    expect(component.step4Form.value.password).toBe('Password123!');
+  });
+
   it('should send the backend register payload expected by the API', () => {
     component.step1Form.setValue({
       fullName: 'Ahmed Ali',

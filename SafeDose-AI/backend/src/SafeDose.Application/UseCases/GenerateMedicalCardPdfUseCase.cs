@@ -69,11 +69,12 @@ namespace SafeDose.Application.UseCases
                         var age = DateTime.Today.Year - cardDto.DateOfBirth.Value.Year;
                         infoColumn.Item().Text($"Age: {age} Years (DOB: {cardDto.DateOfBirth.Value:d})");
                     }
-                    
+
                     var genderStr = cardDto.Gender switch
                     {
                         1 => "Male",
-                        2 => "Female"
+                        2 => "Female",
+                        _ => "Unknown"
                     };
                     infoColumn.Item().Text($"Gender: {genderStr}");
                     infoColumn.Item().Text($"Blood Type: {cardDto.BloodType}");

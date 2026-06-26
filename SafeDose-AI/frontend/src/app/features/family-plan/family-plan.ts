@@ -1,7 +1,7 @@
 import { Component, DestroyRef, computed, inject, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { LucideAngularModule, Plus, SquarePen, Trash2, Users, X } from 'lucide-angular';
+import { LucideAngularModule, Plus, SquarePen, Trash2, UserCheck, Users, X } from 'lucide-angular';
 import { EMPTY, from } from 'rxjs';
 import { catchError, finalize, switchMap } from 'rxjs/operators';
 import { Patient } from '../../core/models/patient';
@@ -32,6 +32,7 @@ export class FamilyPlan implements OnInit {
   trashIcon = Trash2;
   xIcon = X;
   infoIcon = Info;
+  activateIcon = UserCheck;
 
   members = signal<Patient[]>([]);
   loading = signal(false);
@@ -114,6 +115,30 @@ export class FamilyPlan implements OnInit {
         this.closeModal();
         this.loadPatients();
       });
+  }
+
+  activateMember(member: Patient): void {
+    const memberId = this.patientService.resolvePatientId(member);
+    if (memberId == null) {
+      return;
+    }
+
+    this.error = '';
+
+    from(this.patientService.setRunningPatient(memberId))
+      .pipe(
+        catchError(() => {
+          this.error = 'تعذر تفعيل المريض.';
+          return EMPTY;
+        }),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe();
+  }
+
+  isActiveMember(member: Patient): boolean {
+    const memberId = this.patientService.resolvePatientId(member);
+    return memberId != null && memberId === this.patientService.currentPatientId;
   }
 
   deleteMember(id: number): void {

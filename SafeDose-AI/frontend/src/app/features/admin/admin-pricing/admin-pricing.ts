@@ -56,7 +56,7 @@ export class AdminPricing implements OnInit {
   }
 
   private async loadPlans(): Promise<void> {
-    const tiers = await this.subscriptionService.getTiers();
+    const tiers = await this.subscriptionService.getAdminTiers();
     this.plans = this.mapTiersToPlans(tiers);
   }
 

@@ -749,7 +749,7 @@ namespace SafeDose.Domain.Migrations
             migrationBuilder.InsertData(
                 table: "AspNetUsers",
                 columns: new[] { "Id", "AccessFailedCount", "AccountStatus", "ConcurrencyStamp", "Email", "EmailConfirmed", "IsDeleted", "LockoutEnabled", "LockoutEnd", "Name", "NormalizedEmail", "NormalizedUserName", "PasswordHash", "PhoneNumber", "PhoneNumberConfirmed", "PreferredLanguage", "SecurityStamp", "TermsAndConditions", "TwoFactorEnabled", "UserName" },
-                values: new object[] { "1", 0, (byte)0, "bf19e328-49f3-4854-962b-ad48cfbb8bb3", "superadmin@gmail.com", true, false, false, null, "superadmin", "SUPERADMIN@GMAIL.COM", "SUPERADMIN", "AQAAAAIAAYagAAAAENbRYYLDnwKvEZUXnV++QjasRwi8N11+98owpvIrHgt2GiOe8OkNuFHZXbLvBQBJzw==", null, false, null, "ff828807-346c-4e5e-bdd2-ba9286cb7122", false, false, "superadmin" });
+                values: new object[] { "1", 0, (byte)0, "f83b64b1-6622-43bb-a007-fa886bfdf92f", "superadmin@gmail.com", true, false, false, null, "superadmin", "SUPERADMIN@GMAIL.COM", "SUPERADMIN", "AQAAAAIAAYagAAAAEKNibuR+t2UQZckdYJxotYZnoPiMOFn412UIGPuy+9vk5Rpye+tz7ye+DZEixMXdQg==", null, false, null, "1c554eac-15a6-49c0-a0cf-e231c35a8342", false, false, "superadmin" });
 
             migrationBuilder.InsertData(
                 table: "AspNetUserRoles",

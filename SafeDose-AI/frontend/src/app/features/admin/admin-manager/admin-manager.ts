@@ -58,6 +58,7 @@ export class AdminManager implements OnInit {
     newPassword: '',
   };
 
+  // UI role values يتطابقوا مع normalizeUiRole output
   roles = [
     { value: 'super-admin', label: 'سوبر أدمن' },
     { value: 'admin', label: 'أدمن' },
@@ -117,9 +118,7 @@ export class AdminManager implements OnInit {
   }
 
   openEdit(admin: Admin) {
-    if (!this.canManageAdmin(admin)) {
-      return;
-    }
+    if (!this.canManageAdmin(admin)) return;
     this.isEditing = true;
     this.selectedAdmin = admin;
     this.form = {
@@ -140,16 +139,12 @@ export class AdminManager implements OnInit {
       return;
     }
 
-    if (!this.form.name || !this.form.email) {
-      return;
-    }
+    if (!this.form.name || !this.form.email) return;
+    if (!this.isEditing && !this.form.password) return;
 
-    if (!this.isEditing && !this.form.password) {
-      return;
-    }
-
+    // لو editing → نحتفظ بالـ role الأصلي، لو adding → نحدد الـ role المناسب
     const roleToSend = this.isEditing
-      ? this.normalizeRole(this.selectedAdmin?.role ?? this.form.role)
+      ? this.toApiRole(this.selectedAdmin?.role ?? this.form.role)
       : this.getRoleForNewAdmin();
 
     const payload: Record<string, unknown> = {
@@ -190,22 +185,18 @@ export class AdminManager implements OnInit {
   }
 
   confirmDelete(admin: Admin) {
-    if (!this.canManageAdmin(admin)) {
-      return;
-    }
+    if (!this.canManageAdmin(admin)) return;
     this.selectedAdmin = admin;
     this.showDeleteDialog = true;
   }
 
   executeDelete() {
-    if (!this.selectedAdmin) {
-      return;
-    }
+    if (!this.selectedAdmin) return;
 
     this.isDeleting = true;
     this.adminService.deleteAdmin(this.selectedAdmin.id).subscribe({
       next: () => {
-        this.admins = this.admins.filter((admin) => admin.id !== this.selectedAdmin?.id);
+        this.admins = this.admins.filter((a) => a.id !== this.selectedAdmin?.id);
         this.showDeleteDialog = false;
         this.selectedAdmin = null;
         this.isDeleting = false;
@@ -217,9 +208,7 @@ export class AdminManager implements OnInit {
   }
 
   toggleStatus(admin: Admin) {
-    if (!this.canManageAdmin(admin)) {
-      return;
-    }
+    if (!this.canManageAdmin(admin)) return;
 
     this.isTogglingStatus = true;
     this.adminService.toggleAdminStatus(admin.id, admin.status !== 'active').subscribe({
@@ -237,92 +226,63 @@ export class AdminManager implements OnInit {
     });
   }
 
-  getRoleLabel(role: string) {
-    return this.roles.find((item) => item.value === role)?.label ?? role;
+  getRoleLabel(role: string): string {
+    // role هنا بييجي من normalizeUiRole → 'super-admin' أو 'admin'
+    return this.roles.find((r) => r.value === role)?.label ?? role;
   }
 
-  getStatusLabel(status: string) {
+  getStatusLabel(status: string): string {
     return status === 'active' ? 'نشط' : 'غير نشط';
   }
 
+  // ─── Private ───────────────────────────────────────────────
+
   private canManageAdmin(admin: Admin): boolean {
-    if (!this.authService.isSuperAdmin) {
-      return true;
-    }
+    // لازم يكون SuperAdmin عشان يقدر يدير
+    if (!this.authService.isSuperAdmin) return false;
 
-    const currentUser = this.authService.user;
-    const currentEmail = currentUser?.email?.trim().toLowerCase();
-    const currentUserName = currentUser?.userName?.trim().toLowerCase();
-    const currentName = currentUser?.name?.trim().toLowerCase();
-
+    // SuperAdmin مش يقدر يعدل/يحذف نفسه
+    const currentEmail = this.authService.user?.email?.trim().toLowerCase();
     const targetEmail = admin.email?.trim().toLowerCase();
-    const targetUserName = (admin as Admin & { userName?: string }).userName?.trim().toLowerCase();
-    const targetName = admin.name?.trim().toLowerCase();
-
-    const matchesIdentity =
-      (currentEmail && targetEmail && currentEmail === targetEmail) ||
-      (currentUserName && targetUserName && currentUserName === targetUserName) ||
-      (currentName && targetName && currentName === targetName);
-
-    return !matchesIdentity;
+    return !(currentEmail && targetEmail && currentEmail === targetEmail);
   }
 
   private getRoleForNewAdmin(): string {
-    const hasSuperAdmin = this.admins.some((admin) => admin.role === 'super-admin');
-    return hasSuperAdmin ? 'Admin' : 'SuperAdmin';
+    return 'Admin'; // ✅ دايماً Admin، السوبر أدمن بيتعمل manually من الباك إند
+  }
+  // UI ('super-admin' | 'admin') → API ('SuperAdmin' | 'Admin')
+  private toApiRole(uiRole: string): string {
+    const n = uiRole.trim().toLowerCase().replace(/\s+/g, '-');
+    if (n.includes('super')) return 'SuperAdmin';
+    return 'Admin';
+  }
+
+  // API role string → UI role ('super-admin' | 'admin' | 'moderator')
+  private normalizeUiRole(role: string): Admin['role'] {
+    const n = role.trim().toLowerCase().replace(/\s+/g, '-');
+    if (n.includes('super')) return 'super-admin';
+    return 'admin';
   }
 
   private sortAdmins(admins: Admin[]): Admin[] {
     return [...admins].sort((a, b) => {
       const aIsSuper = a.role === 'super-admin';
       const bIsSuper = b.role === 'super-admin';
-
       if (aIsSuper && !bIsSuper) return -1;
       if (!aIsSuper && bIsSuper) return 1;
-
       return (a.name || '').localeCompare(b.name || '', 'ar', { sensitivity: 'base' });
     });
   }
 
-  private normalizeRole(role: string): string {
-    const normalized = role?.trim().toLowerCase().replace(/\s+/g, '-');
-    if (normalized.includes('super')) {
-      return 'SuperAdmin';
-    }
-    if (normalized.includes('admin') || normalized.includes('administrator')) {
-      return 'Admin';
-    }
-    return 'Admin';
-  }
-
-  private normalizeUiRole(role: string): Admin['role'] {
-    const normalized = role?.trim().toLowerCase().replace(/\s+/g, '-');
-    if (normalized.includes('super')) {
-      return 'super-admin';
-    }
-    if (normalized.includes('moderator')) {
-      return 'moderator';
-    }
-    if (normalized.includes('admin') || normalized.includes('administrator')) {
-      return 'admin';
-    }
-    return 'admin';
-  }
-
   private extractAdminsFromResponse(response: unknown): unknown[] {
-    if (Array.isArray(response)) {
-      return response;
-    }
+    if (Array.isArray(response)) return response;
 
     const queue: unknown[] = [response];
     const visited = new Set<unknown>();
 
     while (queue.length) {
       const current = queue.shift();
-      if (Array.isArray(current)) {
-        return current;
-      }
-
+      if (Array.isArray(current)) return current;
       if (current && typeof current === 'object' && !visited.has(current)) {
         visited.add(current);
         queue.push(...Object.values(current as Record<string, unknown>));
@@ -333,18 +293,17 @@ export class AdminManager implements OnInit {
   }
 
   private mapAdmin(admin: unknown): Admin {
-    const source = admin as Record<string, unknown>;
-    const role = String(source['role'] ?? source['roleName'] ?? source['userRole'] ?? 'admin');
-    const status =
-      source['isActive'] === false || source['status'] === 'inactive' ? 'inactive' : 'active';
+    const s = admin as Record<string, unknown>;
+    const role = String(s['role'] ?? s['roleName'] ?? s['userRole'] ?? 'admin');
+    const status = s['isActive'] === false || s['status'] === 'inactive' ? 'inactive' : 'active';
 
     return {
-      id: String(source['id'] ?? source['adminId'] ?? ''),
-      name: String(source['name'] ?? source['fullName'] ?? source['userName'] ?? ''),
-      email: String(source['email'] ?? source['emailAddress'] ?? ''),
+      id: String(s['id'] ?? s['adminId'] ?? ''),
+      name: String(s['name'] ?? s['fullName'] ?? s['userName'] ?? ''),
+      email: String(s['email'] ?? s['emailAddress'] ?? ''),
       role: this.normalizeUiRole(role),
       status: status as Admin['status'],
-      createdAt: String(source['createdAt'] ?? source['created_at'] ?? ''),
+      createdAt: String(s['createdAt'] ?? s['created_at'] ?? ''),
     };
   }
 }

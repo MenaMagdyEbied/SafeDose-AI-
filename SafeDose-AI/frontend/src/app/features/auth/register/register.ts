@@ -38,6 +38,7 @@ import { passwordsMatchValidator } from '../../../shared/validators/passwords-ma
   styleUrl: './register.css',
 })
 export class Register {
+  private static readonly DRAFT_STORAGE_KEY = 'safedose_registration_draft';
   private readonly fb = inject(FormBuilder);
   private readonly authService = inject(Auth);
   private readonly router = inject(Router);
@@ -211,6 +212,74 @@ export class Register {
     return this.step4Form.valid;
   }
 
+  ngOnInit(): void {
+    this.restoreDraft();
+  }
+
+  private saveDraft(): void {
+    const draft = {
+      currentStep: this.currentStep,
+      step1: this.step1Form.getRawValue(),
+      step3: this.step3Form.getRawValue(),
+      step4: this.step4Form.getRawValue(),
+    };
+
+    try {
+      localStorage.setItem(Register.DRAFT_STORAGE_KEY, JSON.stringify(draft));
+    } catch {
+      // Ignore storage failures in restricted environments.
+    }
+  }
+
+  private restoreDraft(): void {
+    try {
+      const raw = localStorage.getItem(Register.DRAFT_STORAGE_KEY);
+      if (!raw) return;
+
+      const draft = JSON.parse(raw) as {
+        currentStep?: number;
+        step1?: Record<string, unknown>;
+        step3?: { termsAndConditions?: boolean; permissions?: string[] };
+        step4?: Record<string, unknown>;
+      };
+
+      if (draft.currentStep) {
+        this.currentStep = draft.currentStep;
+      }
+
+      if (draft.step1) {
+        this.step1Form.patchValue(draft.step1);
+      }
+
+      if (draft.step3) {
+        this.step3Form.patchValue({
+          termsAndConditions: draft.step3.termsAndConditions ?? false,
+          permissions: draft.step3.permissions ?? [],
+        });
+
+        const permissionsControl = this.step3Form.get('permissions') as FormArray;
+        permissionsControl.clear();
+        (draft.step3.permissions ?? []).forEach((permissionId) => {
+          permissionsControl.push(this.fb.control(permissionId));
+        });
+      }
+
+      if (draft.step4) {
+        this.step4Form.patchValue(draft.step4);
+      }
+    } catch {
+      localStorage.removeItem(Register.DRAFT_STORAGE_KEY);
+    }
+  }
+
+  private clearDraft(): void {
+    try {
+      localStorage.removeItem(Register.DRAFT_STORAGE_KEY);
+    } catch {
+      // Ignore storage failures in restricted environments.
+    }
+  }
+
   nextStep(): void {
     const currentForm = this.getCurrentForm();
     if (currentForm) {
@@ -238,6 +307,8 @@ export class Register {
     } else if (this.currentStep === 2) {
       this.currentStep = 1;
     }
+
+    this.saveDraft();
   }
 
   private getCurrentForm(): FormGroup | null {
@@ -269,6 +340,8 @@ export class Register {
       confirmPassword: this.step4Form.value.confirmPassword,
       termsAndConditions: Boolean(this.step3Form.value.termsAndConditions),
     };
+
+    this.saveDraft();
 
     try {
       const pending = {

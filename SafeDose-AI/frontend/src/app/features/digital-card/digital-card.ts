@@ -69,7 +69,24 @@ export class DigitalCard implements AfterViewInit {
     qrUrl: '',
   });
 
-  selectedPatientId = signal<number | null>(this.patientService.currentPatientId);
+  selectedPatientId = signal<number | null>(null);
+
+  private syncSelectedPatient(): void {
+    const currentId = this.patientService.currentPatientId;
+    if (currentId != null) {
+      this.selectedPatientId.set(currentId);
+      return;
+    }
+
+    const fallback = this.patientService.patients().find((patient) => {
+      const id = this.patientService.resolvePatientId(patient);
+      return id != null;
+    });
+    if (fallback) {
+      const fallbackId = this.patientService.resolvePatientId(fallback);
+      this.selectedPatientId.set(fallbackId);
+    }
+  }
 
   private resolvePatientId() {
     const currentId = this.patientService.currentPatientId ?? this.selectedPatientId();
@@ -119,6 +136,7 @@ export class DigitalCard implements AfterViewInit {
 
   ngAfterViewInit(): void {
     queueMicrotask(() => {
+      this.syncSelectedPatient();
       this.loadCard();
     });
   }
@@ -171,6 +189,7 @@ export class DigitalCard implements AfterViewInit {
   async changePatient(patientId: number): Promise<void> {
     this.selectedPatientId.set(patientId);
     await this.patientService.setRunningPatient(patientId);
+    this.syncSelectedPatient();
     this.loadCard();
   }
 }

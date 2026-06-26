@@ -152,6 +152,7 @@ builder.Services.AddScoped<InitiateCheckoutUseCase>();
 builder.Services.AddScoped<ProcessPaymobWebhookUseCase>();
 builder.Services.AddScoped<CancelSubscriptionUseCase>();
 builder.Services.AddScoped<GetPaymentStatusUseCase>();
+builder.Services.AddScoped<CompletePaymentUseCase>();
 
 // Paymob HTTP client + options
 builder.Services.Configure<PaymobOptions>(builder.Configuration.GetSection("Paymob"));

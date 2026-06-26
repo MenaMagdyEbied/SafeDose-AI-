@@ -39,7 +39,6 @@ export class Sidebar {
   usersIcon = Users;
   mobileMenu = false;
 
-
   showLogoutConfirm = false;
   accountMenu = false;
   bellMenu = false;
@@ -78,6 +77,9 @@ export class Sidebar {
       } else {
         this.userName = '';
       }
+
+      this.cdr.markForCheck();
+      this.cdr.detectChanges();
     });
   }
 

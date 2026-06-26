@@ -6,20 +6,28 @@ import { FamilyPlan } from './family-plan';
 describe('FamilyPlan', () => {
   let component: FamilyPlan;
   let fixture: ComponentFixture<FamilyPlan>;
-  let patientService: jasmine.SpyObj<PatientService>;
+  let patientService: any;
+  let createPatientCalls = 0;
+  let setRunningPatientId: number | null = null;
 
   beforeEach(async () => {
-    patientService = jasmine.createSpyObj('PatientService', [
-      'getMyPatients',
-      'createPatient',
-      'updatePatient',
-      'deletePatient',
-    ]);
+    createPatientCalls = 0;
+    setRunningPatientId = null;
 
-    patientService.getMyPatients.and.resolveTo([]);
-    patientService.createPatient.and.resolveTo({} as never);
-    patientService.updatePatient.and.resolveTo({} as never);
-    patientService.deletePatient.and.resolveTo();
+    patientService = {
+      getMyPatients: async () => [],
+      createPatient: async () => {
+        createPatientCalls += 1;
+        return {};
+      },
+      updatePatient: async () => ({}),
+      deletePatient: async () => undefined,
+      setRunningPatient: async (id: number) => {
+        setRunningPatientId = id;
+      },
+      resolvePatientId: (patient: any) => patient?.patientId ?? patient?.id ?? null,
+      currentPatientId: null,
+    };
 
     await TestBed.configureTestingModule({
       imports: [FamilyPlan],
@@ -48,7 +56,23 @@ describe('FamilyPlan', () => {
 
     await component.saveMember();
 
-    expect(patientService.createPatient).toHaveBeenCalled();
-    expect(component.showModal).toBeFalse();
+    expect(createPatientCalls).toBe(1);
+    expect(component.showModal()).toBeFalsy();
+  });
+
+  it('should activate the selected member through the running patient endpoint', () => {
+    const member = {
+      id: 7,
+      patientId: 7,
+      fullName: 'مريض ١',
+      dateOfBirth: '1990-01-01',
+      bloodType: 'O+',
+      chronicConditions: [],
+      allergies: [],
+    } as any;
+
+    component.activateMember(member);
+
+    expect(setRunningPatientId).toBe(7);
   });
 });

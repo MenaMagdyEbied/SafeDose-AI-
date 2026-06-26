@@ -14,7 +14,7 @@ import {
   UserPlus,
   FileText,
 } from 'lucide-angular';
-import {AdminDashboard as AdminDashboardService } from '../services/admin-dashboard';
+import { AdminDashboard as AdminDashboardService } from '../services/admin-dashboard';
 
 @Component({
   selector: 'app-admin-dashboard',
@@ -33,6 +33,7 @@ export class AdminDashboard {
   revenuePeriod: 'monthly' | 'yearly' = 'monthly';
   loading = signal(true);
   loadError = signal('');
+  currentRevenue = signal('0');
 
   // KPI cards. Defaults so the layout doesn't jump while loading.
   kpis = signal<any[]>([]);
@@ -45,7 +46,14 @@ export class AdminDashboard {
   cardsActive = signal(0);
   cardsExpired = signal(0);
   recentActivity = signal<any[]>([]);
+  lastUpdated = signal('');
 
+  private updateTimestamp(): void {
+    const now = new Date();
+    this.lastUpdated.set(
+      'آخر تحديث: اليوم ' + now.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }),
+    );
+  }
   async ngOnInit(): Promise<void> {
     await this.refresh();
   }
@@ -62,6 +70,7 @@ export class AdminDashboard {
           subPercent: b.subPercent ?? 0,
         })),
       );
+      this.currentRevenue.set(this.fmt(rev.currentTotal ?? 0));
     } catch {
       /* keep previous */
     }
@@ -124,6 +133,7 @@ export class AdminDashboard {
           subPercent: b.subPercent ?? 0,
         })),
       );
+      this.currentRevenue.set(this.fmt(rev.currentTotal ?? 0) + ' ' + (k.currency || 'ج.م'));
 
       this.genderSplit.set({ female: g.femalePercent, male: g.malePercent });
       this.totalUsers.set(g.totalUsersLabel || this.fmt(k.totalUsers));
@@ -196,6 +206,8 @@ export class AdminDashboard {
       );
     } finally {
       this.loading.set(false);
+
+      this.updateTimestamp();
     }
   }
 

@@ -187,7 +187,9 @@
       </div>
       <div class="space-y-1">
         <h3 class="text-xl font-extrabold text-on-background">تم الدفع بنجاح! 🎉</h3>
-        <p class="text-sm text-outline leading-relaxed">تم تفعيل {{ planName }} على حسابك.</p>
+        <p class="text-sm text-outline leading-relaxed">
+          تم تفعيل {{ subscribedPlanName || planName }} على حسابك.
+        </p>
       </div>
       <div class="bg-green-50 rounded-2xl p-3 flex items-center gap-2 text-right">
         <lucide-icon [img]="checkCircleIcon" class="w-4 h-4 text-green-500 shrink-0"></lucide-icon>

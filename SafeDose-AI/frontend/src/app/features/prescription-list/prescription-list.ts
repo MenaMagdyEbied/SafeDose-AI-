@@ -31,9 +31,7 @@ export class PrescriptionList implements OnInit {
 
   private currentPatientId: number | null = null;
 
-  ngOnInit(): void {
-    this.loadPrescriptions();
-
+  constructor() {
     effect(() => {
       const patientId = this.patientService.currentPatientId;
       if (patientId != null && patientId !== this.currentPatientId) {
@@ -41,6 +39,10 @@ export class PrescriptionList implements OnInit {
         void this.loadPrescriptions();
       }
     });
+  }
+
+  ngOnInit(): void {
+    this.loadPrescriptions();
   }
 
   private async loadPrescriptions(): Promise<void> {

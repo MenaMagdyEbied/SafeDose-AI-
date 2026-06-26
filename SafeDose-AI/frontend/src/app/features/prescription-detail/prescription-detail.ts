@@ -5,6 +5,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { LucideAngularModule, Plus, Save, Trash2, TriangleAlert } from 'lucide-angular';
 import { Prescription } from '../../core/services/prescription';
 import { PrescriptionDetail as PrescriptionDetailModel } from '../../core/models/prescription-list';
+import { ChangeDetectorRef } from '@angular/core';
 
 @Component({
   selector: 'app-prescription-detail',
@@ -16,6 +17,7 @@ export class PrescriptionDetail implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly location = inject(Location);
   private readonly prescriptionService = inject(Prescription);
+  private readonly cdr = inject(ChangeDetectorRef);
 
   trashIcon = Trash2;
   alertTriangleIcon = TriangleAlert;
@@ -58,6 +60,7 @@ export class PrescriptionDetail implements OnInit {
       this.errorText = 'تعذر تحميل تفاصيل الوصفة. حاول مرة أخرى.';
     } finally {
       this.loading = false;
+      this.cdr.markForCheck();
     }
   }
 
@@ -92,9 +95,9 @@ export class PrescriptionDetail implements OnInit {
       this.errorText = 'تعذر حذف الوصفة.';
     }
     this.showDeleteConfirm = false;
+    this.cdr.markForCheck();
     this.goBack();
   }
-
   goBack(): void {
     this.location.back();
   }

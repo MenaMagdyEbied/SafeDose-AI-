@@ -334,8 +334,23 @@
   <nav
     class="md:hidden flex items-center justify-around border-t border-outline-variant/30 px-2 py-2 text-[11px] font-bold text-on-surface-variant"
   >
-    <a *ngIf="isUser && !isSubscribed" routerLink="/pricing" routerLinkActive="text-primary font-bold" class="text-on-surface hover:text-primary transition-colors text-sm font-medium flex items-center gap-1"><lucide-icon [img]="digitalCardIcon" class="w-4 h-4"></lucide-icon>الأسعار</a>
-    <a *ngIf="isUser && isSubscribed" routerLink="/profile" routerLinkActive="text-primary font-bold" class="text-primary hover:text-primary/80 transition-colors text-sm font-medium">اشتراكي</a>
+    <!-- <a
+      *ngIf="isUser && !isSubscribed"
+      routerLink="/pricing"
+      routerLinkActive="text-primary font-bold"
+      class="text-on-surface hover:text-primary transition-colors text-sm font-medium flex items-center gap-1"
+      ><lucide-icon [img]="digitalCardIcon" class="w-4 h-4"></lucide-icon>الأسعار</a
+    >
+    <a
+      *ngIf="isUser && isSubscribed"
+      routerLink="/profile"
+      routerLinkActive="text-primary font-bold"
+      class="text-primary hover:text-primary/80 transition-colors text-sm font-medium"
+      >اشتراكي</a
+    >
+
+ -->
+
     <a
       routerLink="/home"
       routerLinkActive="text-primary"

@@ -43,8 +43,8 @@ export const MEAL_TIMING_OPTIONS: { value: MealTiming; label: string }[] = [
   { value: 4, label: 'قبل النوم' },
 ];
 
-export const MAX_FREQUENCY = 12;
-export const MAX_REMINDER_TIMES = 12;
+export const MAX_FREQUENCY = 3;
+export const MAX_REMINDER_TIMES = 3;
 
 export interface AddMedicationPayload {
   patientId: number;

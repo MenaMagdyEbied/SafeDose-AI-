@@ -67,7 +67,7 @@ export class AddMedication implements OnInit {
 
   @Output() saved = new EventEmitter<MedicationResponse>();
   @Output() cancelled = new EventEmitter<void>();
-  // Icons
+
   pillIcon = Pill;
   searchIcon = Search;
   xIcon = X;
@@ -86,12 +86,10 @@ export class AddMedication implements OnInit {
   errorText = signal('');
   successText = signal('');
 
-  // Drug search/autocomplete state
   resultsOpen = signal(false);
   selectedCatalogDrug = signal<DrugSearchResult | null>(null);
   readonly filteredDrugs = computed(() => this.interaction.searchResults());
 
-  // Editing an existing medication (route param :id) vs adding a new one
   editingId = signal<number | null>(null);
   isEditMode = computed(() => this.editingId() !== null);
 
@@ -115,17 +113,18 @@ export class AddMedication implements OnInit {
     return this.form.get('times') as FormArray;
   }
 
-  ngOnInit(): void {
-    this.syncPatientContext();
-
+  constructor() {
     effect(() => {
       const patientId = this.patientService.currentPatientId;
       if (patientId != null && patientId !== this.currentPatientId) {
         this.currentPatientId = patientId;
       }
     });
+  }
 
-    // Watch frequency changes -> keep the times FormArray in sync with the chosen count
+  ngOnInit(): void {
+    this.syncPatientContext();
+
     this.form
       .get('frequency')
       ?.valueChanges.pipe(takeUntilDestroyed(this.destroyRef))
@@ -163,8 +162,6 @@ export class AddMedication implements OnInit {
     arr.updateValueAndValidity();
     this.form.updateValueAndValidity();
   }
-
-  // ===== Drug autocomplete (same endpoint/pattern as interaction-checker) =====
 
   onDrugNameInput(value: string): void {
     this.selectedCatalogDrug.set(null);
@@ -257,7 +254,6 @@ export class AddMedication implements OnInit {
       )
       .subscribe((result) => {
         this.successText.set('تم حفظ الدواء بنجاح');
-        // ✅ بدل router.navigate، نطلق event للـ parent بعد نص ثانية (يدي وقت يشوف رسالة النجاح)
         setTimeout(() => this.saved.emit(result), 600);
       });
   }

@@ -1,4 +1,4 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://api.safedose.ai',
+  apiUrl: 'https://localhost:54218/api',
 };

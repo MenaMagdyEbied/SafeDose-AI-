@@ -15,6 +15,7 @@ import { AdminLayout } from './layouts/admin-layout/admin-layout';
 import { MainLayout } from './layouts/main-layout/main-layout';
 import { NotFound } from './shared/components/not-found/not-found';
 import { ScanPrescription } from './features/scan-prescription/scan-prescription';
+import { limitGuard } from './core/auth/guards/limit-guard';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'home', pathMatch: 'full' },
@@ -57,7 +58,7 @@ export const routes: Routes = [
       {
         path: 'digital-card',
         component: DigitalCard,
-        canActivate: [authGuard],
+        canActivate: [authGuard, limitGuard],
         title: 'البطاقة الرقمية | SafeDose AI',
       },
       {

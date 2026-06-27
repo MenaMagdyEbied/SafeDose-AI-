@@ -62,6 +62,18 @@ namespace SafeDose.Api.Controllers
             }
         }
 
+        [HttpPost("ResendCode/{email}")]
+        public async Task<IActionResult> ReSendCode(string email)
+        {
+            try
+            {
+                string result = await _authService.ReSend(email);
+                return Ok(new { message = result });    
+            }
+            catch (Exception ex){
+                return BadRequest(new { message = ex.Message });
+            }
+        }
 
         [HttpPost("login")]
         public async Task<IActionResult> Login(LoginDTO dto)

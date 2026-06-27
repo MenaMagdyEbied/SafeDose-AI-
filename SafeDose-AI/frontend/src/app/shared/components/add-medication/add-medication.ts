@@ -48,6 +48,7 @@ import {
 } from '../../../core/models';
 import { timesMatchFrequency } from '../../validators/times-match-frequency';
 import { dateRangeValid } from '../../validators/date-range-valid';
+import { PushNotification } from '../../../core/services/push-notification';
 
 @Component({
   selector: 'app-add-medication',
@@ -64,6 +65,7 @@ export class AddMedication implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly pushService = inject(PushNotification);
 
   @Output() saved = new EventEmitter<MedicationResponse>();
   @Output() cancelled = new EventEmitter<void>();
@@ -85,7 +87,7 @@ export class AddMedication implements OnInit {
   saving = signal(false);
   errorText = signal('');
   successText = signal('');
-
+  showNotificationPrompt = signal(false);
   resultsOpen = signal(false);
   selectedCatalogDrug = signal<DrugSearchResult | null>(null);
   readonly filteredDrugs = computed(() => this.interaction.searchResults());
@@ -254,10 +256,24 @@ export class AddMedication implements OnInit {
       )
       .subscribe((result) => {
         this.successText.set('تم حفظ الدواء بنجاح');
-        setTimeout(() => this.saved.emit(result), 600);
+
+        if (!this.pushService.isPermissionGranted && this.pushService.isSupported) {
+          this.showNotificationPrompt.set(true); // ← نعرض مودالنا الأول
+        } else {
+          setTimeout(() => this.saved.emit(result), 600);
+        }
       });
   }
+  confirmNotificationPermission(): void {
+    this.showNotificationPrompt.set(false);
+    void this.pushService.subscribe();
+    this.saved.emit(/* النتيجة المحفوظة */);
+  }
 
+  declineNotificationPermission(): void {
+    this.showNotificationPrompt.set(false);
+    this.saved.emit(/* النتيجة المحفوظة */);
+  }
   private loadForEdit(id: number): void {
     from(this.medicationsService.getById(id))
       .pipe(

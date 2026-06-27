@@ -21,6 +21,15 @@
       </div>
     }
 
+    @if (successText) {
+      <div
+        class="p-3.5 bg-primary/10 border-r-4 border-primary text-primary text-xs font-bold rounded-l-xl flex items-center gap-2.5 text-right"
+      >
+        <lucide-icon [img]="shieldCheckIcon" class="w-5 h-5 shrink-0 mt-0.5"></lucide-icon>
+        <p>{{ successText }}</p>
+      </div>
+    }
+
     <div class="space-y-2">
       <div class="flex gap-2 sm:gap-3 justify-center py-2" dir="ltr">
         @for (d of digits; track $index) {
@@ -60,6 +69,8 @@
       }
     </button>
 
+   
+
     <button
       type="button"
       routerLink="/register"
@@ -68,5 +79,22 @@
       <lucide-icon [img]="shieldCheckIcon" class="w-4 h-4"></lucide-icon>
       <span>تعديل البيانات والعودة للتسجيل</span>
     </button>
+
+ <button
+      type="button"
+      (click)="resendCode()"
+      [disabled]="resendLoading() || !email"
+      class="w-full h-12  text-primary rounded-2xl font-bold text-sm flex items-center justify-center gap-2 transition-all hover:bg-primary/5 disabled:opacity-60 cursor-pointer"
+    >
+      @if (resendLoading()) {
+        <div
+          class="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"
+        ></div>
+      } @else {
+        <lucide-icon [img]="shieldCheckIcon" class="w-4 h-4"></lucide-icon>
+      }
+      <span>إعادة إرسال الكود</span>
+    </button>
+    
   </div>
 </section>

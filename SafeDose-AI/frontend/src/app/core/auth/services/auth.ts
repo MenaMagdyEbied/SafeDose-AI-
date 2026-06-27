@@ -117,8 +117,9 @@ export class Auth {
 
   private setSession(user: SessionUser, token: string): void {
     const expire = this.getExpireDate(COOKIE_DAYS);
-    this.cookieService.set(TOKEN_KEY, token, expire, '/', '', true, 'Strict');
-    this.cookieService.set(USER_KEY, JSON.stringify(user), expire, '/', '', true, 'Strict');
+    const isSecure = window.location.protocol === 'https:';
+    this.cookieService.set(TOKEN_KEY, token, expire, '/', '', isSecure, 'Strict');
+    this.cookieService.set(USER_KEY, JSON.stringify(user), expire, '/', '', isSecure, 'Strict');
     this.userSubject.next(user);
   }
 
@@ -157,30 +158,30 @@ export class Auth {
               roles: profile.roles as UserRole[],
             };
             this.setSession(fullUser, res.token);
-            this.ensurePrimaryPatient(profile.name || fullUser.userName);
           }),
-          switchMap(() => of(this.userSubject.value as SessionUser)),
+          switchMap((profile) =>
+            this.ensurePrimaryPatientAsync(profile.name || fallbackUser.userName).pipe(
+              switchMap(() => of(this.userSubject.value as SessionUser)),
+            ),
+          ),
           catchError(() => {
-            this.ensurePrimaryPatient(fallbackUser.userName);
-            return of(fallbackUser);
+            return this.ensurePrimaryPatientAsync(fallbackUser.userName).pipe(
+              switchMap(() => of(fallbackUser)),
+            );
           }),
         );
       }),
     );
   }
 
-  // EVERY login checks /patients/my. If the account has no patient row yet,
-  // we create a minimal one so the medications + medical-card + interaction-check
-  // flows all have a valid PatientId to work with.
-  // Step-2 registration data (age, conditions) is layered on top when available.
-  private ensurePrimaryPatient(fallbackName: string): void {
-    this.http.get<any[]>(this.apiUrl + '/patients/my').subscribe({
-      next: (existing) => {
+  private ensurePrimaryPatientAsync(fallbackName: string): Observable<void> {
+    return this.http.get<any[]>(this.apiUrl + '/patients/my').pipe(
+      switchMap((existing) => {
         if (existing && existing.length > 0) {
           try {
             localStorage.removeItem('safedose_pending_patient');
           } catch {}
-          return;
+          return of(void 0);
         }
 
         let pending: any = null;
@@ -209,21 +210,24 @@ export class Auth {
           allergies: [],
         };
 
-        this.http.post(this.apiUrl + '/patients', body).subscribe({
-          next: () => {
+        return this.http.post(this.apiUrl + '/patients', body).pipe(
+          tap(() => {
             try {
               localStorage.removeItem('safedose_pending_patient');
             } catch {}
-          },
-          error: () => {
-            /* retried on next login */
-          },
-        });
-      },
-      error: () => {
-        /* skip — backend probably 500 (run the SQL fix) */
-      },
-    });
+          }),
+          switchMap(() => of(void 0)),
+          catchError(() => {
+            // Patient creation failed, but don't break login flow
+            return of(void 0);
+          }),
+        );
+      }),
+      catchError(() => {
+        // No patients endpoint error, but don't break login flow
+        return of(void 0);
+      }),
+    );
   }
 
   register(payload: Record<string, unknown>): Observable<MessageResponse> {
@@ -236,6 +240,13 @@ export class Auth {
 
   confirmEmail(payload: Record<string, unknown>): Observable<MessageResponse> {
     return this.http.post<MessageResponse>(this.apiUrl + '/Auth/emailConfirmation', payload);
+  }
+
+  resendCode(email: string): Observable<MessageResponse> {
+    return this.http.post<MessageResponse>(
+      this.apiUrl + `/Auth/ResendCode/${encodeURIComponent(email)}`,
+      {},
+    );
   }
 
   forgotPassword(payload: Record<string, unknown>): Observable<MessageResponse> {
@@ -251,7 +262,8 @@ export class Auth {
     if (!current) return;
     const updated = { ...current, ...updates };
     const expire = this.getExpireDate(COOKIE_DAYS);
-    this.cookieService.set(USER_KEY, JSON.stringify(updated), expire, '/', '', true, 'Strict');
+    const isSecure = window.location.protocol === 'https:';
+    this.cookieService.set(USER_KEY, JSON.stringify(updated), expire, '/', '', isSecure, 'Strict');
     this.userSubject.next(updated);
   }
 }

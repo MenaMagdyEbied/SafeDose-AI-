@@ -22,7 +22,9 @@ export class EmailConfirmation implements OnInit {
   digits: string[] = ['', '', '', '', '', ''];
   codeTouched = false;
   loading = signal(false);
+  resendLoading = signal(false);
   errorText = '';
+  successText = '';
 
   ngOnInit(): void {
     this.email = this.route.snapshot.queryParams['email'] || '';
@@ -65,6 +67,7 @@ export class EmailConfirmation implements OnInit {
     const code = this.digits.join('');
     this.loading.set(true);
     this.errorText = '';
+    this.successText = '';
 
     this.authService.confirmEmail({ email: this.email, code }).subscribe({
       next: () => {
@@ -82,6 +85,28 @@ export class EmailConfirmation implements OnInit {
           (typeof err?.error === 'string' ? err.error : err?.error?.message) ||
           'كود التأكيد غير صحيح. حاول مرة أخرى.';
         this.digits = ['', '', '', '', '', ''];
+        // this.router.navigate(['/email-confirmation']);
+      },
+    });
+  }
+
+  resendCode(): void {
+    if (!this.email) return;
+
+    this.resendLoading.set(true);
+    this.errorText = '';
+    this.successText = '';
+
+    this.authService.resendCode(this.email).subscribe({
+      next: () => {
+        this.resendLoading.set(false);
+        this.successText = 'تم إعادة إرسال كود التأكيد بنجاح.';
+      },
+      error: (err) => {
+        this.resendLoading.set(false);
+        this.errorText =
+          (typeof err?.error === 'string' ? err.error : err?.error?.message) ||
+          'تعذر إعادة إرسال كود التأكيد. حاول مرة أخرى.';
       },
     });
   }

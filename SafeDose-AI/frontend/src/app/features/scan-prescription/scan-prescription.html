@@ -338,3 +338,31 @@
     </div>
   }
 </section>
+@if (showNotificationPrompt()) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" dir="rtl">
+    <div class="bg-white rounded-2xl p-6 max-w-sm text-center space-y-4 shadow-xl">
+      <div class="mx-auto w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
+        <lucide-icon [img]="checkCircleIcon" class="w-6 h-6 text-primary"></lucide-icon>
+      </div>
+      <h3 class="font-bold text-lg">فعّلي تذكيرات الدواء</h3>
+      <p class="text-sm text-outline leading-relaxed">
+        عشان نقدر نبعتلك تنبيه في معاد كل جرعة من أدويتك المسجلة في الروشتة، لازم تسمحي للمتصفح
+        بإرسال الإشعارات.
+      </p>
+      <div class="flex gap-2">
+        <button
+          (click)="confirmNotificationPermission()"
+          class="flex-1 bg-primary text-white rounded-xl py-2.5 font-bold text-sm cursor-pointer hover:bg-primary-dark transition-all"
+        >
+          تفعيل الإشعارات
+        </button>
+        <button
+          (click)="declineNotificationPermission()"
+          class="flex-1 border border-outline-variant rounded-xl py-2.5 font-bold text-sm cursor-pointer hover:bg-slate-50 transition-all"
+        >
+          ليس الآن
+        </button>
+      </div>
+    </div>
+  </div>
+}

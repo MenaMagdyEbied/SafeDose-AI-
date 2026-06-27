@@ -222,3 +222,27 @@
     </div>
   </form>
 </section>
+@if (showNotificationPrompt()) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+    <div class="bg-white rounded-2xl p-6 max-w-sm text-center space-y-4">
+      <h3 class="font-bold text-lg">فعّلي تذكيرات الدواء</h3>
+      <p class="text-sm text-outline">
+        عشان نقدر نبعتلك تنبيه في معاد كل جرعة، لازم تسمحي للمتصفح بإرسال الإشعارات.
+      </p>
+      <div class="flex gap-2">
+        <button
+          (click)="confirmNotificationPermission()"
+          class="flex-1 bg-primary text-white rounded-xl py-2.5 font-bold"
+        >
+          تفعيل الإشعارات
+        </button>
+        <button
+          (click)="declineNotificationPermission()"
+          class="flex-1 border rounded-xl py-2.5 font-bold"
+        >
+          ليس الآن
+        </button>
+      </div>
+    </div>
+  </div>
+}

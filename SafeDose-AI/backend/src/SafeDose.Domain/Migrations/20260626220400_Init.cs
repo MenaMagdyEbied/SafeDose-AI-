@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace SafeDose.Domain.Migrations
 {
     /// <inheritdoc />
-    public partial class init : Migration
+    public partial class Init : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -37,6 +37,7 @@ namespace SafeDose.Domain.Migrations
                     PreferredLanguage = table.Column<string>(type: "nvarchar(5)", maxLength: 5, nullable: true),
                     IsDeleted = table.Column<bool>(type: "bit", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETDATE()"),
+                    TermsAndConditions = table.Column<bool>(type: "bit", nullable: false),
                     UserName = table.Column<string>(type: "nvarchar(80)", maxLength: 80, nullable: true),
                     NormalizedUserName = table.Column<string>(type: "nvarchar(80)", maxLength: 80, nullable: true),
                     Email = table.Column<string>(type: "nvarchar(150)", maxLength: 150, nullable: true),
@@ -320,6 +321,7 @@ namespace SafeDose.Domain.Migrations
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETDATE()"),
                     MedicalCardToken = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     IsActive = table.Column<bool>(type: "bit", nullable: false, defaultValue: true),
+                    IsRunning = table.Column<bool>(type: "bit", nullable: false),
                     DeactivatedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
                 },
                 constraints: table =>
@@ -331,6 +333,29 @@ namespace SafeDose.Domain.Migrations
                         principalTable: "AspNetUsers",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "PushSubscription",
+                columns: table => new
+                {
+                    PushSubscriptionId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Endpoint = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    P256DH = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Auth = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    AccountId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    CreatedAt = table.Column<DateOnly>(type: "date", nullable: false, defaultValueSql: "GETDATE()")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_PushSubscription", x => x.PushSubscriptionId);
+                    table.ForeignKey(
+                        name: "FK_PushSubscription_AspNetUsers_AccountId",
+                        column: x => x.AccountId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -673,6 +698,7 @@ namespace SafeDose.Domain.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     PatientMedicationId = table.Column<int>(type: "int", nullable: false),
                     Time = table.Column<TimeOnly>(type: "time", nullable: false),
+                    LastReminderDate = table.Column<DateOnly>(type: "date", nullable: false),
                     AccountId = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
@@ -692,11 +718,11 @@ namespace SafeDose.Domain.Migrations
                 {
                     ReminderResponseId = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    PatientMedicationId = table.Column<int>(type: "int", nullable: false),
-                    ScheduleDateTime = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    PatientMedicationId = table.Column<int>(type: "int", nullable: true),
                     ResponseType = table.Column<byte>(type: "tinyint", nullable: false),
-                    SnoozeMinutes = table.Column<int>(type: "int", nullable: true),
                     RespondedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    DrugName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    TimeDrug = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     AccountId = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
@@ -707,7 +733,7 @@ namespace SafeDose.Domain.Migrations
                         column: x => x.PatientMedicationId,
                         principalTable: "PatientMedications",
                         principalColumn: "PatientMedicationId",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.SetNull);
                 });
 
             migrationBuilder.InsertData(
@@ -722,8 +748,8 @@ namespace SafeDose.Domain.Migrations
 
             migrationBuilder.InsertData(
                 table: "AspNetUsers",
-                columns: new[] { "Id", "AccessFailedCount", "AccountStatus", "ConcurrencyStamp", "Email", "EmailConfirmed", "IsDeleted", "LockoutEnabled", "LockoutEnd", "Name", "NormalizedEmail", "NormalizedUserName", "PasswordHash", "PhoneNumber", "PhoneNumberConfirmed", "PreferredLanguage", "SecurityStamp", "TwoFactorEnabled", "UserName" },
-                values: new object[] { "1", 0, (byte)0, "9587c422-9e3f-47b3-9044-24359386d00b", "superadmin@gmail.com", true, false, false, null, "superadmin", "SUPERADMIN@GMAIL.COM", "SUPERADMIN", "AQAAAAIAAYagAAAAEDNWowuvzhvoccubJgIBxkfOXJ+oc0pAlnCwvmYZ80QmEawsJWIlMFc5dPEQlLf77Q==", null, false, null, "1155c830-97f0-4882-a1a2-78d979622bb4", false, "superadmin" });
+                columns: new[] { "Id", "AccessFailedCount", "AccountStatus", "ConcurrencyStamp", "Email", "EmailConfirmed", "IsDeleted", "LockoutEnabled", "LockoutEnd", "Name", "NormalizedEmail", "NormalizedUserName", "PasswordHash", "PhoneNumber", "PhoneNumberConfirmed", "PreferredLanguage", "SecurityStamp", "TermsAndConditions", "TwoFactorEnabled", "UserName" },
+                values: new object[] { "1", 0, (byte)0, "bd51af46-948c-4437-888e-3ab3567abda9", "superadmin@gmail.com", true, false, false, null, "superadmin", "SUPERADMIN@GMAIL.COM", "SUPERADMIN", "AQAAAAIAAYagAAAAEA4RsTpDLdiDjmIRFuRDy0Uw5pt2PmLmY+zxthO8WkVStwdNPxgISTuyCcFj5eRs0A==", null, false, null, "257881a2-d1c0-445b-99b7-f7a51c36b51a", false, false, "superadmin" });
 
             migrationBuilder.InsertData(
                 table: "AspNetUserRoles",
@@ -936,6 +962,17 @@ namespace SafeDose.Domain.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "IX_PushSubscription_AccountId",
+                table: "PushSubscription",
+                column: "AccountId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PushSubscription_Endpoint",
+                table: "PushSubscription",
+                column: "Endpoint",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_ReminderResponses_PatientMedicationId",
                 table: "ReminderResponses",
                 column: "PatientMedicationId");
@@ -1003,6 +1040,9 @@ namespace SafeDose.Domain.Migrations
 
             migrationBuilder.DropTable(
                 name: "PricingTierFeatures");
+
+            migrationBuilder.DropTable(
+                name: "PushSubscription");
 
             migrationBuilder.DropTable(
                 name: "ReminderResponses");

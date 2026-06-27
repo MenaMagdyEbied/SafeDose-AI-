@@ -37,10 +37,17 @@ export class PatientHome implements OnInit {
   private readonly subscriptionService = inject(SubscriptionService);
   private readonly destroyRef = inject(DestroyRef);
 
-  taken = signal(false);
   loading = signal(false);
   errorText = signal('');
   successText = signal('');
+  nextDose = signal<{
+    patientMedicationId: number;
+    drugName: string;
+    dose: string;
+    mealTiming: string;
+    timeLabel: string;
+    taken: boolean;
+  } | null>(null);
 
   showEditModal = signal(false);
 
@@ -73,7 +80,7 @@ export class PatientHome implements OnInit {
       conditions: ['السكري', 'الضغط', 'القلب'],
       allergies: 'لا يوجد',
       doctorName: 'د. مجدي يعقوب',
-      subscriptionPlan: isPaid ? 'pro' : (subscription?.tierCode === 'free' ? 'free' : 'pro'),
+      subscriptionPlan: isPaid ? 'pro' : subscription?.tierCode === 'free' ? 'free' : 'pro',
     };
   }
 
@@ -90,38 +97,6 @@ export class PatientHome implements OnInit {
   ngOnInit(): void {
     void this.subscriptionService.refresh();
     this.loadPatientData();
-  }
-  private async loadPatientData(): Promise<void> {
-    this.loading.set(true);
-    this.errorText.set('');
-
-    try {
-      const patientId =
-        this.patientService.currentPatientId ?? (await this.patientService.getPrimaryPatientId());
-      this.currentPatientId.set(patientId);
-
-      if (!this.currentPatientId()) {
-        this.errorText.set('تعذر تحديد المريض الحالي.');
-        return;
-      }
-
-      const meds = await this.medicationsService.getByPatient(this.currentPatientId()!);
-      this.medications.set(
-        meds.map((item) => ({
-          name: item.drugName,
-          dose: item.dose ?? item.drugDose ?? '—',
-          frequency: item.frequency ? `${item.frequency} مرة يومياً` : '—',
-        })),
-      );
-    } catch {
-      this.errorText.set('تعذر تحميل الأدوية من الخادم.');
-    } finally {
-      this.loading.set(false);
-    }
-  }
-
-  takeDose(): void {
-    this.taken.set(true);
   }
 
   showSymptomsReport(): void {
@@ -146,5 +121,102 @@ export class PatientHome implements OnInit {
 
   onMedicationCancelled(): void {
     this.closeEditModal();
+  }
+
+  private async loadPatientData(): Promise<void> {
+    this.loading.set(true);
+    this.errorText.set('');
+
+    try {
+      const patientId =
+        this.patientService.currentPatientId ?? (await this.patientService.getPrimaryPatientId());
+      this.currentPatientId.set(patientId);
+
+      if (!this.currentPatientId()) {
+        this.errorText.set('تعذر تحديد المريض الحالي.');
+        return;
+      }
+
+      const meds = await this.medicationsService.getByPatient(this.currentPatientId()!);
+      this.medications.set(
+        meds.map((item) => ({
+          name: item.drugName,
+          dose: item.dose ?? item.drugDose ?? '—',
+          frequency: item.frequency ? `${item.frequency} مرة يومياً` : '—',
+        })),
+      );
+
+      this.computeNextDose(meds);
+    } catch {
+      this.errorText.set('تعذر تحميل الأدوية من الخادم.');
+    } finally {
+      this.loading.set(false);
+    }
+  }
+
+  private computeNextDose(meds: any[]): void {
+    const nowMin = new Date().getHours() * 60 + new Date().getMinutes();
+    let best: { tMin: number; m: any; t: string } | null = null;
+
+    for (const m of meds) {
+      const times: string[] =
+        Array.isArray(m.times) && m.times.length > 0 ? m.times : this.fallbackTimes(m.frequency);
+
+      for (const t of times) {
+        const tMin = this.parseMin(t);
+        if (tMin == null || tMin <= nowMin) continue; // بس المواعيد الجاية
+
+        if (best === null || tMin < best.tMin) {
+          best = { tMin, m, t };
+        }
+      }
+    }
+
+    if (!best) {
+      this.nextDose.set(null); // مفيش معاد جاي النهاردة
+      return;
+    }
+
+    this.nextDose.set({
+      patientMedicationId: best.m.patientMedicationId,
+      drugName: best.m.drugName || best.m.name || 'دواء',
+      dose: best.m.dose ?? best.m.drugDose ?? '',
+      mealTiming: best.m.mealTimingArabic || '',
+      timeLabel: this.fmt(best.tMin),
+      taken: false,
+    });
+  }
+
+  private parseMin(t: string): number | null {
+    const m = /^(\d{1,2}):(\d{2})/.exec(t || '');
+    if (!m) return null;
+    return parseInt(m[1], 10) * 60 + parseInt(m[2], 10);
+  }
+
+  private fmt(mins: number): string {
+    const h = Math.floor(mins / 60);
+    const m = mins % 60;
+    const ampm = h >= 12 ? 'م' : 'ص';
+    const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+    return `${h12}:${m.toString().padStart(2, '0')} ${ampm}`;
+  }
+
+  private fallbackTimes(freq: number | null | undefined): string[] {
+    if (!freq || freq < 1) return [];
+    if (freq === 1) return ['09:00'];
+    if (freq === 2) return ['09:00', '21:00'];
+    if (freq === 3) return ['09:00', '15:00', '21:00'];
+    if (freq === 4) return ['08:00', '12:00', '16:00', '20:00'];
+    return Array.from({ length: freq }, (_, i) => {
+      const slot = Math.round((24 / freq) * i + 8) % 24;
+      return `${slot.toString().padStart(2, '0')}:00`;
+    });
+  }
+
+  takeDose(): void {
+    const nd = this.nextDose();
+    if (!nd) return;
+    this.nextDose.set({ ...nd, taken: true });
+    // لو عايزة تبعتي API call هنا كمان زي notifications.ts، قوليلي وأضيفه
   }
 }

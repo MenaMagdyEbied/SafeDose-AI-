@@ -12,8 +12,8 @@ using SafeDose.Domain.ApplicationDbContext;
 namespace SafeDose.Domain.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260624235432_TrmsAndCondition")]
-    partial class TrmsAndCondition
+    [Migration("20260626220400_Init")]
+    partial class Init
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -287,7 +287,7 @@ namespace SafeDose.Domain.Migrations
                             Id = "1",
                             AccessFailedCount = 0,
                             AccountStatus = (byte)0,
-                            ConcurrencyStamp = "9b99cc69-4dc4-44bf-84d0-cbd792ffc454",
+                            ConcurrencyStamp = "bd51af46-948c-4437-888e-3ab3567abda9",
                             CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Email = "superadmin@gmail.com",
                             EmailConfirmed = true,
@@ -296,9 +296,9 @@ namespace SafeDose.Domain.Migrations
                             Name = "superadmin",
                             NormalizedEmail = "SUPERADMIN@GMAIL.COM",
                             NormalizedUserName = "SUPERADMIN",
-                            PasswordHash = "AQAAAAIAAYagAAAAEIrbMJ8O9WEO4upqN4/hcaRYv3JiMY8m2RWaJJPMMZPlE0+Yppu7D2oDGyBcWSUt/A==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEA4RsTpDLdiDjmIRFuRDy0Uw5pt2PmLmY+zxthO8WkVStwdNPxgISTuyCcFj5eRs0A==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "bb006c72-847f-454a-8d89-7219750827bc",
+                            SecurityStamp = "257881a2-d1c0-445b-99b7-f7a51c36b51a",
                             TermsAndConditions = false,
                             TwoFactorEnabled = false,
                             UserName = "superadmin"
@@ -813,6 +813,9 @@ namespace SafeDose.Domain.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
                         .HasDefaultValue(true);
+
+                    b.Property<bool>("IsRunning")
+                        .HasColumnType("bit");
 
                     b.Property<Guid>("MedicalCardToken")
                         .HasColumnType("uniqueidentifier");

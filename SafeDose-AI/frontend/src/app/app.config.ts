@@ -1,4 +1,4 @@
-import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/core';
+import { ApplicationConfig, provideBrowserGlobalErrorListeners, isDevMode } from '@angular/core';
 import {
   provideRouter,
   withHashLocation,
@@ -21,6 +21,7 @@ import { routes } from './app.routes';
 import { authInterceptor } from './core/interceptors/auth-interceptor';
 import { loaderInterceptor } from './core/interceptors/loader-interceptor';
 import { responseInterceptor } from './core/interceptors/response-interceptor';
+import { provideServiceWorker } from '@angular/service-worker';
 
 const icons = { Shield, Pill, Sparkles, Activity, TriangleAlert, Heart };
 export const appConfig: ApplicationConfig = {
@@ -41,5 +42,9 @@ export const appConfig: ApplicationConfig = {
       multi: true,
       useValue: new LucideIconProvider(icons),
     },
+    provideServiceWorker('ngsw-worker.js', {
+      enabled: !isDevMode(),
+      registrationStrategy: 'registerWhenStable:30000',
+    }),
   ],
 };

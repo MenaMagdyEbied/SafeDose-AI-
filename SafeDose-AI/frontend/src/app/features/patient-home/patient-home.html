@@ -24,42 +24,51 @@
       </div>
     </button>
   </section>
-
   <!-- Next Dose -->
   <section class="space-y-3">
     <h3 class="text-lg font-bold text-on-surface-variant">الموعد القادم</h3>
-    <div
-      class="bg-surface-container-low border border-outline-variant/30 rounded-2xl p-4 sm:p-5 flex flex-col gap-4"
-    >
-      <div class="flex items-center gap-3 sm:gap-4">
-        <div class="w-2 h-14 sm:h-16 bg-primary rounded-full shrink-0"></div>
-        <div class="flex-1 text-right">
-          <h4 class="text-base sm:text-xl font-bold text-primary">جلوكوفاج (Glucophage 500mg)</h4>
-          <p class="text-xs sm:text-sm text-on-surface-variant leading-relaxed">
-            10:00 صباحاً - بعد الإفطار مباشرةً
-          </p>
-        </div>
-        <lucide-icon
-          [img]="activityIcon"
-          class="w-6 h-6 sm:w-8 sm:h-8 text-primary shrink-0"
-        ></lucide-icon>
-      </div>
-      <button
-        (click)="takeDose()"
-        [disabled]="taken()"
-        [class]="
-          taken()
-            ? 'w-full h-14 rounded-xl font-bold text-base sm:text-lg flex items-center justify-center gap-2 transition-all bg-slate-200 text-outline cursor-not-allowed'
-            : 'w-full h-14 rounded-xl font-bold text-base sm:text-lg flex items-center justify-center gap-2 transition-all bg-tertiary hover:bg-tertiary-dark text-white shadow-sm cursor-pointer'
-        "
+
+    @if (nextDose()) {
+      <div
+        class="bg-surface-container-low border border-outline-variant/30 rounded-2xl p-4 sm:p-5 flex flex-col gap-4"
       >
-        <span>{{ taken() ? 'تم تناول الجرعة بنجاح' : 'تناول الجرعة الآن' }}</span>
-        <lucide-icon
-          [img]="checkCircleIcon"
-          [class]="taken() ? 'w-5 h-5 text-emerald-600' : 'w-5 h-5 text-white'"
-        ></lucide-icon>
-      </button>
-    </div>
+        <div class="flex items-center gap-3 sm:gap-4">
+          <div class="w-2 h-14 sm:h-16 bg-primary rounded-full shrink-0"></div>
+          <div class="flex-1 text-right">
+            <h4 class="text-base sm:text-xl font-bold text-primary">{{ nextDose()!.drugName }}</h4>
+            <p class="text-xs sm:text-sm text-on-surface-variant leading-relaxed">
+              {{ nextDose()!.timeLabel
+              }}{{ nextDose()!.mealTiming ? ' - ' + nextDose()!.mealTiming : '' }}
+            </p>
+          </div>
+          <lucide-icon
+            [img]="activityIcon"
+            class="w-6 h-6 sm:w-8 sm:h-8 text-primary shrink-0"
+          ></lucide-icon>
+        </div>
+        <button
+          (click)="takeDose()"
+          [disabled]="nextDose()!.taken"
+          [class]="
+            nextDose()!.taken
+              ? 'w-full h-14 rounded-xl font-bold text-base sm:text-lg flex items-center justify-center gap-2 transition-all bg-slate-200 text-outline cursor-not-allowed'
+              : 'w-full h-14 rounded-xl font-bold text-base sm:text-lg flex items-center justify-center gap-2 transition-all bg-tertiary hover:bg-tertiary-dark text-white shadow-sm cursor-pointer'
+          "
+        >
+          <span>{{ nextDose()!.taken ? 'تم تناول الجرعة بنجاح' : 'تناول الجرعة الآن' }}</span>
+          <lucide-icon
+            [img]="checkCircleIcon"
+            [class]="nextDose()!.taken ? 'w-5 h-5 text-emerald-600' : 'w-5 h-5 text-white'"
+          ></lucide-icon>
+        </button>
+      </div>
+    } @else {
+      <div
+        class="bg-surface-container-low border border-outline-variant/30 rounded-2xl p-5 text-center text-sm font-bold text-outline"
+      >
+        لا توجد مواعيد متبقية لليوم
+      </div>
+    }
   </section>
 
   <!-- Quick Actions -->

@@ -1,4 +1,11 @@
-import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  OnInit,
+  OnDestroy,
+  inject,
+} from '@angular/core';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import {
   Bell,
@@ -22,19 +29,26 @@ import { Auth } from '../../../../core/auth/services/auth';
 import { Subscription } from '../../../../core/services/subscription';
 import { Medications } from '../../../../core/services/medications';
 import { PatientService } from '../../../../core/services/patient';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
+import { PushNotification } from '../../../../core/services/push-notification';
 
 @Component({
   selector: 'app-header',
   imports: [LucideAngularModule, RouterLink, RouterLinkActive],
   templateUrl: './header.html',
   styleUrl: './header.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class Header {
+export class Header implements OnInit, OnDestroy {
   private readonly router = inject(Router);
+  private readonly cdr = inject(ChangeDetectorRef);
   protected readonly authService = inject(Auth);
   protected readonly subscriptionService = inject(Subscription);
   private readonly medicationsService = inject(Medications);
   private readonly patientService = inject(PatientService);
+  private destroy$ = new Subject<void>();
+  private readonly pushService = inject(PushNotification);
 
   showLogoutConfirm = false;
   accountMenu = false;
@@ -58,13 +72,8 @@ export class Header {
   pillIcon = Pill;
   digitalCardIcon = CreditCard;
   alertIcon = TriangleAlert;
-
-  // Bell dropdown content. Built from the user's actual active medications +
-  // their reminder times — same source the /notifications page uses. No mock.
   medNotifications: any[] = [];
 
-  // Family-side notifications: backend has no endpoint yet. Empty by default
-  // so the count stays 0 instead of inventing fake entries.
   familyNotifications: any[] = [];
 
   get unreadMeds(): number {
@@ -75,16 +84,6 @@ export class Header {
   }
   get unreadCount(): number {
     return this.unreadMeds + this.unreadFamily;
-  }
-
-  takeDose(notif: any): void {
-    notif.status = 'taken';
-    notif.read = true;
-  }
-
-  snooze(notif: any): void {
-    notif.status = 'snoozed';
-    notif.read = true;
   }
 
   markMedRead(notif: any): void {
@@ -104,7 +103,7 @@ export class Header {
   }
 
   ngOnInit(): void {
-    this.authService.user$.subscribe((user) => {
+    this.authService.user$.pipe(takeUntil(this.destroy$)).subscribe((user) => {
       this.userName = user?.name || user?.userName || '';
       if (user) {
         this.subscriptionService.refresh();
@@ -114,7 +113,13 @@ export class Header {
         this.medNotifications = [];
         this.familyNotifications = [];
       }
+      this.cdr.markForCheck();
     });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   private async loadBellNotifications(): Promise<void> {
@@ -122,16 +127,28 @@ export class Header {
       const patientId = await this.patientService.getPrimaryPatientId();
       if (!patientId) {
         this.medNotifications = [];
+        this.cdr.markForCheck();
         return;
       }
 
-      const meds = (await this.medicationsService.getByPatient(patientId)) || [];
+      const [meds, history] = await Promise.all([
+        this.medicationsService.getByPatient(patientId),
+        this.pushService.getReminderHistory(patientId).catch(() => []),
+      ]);
+
+      const medsList = meds || [];
+      const historyList = (history || []) as any[];
+
+      const historyMap = new Map<string, number>();
+      for (const h of historyList) {
+        historyMap.set(`${h.patientMedicationId}_${h.drugTime}`, h.responseType);
+      }
+
       const nowMin = this.minutesNow();
       const out: any[] = [];
       let id = 1;
 
-      // Only show today's upcoming + most recently passed (the bell is a peek view).
-      for (const m of meds as any[]) {
+      for (const m of medsList as any[]) {
         const drugName: string = m.drugName || m.name || 'دواء';
         const dose: string = m.dose || m.drugDose || '';
         const meal: string = m.mealTimingArabic || '';
@@ -141,34 +158,45 @@ export class Header {
         for (const t of times) {
           const tMin = this.parseMin(t);
           if (tMin == null) continue;
-          const status = tMin <= nowMin ? 'taken' : 'pending';
+
+          const respondedType = historyMap.get(`${m.patientMedicationId}_${t}`);
+          const status =
+            respondedType === 1
+              ? 'taken'
+              : respondedType === 2
+                ? 'skipped'
+                : tMin <= nowMin
+                  ? 'missed'
+                  : 'pending';
           out.push({
             id: id++,
             type: 'reminder',
             status,
             title: `حان وقت ${drugName}`,
             body: `${dose}${meal ? ' — ' + meal : ''}`,
-            time: status === 'pending' ? `الساعة ${this.fmt(tMin)}` : `الساعة ${this.fmt(tMin)}`,
-            read: status === 'taken',
+            time: `الساعة ${this.fmt(tMin)}`,
+            read: status === 'taken' || status === 'skipped',
             sortKey: tMin,
+            patientMedicationId: m.patientMedicationId,
+            drugName,
+            rawTime: t,
           });
         }
       }
 
-      // Most relevant first: next pending dose, then earlier same-day taken.
       out.sort((a, b) => {
         if (a.status !== b.status) return a.status === 'pending' ? -1 : 1;
         if (a.status === 'pending') return a.sortKey - b.sortKey;
         return b.sortKey - a.sortKey;
       });
 
-      // Bell is a quick peek — cap at 5. The page shows the full list.
       this.medNotifications = out.slice(0, 5);
+      this.cdr.markForCheck();
     } catch {
       this.medNotifications = [];
+      this.cdr.markForCheck();
     }
   }
-
   private minutesNow(): number {
     const d = new Date();
     return d.getHours() * 60 + d.getMinutes();
@@ -202,5 +230,25 @@ export class Header {
 
   async changePatient(patientId: number): Promise<void> {
     await this.patientService.setRunningPatient(patientId);
+  }
+  takeDose(notif: any): void {
+    notif.status = 'taken';
+    notif.read = true;
+
+    if (notif.patientMedicationId) {
+      this.pushService
+        .addReminderResponse({
+          patientMedicationId: notif.patientMedicationId,
+          drugName: notif.drugName ?? notif.title,
+          drugTime: notif.rawTime ?? null,
+          responseType: 1,
+        })
+        .catch(() => {});
+    }
+  }
+
+  snooze(notif: any): void {
+    notif.status = 'snoozed';
+    notif.read = true;
   }
 }

@@ -131,7 +131,7 @@ namespace SafeDose.Infrastructure.Auth
                 await _emailSender.SendEmailAsync(account.Email, "Email Confirmation",
                 $"<p>Code : {encodedToken} </p>");
 
-                return new AuthModelDTO { Message = "تم تسجيل المستخدم بنجاح . تم ارسال الرمز تأكيدي ألي الايميل" };
+                return new AuthModelDTO { Message = "تم تسجيل المستخدم بنجاح . تم ارسال الرمز تأكيدي ألي الايميل سينتهي بعد 3 دقائق" };
             }
 
         }
@@ -158,6 +158,27 @@ namespace SafeDose.Infrastructure.Auth
             return "حدث خطأ";
         }
 
+
+        public async Task<string> ReSend(string Email)
+        {
+            Account account = await _userManager.FindByEmailAsync(Email);
+            if (account == null)
+                throw new Exception("الأيميل غير موجود");
+
+            // generate token
+            var token = await _userManager.GenerateEmailConfirmationTokenAsync(account);
+            var encodedToken = HttpUtility.UrlEncode(token);
+
+            // send Email . 
+
+            await _emailSender.SendEmailAsync(account.Email, "Email Confirmation",
+            $"<p>Code : {encodedToken} </p>");
+
+            return "تم ارسال الرمز الي الايميل  سينتهي بعد 3 دقائق";
+        }
+
+
+
         public async Task<AuthModelDTO> GetTokenAsync(LoginDTO model)
         {
             AuthModelDTO authModel = new AuthModelDTO();
@@ -177,7 +198,7 @@ namespace SafeDose.Infrastructure.Auth
 
             var jwtSecurityToken = await CreateJwtToken(user);
 
-            authModel.Message = "Token created successfully!";
+            authModel.Message = "تم التسجيل بنجاح";
             authModel.IsAuthenticated = true;
             authModel.Token = new JwtSecurityTokenHandler().WriteToken(jwtSecurityToken);
             authModel.ExpiresOn = jwtSecurityToken.ValidTo;
@@ -240,7 +261,7 @@ namespace SafeDose.Infrastructure.Auth
             await _emailSender.SendEmailAsync(user.Email, "Reset Password",
                 $"<p>Code : {encodedToken}</p>");
 
-            return "تم ارسال الرمز افحص الايميل";
+            return "تم ارسال الرمز افحص الايميل سينتهي بعد 3 دقائق";
         }
 
         public async Task<string> ResetPass(ResetPasswordDto ResetPasswordModel)

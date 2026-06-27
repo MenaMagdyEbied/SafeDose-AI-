@@ -31,6 +31,7 @@ import {
 import { PatientService } from '../../core/services/patient';
 import { Prescription } from '../../core/services/prescription';
 import { Interaction } from '../../core/services/interaction';
+import { PushNotification } from '../../core/services/push-notification';
 
 type ViewStage = 'upload' | 'review' | 'summary';
 
@@ -58,6 +59,7 @@ export class ScanPrescription implements OnInit {
   private readonly prescriptionService = inject(Prescription);
   private readonly patientService = inject(PatientService);
   private readonly interactionService = inject(Interaction);
+  private readonly pushService = inject(PushNotification);
 
   stage = signal<ViewStage>('upload');
   loading = signal(false);
@@ -80,7 +82,7 @@ export class ScanPrescription implements OnInit {
   private currentPatientId: number | null = null;
   private today = new Date().toISOString().slice(0, 10);
   private searchDebounceTimers: { [key: number]: any } = {};
-
+  showNotificationPrompt = signal(false);
   doctorName = signal<string | null>(null);
   reviewMeds = signal<ReviewMed[]>([]);
 
@@ -382,9 +384,20 @@ export class ScanPrescription implements OnInit {
           meds: validMeds.map((m) => ({ name: m.resolvedName })),
         });
         this.stage.set('summary');
+
+        if (!this.pushService.isPermissionGranted && this.pushService.isSupported) {
+          this.showNotificationPrompt.set(true);
+        }
       });
   }
+  confirmNotificationPermission(): void {
+    this.showNotificationPrompt.set(false);
+    void this.pushService.subscribe();
+  }
 
+  declineNotificationPermission(): void {
+    this.showNotificationPrompt.set(false);
+  }
   viewPrescriptionDetail(): void {
     const saved = this.lastSavedPrescription();
     if (!saved) return;

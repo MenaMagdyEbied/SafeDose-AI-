@@ -14,6 +14,7 @@ import { FamilyNotification } from '../../core/models/family-notification';
 import { ConfirmDialog } from '../../shared/components/confirm-dialog/confirm-dialog';
 import { Medications } from '../../core/services/medications';
 import { PatientService } from '../../core/services/patient';
+import { PushNotification } from '../../core/services/push-notification';
 
 @Component({
   selector: 'app-notifications',
@@ -25,6 +26,7 @@ export class Notifications implements OnInit {
   private readonly medicationsService = inject(Medications);
   private readonly patientService = inject(PatientService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly pushService = inject(PushNotification);
 
   pillIcon = Pill;
   usersIcon = Users;
@@ -41,8 +43,6 @@ export class Notifications implements OnInit {
 
   loading = signal(false);
 
-  // Built from the patient's real active medications + their reminder times.
-  // No hardcoded ميتفورمين/أملوديبين — every entry maps to a real Drug row.
   medNotifications: MedNotification[] = [];
 
   // Family notifications: real backend feed doesn't exist yet. Empty by default —
@@ -59,7 +59,10 @@ export class Notifications implements OnInit {
       }
     });
   }
-
+  snooze(notif: MedNotification): void {
+    notif.status = 'snoozed';
+    notif.read = true;
+  }
   private async loadFromMedications(): Promise<void> {
     this.loading.set(true);
     try {
@@ -69,12 +72,26 @@ export class Notifications implements OnInit {
         return;
       }
 
-      const meds = (await this.medicationsService.getByPatient(patientId)) || [];
+      const [meds, history] = await Promise.all([
+        this.medicationsService.getByPatient(patientId),
+        this.pushService.getReminderHistory(patientId).catch(() => []),
+      ]);
+
+      const medsList = meds || [];
+      const historyList = (history || []) as any[];
+
+      // خريطة: patientMedicationId + drugTime → responseType (1 = أخدت، 2 = لأ)
+      const historyMap = new Map<string, number>();
+      for (const h of historyList) {
+        const key = `${h.patientMedicationId}_${h.drugTime}`;
+        historyMap.set(key, h.responseType);
+      }
+
       const out: MedNotification[] = [];
       const nowMin = this.minutesNow();
       let counter = 1;
 
-      for (const m of meds as any[]) {
+      for (const m of medsList as any[]) {
         const drugName: string = m.drugName || m.name || 'دواء';
         const dose: string = m.dose || m.drugDose || '';
         const mealTiming: string = m.mealTimingArabic || this.mealTimingLabel(m.mealTiming);
@@ -85,24 +102,37 @@ export class Notifications implements OnInit {
 
         for (const t of times) {
           const tMin = this.parseTimeMin(t);
-          const status: MedNotification['status'] =
-            tMin == null ? 'pending' : tMin <= nowMin ? 'taken' : 'pending';
-          const time =
-            tMin == null
-              ? 'لاحقاً'
-              : status === 'taken'
-                ? `الساعة ${this.formatTime(tMin)}`
-                : `الساعة ${this.formatTime(tMin)}`;
 
-          out.push({
-            id: counter++,
-            type: 'reminder',
-            status,
-            title: `حان وقت ${drugName}`,
-            body: `${dose}${mealTiming ? ' — ' + mealTiming : ''}`,
-            time,
-            read: status === 'taken',
-          });
+          // شوفي الأول لو فيه رد مسجل قبل كدا لنفس الدواء والوقت ده
+          const key = `${m.patientMedicationId}_${t}`;
+          const respondedType = historyMap.get(key);
+
+          let status: MedNotification['status'];
+          if (respondedType === 1) {
+            status = 'taken';
+          } else if (respondedType === 2) {
+            status = 'skipped';
+          } else if (tMin == null) {
+            status = 'pending';
+          } else if (tMin <= nowMin) {
+            status = 'missed'; // فات وقته ولسه مفيش رد فعلي
+          } else {
+            status = 'pending';
+          }
+
+          const time = tMin == null ? 'لاحقاً' : `الساعة ${this.formatTime(tMin)}`;
+
+         out.push({
+           id: counter++,
+           type: 'reminder',
+           status,
+           title: `حان وقت ${drugName}`,
+           body: `${dose}${mealTiming ? ' — ' + mealTiming : ''}`,
+           time,
+           read: status === 'taken' || status === 'skipped', // missed تفضل unread عشان تلفت النظر
+           patientMedicationId: m.patientMedicationId,
+           drugName,
+         });
         }
       }
 
@@ -124,21 +154,6 @@ export class Notifications implements OnInit {
 
   get unreadFamily() {
     return this.familyNotifications.filter((n) => !n.read).length;
-  }
-
-  takeDose(notif: MedNotification) {
-    notif.status = 'taken';
-    notif.read = true;
-  }
-
-  snooze(notif: MedNotification) {
-    notif.status = 'snoozed';
-    notif.read = true;
-  }
-
-  skipDose(notif: MedNotification) {
-    notif.status = 'skipped';
-    notif.read = true;
   }
 
   markAllRead() {
@@ -233,5 +248,37 @@ export class Notifications implements OnInit {
       const slot = Math.round((24 / freq) * i + 8) % 24;
       return `${slot.toString().padStart(2, '0')}:00`;
     });
+  }
+
+  takeDose(notif: MedNotification): void {
+    notif.status = 'taken';
+    notif.read = true;
+
+    if (notif.patientMedicationId) {
+      this.pushService
+        .addReminderResponse({
+          patientMedicationId: notif.patientMedicationId,
+          drugName: notif.drugName ?? notif.title,
+          drugTime: notif.time ?? null,
+          responseType: 1, // أخدت الجرعة
+        })
+        .catch(() => {});
+    }
+  }
+
+  skipDose(notif: MedNotification): void {
+    notif.status = 'skipped';
+    notif.read = true;
+
+    if (notif.patientMedicationId) {
+      this.pushService
+        .addReminderResponse({
+          patientMedicationId: notif.patientMedicationId,
+          drugName: notif.drugName ?? notif.title,
+          drugTime: notif.time ?? null,
+          responseType: 2, // لأ
+        })
+        .catch(() => {});
+    }
   }
 }
